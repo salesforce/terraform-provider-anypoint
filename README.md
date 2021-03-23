@@ -16,7 +16,8 @@ First, build and install the provider.
 make install
 ```
 
-Then, run the following command to initialize the workspace and apply the sample configuration.
+Then, navigate inside the examples folder, and update your credentials in `main.tf`.   
+Run the following command to initialize the workspace and apply the sample configuration.
 
 ```shell
 terraform init && terraform apply
