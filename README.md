@@ -1,18 +1,12 @@
-# Terraform Provider Hashicups
+# Terraform Provider Cloudhub
 
 Run the following command to build the provider
 
-## Dependencies
-* Python 3.7  
-```bash
-brew install pyenv && pyenv install 3.7.10 && pyenv global 3.7.3 && $ echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
-```
-* pkg-config `brew install pkg-config`
-
-
 ```shell
-go build -o terraform-provider-hashicups
+go build -o terraform-provider-cloudhub
 ```
+
+**N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/mulesoft-consulting` 
 
 ## Test sample configuration
 
