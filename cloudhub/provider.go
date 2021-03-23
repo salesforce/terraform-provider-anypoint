@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	auth "github.com/mulesoft-consulting/cloudhub-client-go/authenticate"
+	auth "github.com/mulesoft-consulting/cloudhub-client-go/authorization"
 )
 
 type ProviderConfOutput struct {
