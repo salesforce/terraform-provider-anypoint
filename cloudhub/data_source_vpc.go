@@ -131,11 +131,17 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//request vpcs
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(pco.authctx, pco.org_id, vpcid).Execute()
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get VPC",
-			Detail:   string(b),
+			Detail:   details,
 		})
 		return diags
 	}
@@ -167,7 +173,7 @@ func setVPCCoreAttributesToResourceData(d *schema.ResourceData, vpcitem map[stri
 	if vpcitem != nil {
 		for _, attr := range attributes {
 			if err := d.Set(attr, vpcitem[attr]); err != nil {
-				return fmt.Errorf("Unable to set VPC attribute %s\n Details: %s", attr, err)
+				return fmt.Errorf("unable to set VPC attribute %s\n details: %s", attr, err)
 			}
 		}
 	}

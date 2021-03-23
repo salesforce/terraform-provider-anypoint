@@ -59,7 +59,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 			Summary:  "Required org id",
 			Detail:   "The Organization Id is required.",
 		})
-		return newProviderConfOutput(ctx, auth.NewInlineResponse200(), org_id), diags
+		return newProviderConfOutput(auth.NewInlineResponse200(), org_id), diags
 	}
 
 	creds := auth.NewCredentialsWithDefaults()
@@ -70,18 +70,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	//authenticate
 	cfgauth := auth.NewConfiguration()
 	authclient := auth.NewAPIClient(cfgauth)
-	authres, httpauthr, err := authclient.DefaultApi.Oauth2TokenPost(ctx).Credentials(*creds).Execute()
+	authres, httpr, err := authclient.DefaultApi.Oauth2TokenPost(ctx).Credentials(*creds).Execute()
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpauthr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Authenticate",
-			Detail:   string(b),
+			Detail:   details,
 		})
-		return newProviderConfOutput(ctx, auth.NewInlineResponse200(), org_id), diags
+		return newProviderConfOutput(auth.NewInlineResponse200(), org_id), diags
 	}
-	defer httpauthr.Body.Close()
-	return newProviderConfOutput(ctx, &authres, org_id), diags
+	defer httpr.Body.Close()
+	return newProviderConfOutput(&authres, org_id), diags
 }
 
 type ProviderConfOutput struct {
@@ -90,8 +96,9 @@ type ProviderConfOutput struct {
 	vpcclient *vpc.APIClient
 }
 
-func newProviderConfOutput(ctx context.Context, authres *auth.InlineResponse200, org_id string) ProviderConfOutput {
+func newProviderConfOutput(authres *auth.InlineResponse200, org_id string) ProviderConfOutput {
 	//prepare request to get vpcs
+	ctx := context.Background()
 	authctx := context.WithValue(ctx, vpc.ContextAccessToken, authres.GetAccessToken())
 	cfg := vpc.NewConfiguration()
 	vpcclient := vpc.NewAPIClient(cfg)

@@ -43,7 +43,6 @@ func resourceVPC() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: [...]string{},
 			},
 			"internal_dns_special_domains": {
 				Type:     schema.TypeList,
@@ -51,7 +50,6 @@ func resourceVPC() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: [...]string{},
 			},
 			"is_default": {
 				Type:     schema.TypeBool,
@@ -64,7 +62,6 @@ func resourceVPC() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: [...]string{},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -77,7 +74,6 @@ func resourceVPC() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: [...]string{},
 			},
 			"firewall_rules": {
 				Type:     schema.TypeList,
@@ -106,7 +102,6 @@ func resourceVPC() *schema.Resource {
 			"vpc_routes": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Default:  [...]string{},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"next_hop": {
@@ -134,11 +129,17 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	//request vpc creation
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsPost(pco.authctx, pco.org_id).VpcCore(*body).Execute()
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Create VPC",
-			Detail:   string(b),
+			Detail:   details,
 		})
 		return diags
 	}
@@ -159,11 +160,17 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{})
 
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(pco.authctx, pco.org_id, vpcid).Execute()
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get VPC",
-			Detail:   string(b),
+			Detail:   details,
 		})
 		return diags
 	}
@@ -193,11 +200,17 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		//request vpc creation
 		_, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdPut(pco.authctx, pco.org_id, vpcid).VpcCore(*body).Execute()
 		if err != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+			var details string
+			if httpr != nil {
+				b, _ := ioutil.ReadAll(httpr.Body)
+				details = string(b)
+			} else {
+				details = err.Error()
+			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to Update VPC",
-				Detail:   string(b),
+				Detail:   details,
 			})
 			return diags
 		}
@@ -217,11 +230,17 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{
 
 	httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdDelete(pco.authctx, pco.org_id, vpcid).Execute()
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Delete VPC",
-			Detail:   string(b),
+			Detail:   details,
 		})
 		return diags
 	}

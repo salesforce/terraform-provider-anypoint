@@ -123,20 +123,29 @@ func dataSourceVPCs() *schema.Resource {
 func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
+
 	pco := m.(ProviderConfOutput)
 
 	//request vpcs
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsGet(pco.authctx, pco.org_id).Execute()
+
 	if err != nil {
-		b, _ := ioutil.ReadAll(httpr.Body)
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get VPCs",
-			Detail:   string(b),
+			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
+
 	//process data
 	data := res.GetData()
 	vpcs := flattenVPCsData(&data)
@@ -157,7 +166,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func flattenVPCsData(vpcs *[]vpc.Vpc) []interface{} {
-	if vpcs != nil {
+	if vpcs != nil && len(*vpcs) > 0 {
 		res := make([]interface{}, len(*vpcs))
 
 		for i, vpcitem := range *vpcs {
