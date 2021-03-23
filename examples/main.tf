@@ -7,7 +7,11 @@ terraform {
   }
 }
 
-provider "cloudhub" {}
+provider "cloudhub" {
+  client_id = "xxxxxxx"
+  client_secret = "xxxxxx"
+  org_id = "xxxxxx"
+}
 
 
 data "cloudhub_vpcs" "all" {}
