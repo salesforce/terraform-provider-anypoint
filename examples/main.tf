@@ -33,24 +33,24 @@ provider "cloudhub" {
 }
 
 
-# resource "cloudhub_vpc" "avpc" {
-#   name = "myAwesomeVPC"
-#   region = "us-east-1"
-#   owner_id = ""
-#   cidr_block = "10.0.0.0/20"
-#   internal_dns_servers = []
-#   internal_dns_special_domains = []
-#   is_default = false
-#   associated_environments = []
-#   shared_with = []
-#   //firewall_rules = []
-#   //vpc_routes = []
-# }
+resource "cloudhub_vpc" "avpc" {
+  name = "myAwesomeVPC"
+  region = "us-east-1"
+  owner_id = ""
+  cidr_block = "10.0.0.0/20"
+  internal_dns_servers = []
+  internal_dns_special_domains = []
+  is_default = false
+  associated_environments = []
+  shared_with = []
+  //firewall_rules = []
+  //vpc_routes = []
+}
 
-data "cloudhub_vpcs" "all" {}
+#data "cloudhub_vpcs" "all" {}
 
 
 output "created_vpcs" {
-  #value = cloudhub_vpc.avpc.id
-  value = data.cloudhub_vpcs.all
+  value = cloudhub_vpc.avpc.id
+  #value = data.cloudhub_vpcs.all
 }

@@ -263,23 +263,51 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	body.SetName(d.Get("name").(string))
 	body.SetRegion(d.Get("region").(string))
 	body.SetCidrBlock(d.Get("cidr_block").(string))
-	body.SetInternalDns(*vpc.NewInternalDns(d.Get("internal_dns_servers").([]string), d.Get("internal_dns_special_domains").([]string)))
 	body.SetIsDefault(d.Get("is_default").(bool))
-	body.SetAssociatedEnvironments(d.Get("associated_environments").([]string))
 	body.SetOwnerId(d.Get("owner_id").(string))
-	body.SetSharedWith(d.Get("shared_with").([]string))
 
-	orules := d.Get("firewall_rules").([]map[string]interface{})
+	//preparing shared with list
+	sw := d.Get("shared_with").([]interface{})
+	shared_with := make([]string, len(sw))
+	for index, e := range sw {
+		shared_with[index] = e.(string)
+	}
+	body.SetSharedWith(shared_with)
+
+	//preparing associated environments list
+	aes := d.Get("associated_environments").([]interface{})
+	associated_environments := make([]string, len(aes))
+	for index, ae := range aes {
+		associated_environments[index] = ae.(string)
+	}
+	body.SetAssociatedEnvironments(associated_environments)
+
+	//preparing internal_dns structure
+	idss := d.Get("internal_dns_servers").([]interface{})
+	dns_servers := make([]string, len(idss))
+	for index, dns_server := range idss {
+		dns_servers[index] = dns_server.(string)
+	}
+	idsds := d.Get("internal_dns_special_domains").([]interface{})
+	special_domains := make([]string, len(idsds))
+	for index, special_domain := range idsds {
+		special_domains[index] = special_domain.(string)
+	}
+	body.SetInternalDns(*vpc.NewInternalDns(dns_servers, special_domains))
+
+	//preparing firewall rules
+	orules := d.Get("firewall_rules").([]interface{})
 	frules := make([]vpc.FirewallRule, len(orules))
 	for index, rule := range orules {
-		frules[index] = *vpc.NewFirewallRule(rule["cidr_block"].(string), rule["from_port"].(int32), rule["protocol"].(string), rule["to_port"].(int32))
+		frules[index] = *vpc.NewFirewallRule(rule.(map[string]interface{})["cidr_block"].(string), rule.(map[string]interface{})["from_port"].(int32), rule.(map[string]interface{})["protocol"].(string), rule.(map[string]interface{})["to_port"].(int32))
 	}
 	body.SetFirewallRules(frules)
 
-	oroutes := d.Get("vpc_routes").([]map[string]interface{})
+	//preparing vpc routes
+	oroutes := d.Get("vpc_routes").([]interface{})
 	vpcroutes := make([]vpc.VpcRoute, len(orules))
 	for index, route := range oroutes {
-		vpcroutes[index] = *vpc.NewVpcRoute(route["cidr"].(string), route["next_hop"].(string))
+		vpcroutes[index] = *vpc.NewVpcRoute(route.(map[string]interface{})["cidr"].(string), route.(map[string]interface{})["next_hop"].(string))
 	}
 	body.SetVpcRoutes(vpcroutes)
 
