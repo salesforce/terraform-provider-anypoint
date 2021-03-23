@@ -2,7 +2,6 @@ package cloudhub
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -177,7 +176,7 @@ func setVPCCoreAttributesToResourceData(d *schema.ResourceData, vpcitem map[stri
 			}
 		}
 	}
-	return errors.New("vpc is nil")
+	return nil
 }
 
 /*
