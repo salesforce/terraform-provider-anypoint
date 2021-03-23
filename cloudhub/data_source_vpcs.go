@@ -125,12 +125,8 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 
-	//prepare request to get vpcs
-	authctx := context.WithValue(ctx, vpc.ContextAccessToken, pco.authres.GetAccessToken())
-	cfg := vpc.NewConfiguration()
-	client := vpc.NewAPIClient(cfg)
 	//request vpcs
-	res, httpr, err := client.DefaultApi.OrganizationsOrgIdVpcsGet(authctx, pco.org_id).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsGet(pco.authctx, pco.org_id).Execute()
 	if err != nil {
 		b, _ := ioutil.ReadAll(httpr.Body)
 		diags := append(diags, diag.Diagnostic{
@@ -143,13 +139,13 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	defer httpr.Body.Close()
 	//process data
 	data := res.GetData()
-	vpcs := flattenVpcData(&data)
+	vpcs := flattenVPCsData(&data)
 	//save in data source schema
 	if err := d.Set("vpcs", vpcs); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set VPCs",
-			Detail:   "Unable to set vpcs in resource schema",
+			Detail:   "Unable to set VPCs in resource schema",
 		})
 		return diags
 	}
@@ -160,7 +156,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
-func flattenVpcData(vpcs *[]vpc.Vpc) []interface{} {
+func flattenVPCsData(vpcs *[]vpc.Vpc) []interface{} {
 	if vpcs != nil {
 		res := make([]interface{}, len(*vpcs))
 

@@ -8,12 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	auth "github.com/mulesoft-consulting/cloudhub-client-go/authorization"
+	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
 )
-
-type ProviderConfOutput struct {
-	authres *auth.InlineResponse200
-	org_id  string
-}
 
 // Provider -
 func Provider() *schema.Provider {
@@ -38,9 +34,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("CLOUDHUB_ORG_ID", nil),
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"cloudhub_vpc": resourceVPC(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"cloudhub_vpcs": dataSourceVPCs(),
+			"cloudhub_vpc":  dataSourceVPC(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -60,10 +59,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 			Summary:  "Required org id",
 			Detail:   "The Organization Id is required.",
 		})
-		return ProviderConfOutput{
-			authres: auth.NewInlineResponse200(),
-			org_id:  org_id,
-		}, diags
+		return newProviderConfOutput(ctx, auth.NewInlineResponse200(), org_id), diags
 	}
 
 	creds := auth.NewCredentialsWithDefaults()
@@ -82,14 +78,26 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 			Summary:  "Unable to Authenticate",
 			Detail:   string(b),
 		})
-		return ProviderConfOutput{
-			authres: auth.NewInlineResponse200(),
-			org_id:  org_id,
-		}, diags
+		return newProviderConfOutput(ctx, auth.NewInlineResponse200(), org_id), diags
 	}
 	defer httpauthr.Body.Close()
+	return newProviderConfOutput(ctx, &authres, org_id), diags
+}
+
+type ProviderConfOutput struct {
+	authctx   context.Context
+	org_id    string
+	vpcclient *vpc.APIClient
+}
+
+func newProviderConfOutput(ctx context.Context, authres *auth.InlineResponse200, org_id string) ProviderConfOutput {
+	//prepare request to get vpcs
+	authctx := context.WithValue(ctx, vpc.ContextAccessToken, authres.GetAccessToken())
+	cfg := vpc.NewConfiguration()
+	vpcclient := vpc.NewAPIClient(cfg)
 	return ProviderConfOutput{
-		authres: &authres,
-		org_id:  org_id,
-	}, diags
+		authctx:   authctx,
+		org_id:    org_id,
+		vpcclient: vpcclient,
+	}
 }
