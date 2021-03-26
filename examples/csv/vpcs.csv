@@ -1,0 +1,3 @@
+name,region,owner_id,cidr_block,internal_dns_servers,internal_dns_special_domains,is_default,associated_environments,shared_with
+myAwesomeVPC_FOR_CAT,us-east-1,,192.168.0.0/24,,,true,,
+
