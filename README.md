@@ -1,9 +1,9 @@
-# Terraform Provider Cloudhub
+# Terraform Provider Anypoint
 
 Run the following command to build the provider
 
 ```bash
-$ go build -o terraform-provider-cloudhub
+$ go build -o terraform-provider-anypoint
 ```
 
 **N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/mulesoft-consulting` 

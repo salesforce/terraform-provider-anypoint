@@ -1,8 +1,8 @@
 terraform {
   required_providers {
-    cloudhub = {
+    anypoint = {
       //versions = ["0.2"]
-      source = "anypoint.mulesoft.com/automation/cloudhub"
+      source = "anypoint.mulesoft.com/automation/anypoint"
     }
   }
 }
@@ -10,23 +10,23 @@ terraform {
 variable client_id {
   type        = string
   default     = ""
-  description = "the client_id of the cloudhub connected app"
+  description = "the client_id of the anypoint connected app"
 }
 
 variable client_secret {
   type        = string
   default     = ""
-  description = "the client_secret of the cloudhub connected app"
+  description = "the client_secret of the anypoint connected app"
 }
 
 variable org_id {
   type        = string
   default     = ""
-  description = "the cloudhub organization id"
+  description = "the anypoint organization id"
 }
 
 
-provider "cloudhub" {
+provider "anypoint" {
   client_id = var.client_id
   client_secret = var.client_secret
   org_id = var.org_id
@@ -40,7 +40,7 @@ locals {
   vpc_instances = csvdecode(local.csv_data)
 }
 
-resource "cloudhub_vpc" "example" {
+resource "anypoint_vpc" "example" {
   count = length(local.vpc_instances)
 
   name = element(local.vpc_instances, count.index).name
@@ -57,15 +57,15 @@ resource "cloudhub_vpc" "example" {
 
 
 output "name" {
-  value = cloudhub_vpc.example[*].name
+  value = anypoint_vpc.example[*].name
 }
 
 output "region" {
-  value = cloudhub_vpc.example[*].region
+  value = anypoint_vpc.example[*].region
 }
 
 output "cidr_block" {
-  value = cloudhub_vpc.example[*].cidr_block
+  value = anypoint_vpc.example[*].cidr_block
 }
 
 
@@ -73,9 +73,9 @@ output "cidr_block" {
 
 
 
-#data "cloudhub_vpcs" "all" {}
+#data "anypoint_vpcs" "all" {}
 
-# resource "cloudhub_vpc" "avpc" {
+# resource "anypoint_vpc" "avpc" {
 #   name = "myAwesomeVPC"
 #   region = "us-east-2"
 #   owner_id = ""
@@ -93,17 +93,17 @@ output "cidr_block" {
 
 
 # output "region" {
-#   value = cloudhub_vpc.avpc.region
+#   value = anypoint_vpc.avpc.region
 # }
 
 # output "id" {
-#   value = cloudhub_vpc.avpc.id
+#   value = anypoint_vpc.avpc.id
 # }
 
 # output "name" {
-#   value = cloudhub_vpc.avpc.name
+#   value = anypoint_vpc.avpc.name
 # }
 
 # output "cidrblock" {
-#   value = cloudhub_vpc.avpc.cidr_block
+#   value = anypoint_vpc.avpc.cidr_block
 # }

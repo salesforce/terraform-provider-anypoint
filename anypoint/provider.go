@@ -1,4 +1,4 @@
-package cloudhub
+package anypoint
 
 import (
 	"context"
@@ -19,27 +19,27 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("CLOUDHUB_CLIENT_ID", nil),
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_ID", nil),
 			},
 			"client_secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("CLOUDHUB_CLIENT_SECRET", nil),
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_SECRET", nil),
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   false,
-				DefaultFunc: schema.EnvDefaultFunc("CLOUDHUB_ORG_ID", nil),
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_ORG_ID", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"cloudhub_vpc": resourceVPC(),
+			"anypoint_vpc": resourceVPC(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"cloudhub_vpcs": dataSourceVPCs(),
-			"cloudhub_vpc":  dataSourceVPC(),
+			"anypoint_vpcs": dataSourceVPCs(),
+			"anypoint_vpc":  dataSourceVPC(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

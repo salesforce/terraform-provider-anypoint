@@ -1,4 +1,4 @@
-package cloudhub
+package anypoint
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-module github.com/mulesoft-consulting/terraform-provider-cloudhub
+module github.com/mulesoft-consulting/terraform-provider-anypoint
 
 go 1.15
 
