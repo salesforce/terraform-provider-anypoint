@@ -127,8 +127,12 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 		})
 		return diags
 	}
+
+	authctx := getVPCAuthCtx(&pco)
+
 	//request vpcs
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(pco.authctx, pco.org_id, vpcid).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, pco.org_id, vpcid).Execute()
+	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -144,7 +148,6 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 		})
 		return diags
 	}
-	defer httpr.Body.Close()
 	//process data
 	vpcinstance := flattenVPCData(&res)
 	//save in data source schema

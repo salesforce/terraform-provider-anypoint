@@ -123,11 +123,11 @@ func dataSourceVPCs() *schema.Resource {
 func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
-
 	pco := m.(ProviderConfOutput)
+	authctx := getVPCAuthCtx(&pco)
 
 	//request vpcs
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsGet(pco.authctx, pco.org_id).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsGet(authctx, pco.org_id).Execute()
 
 	if err != nil {
 		var details string

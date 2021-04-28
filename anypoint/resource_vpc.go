@@ -124,10 +124,12 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 
+	authctx := getVPCAuthCtx(&pco)
+
 	body := newVPCBody(d)
 
 	//request vpc creation
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsPost(pco.authctx, pco.org_id).VpcCore(*body).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsPost(authctx, pco.org_id).VpcCore(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -158,7 +160,9 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(pco.authctx, pco.org_id, vpcid).Execute()
+	authctx := getVPCAuthCtx(&pco)
+
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, pco.org_id, vpcid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -195,10 +199,12 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 
+	authctx := getVPCAuthCtx(&pco)
+
 	if d.HasChanges(getVPCCoreAttributes()...) {
 		body := newVPCBody(d)
 		//request vpc creation
-		_, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdPut(pco.authctx, pco.org_id, vpcid).VpcCore(*body).Execute()
+		_, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdPut(authctx, pco.org_id, vpcid).VpcCore(*body).Execute()
 		if err != nil {
 			var details string
 			if httpr != nil {
@@ -228,7 +234,9 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 
-	httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdDelete(pco.authctx, pco.org_id, vpcid).Execute()
+	authctx := getVPCAuthCtx(&pco)
+
+	httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdDelete(authctx, pco.org_id, vpcid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -253,9 +261,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{
 }
 
 /*
-* Creates a new VPC Core Struct from the resource data schema
-* @param d *schema.ResourceData
-* @return vpcCore object
+ * Creates a new VPC Core Struct from the resource data schema
  */
 func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	body := vpc.NewVpcCoreWithDefaults()
@@ -312,4 +318,9 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	body.SetVpcRoutes(vpcroutes)
 
 	return body
+}
+
+func getVPCAuthCtx(pco *ProviderConfOutput) context.Context {
+	ctxbckgrnd := context.Background()
+	return context.WithValue(ctxbckgrnd, vpc.ContextAccessToken, pco.access_token)
 }
