@@ -320,6 +320,9 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	return body
 }
 
+/*
+ * Returns authentication context (includes authorization header)
+ */
 func getVPCAuthCtx(pco *ProviderConfOutput) context.Context {
 	ctxbckgrnd := context.Background()
 	return context.WithValue(ctxbckgrnd, vpc.ContextAccessToken, pco.access_token)

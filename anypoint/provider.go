@@ -49,6 +49,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"anypoint_vpc": resourceVPC(),
+			"anypoint_bg":  resourceBG(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs": dataSourceVPCs(),

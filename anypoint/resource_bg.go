@@ -1,0 +1,691 @@
+package anypoint
+
+import (
+	"context"
+	"io/ioutil"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
+)
+
+func resourceBG() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourceBGCreate,
+		ReadContext:   resourceBGRead,
+		UpdateContext: resourceBGUpdate,
+		DeleteContext: resourceBGDelete,
+		Schema: map[string]*schema.Schema{
+			"last_updated": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"createdat": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updatedat": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ownerid": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"clientid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"idprovider_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"isfederated": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"parentorganizationid": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"parentorganizationids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"suborganizationids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"tenantorganizationids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"mfarequired": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"isautomaticadminpromotionexempt": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ismaster": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"subscription_category": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subscription_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subscription_expiration": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"properties": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
+			"environments": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"organizationid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"isproduction": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"clientid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"entitlements_createenvironments": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"entitlements_globaldeployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"entitlements_createsuborgs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"entitlements_hybrid_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"entitlements_hybridinsight": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"entitlements_hybridautodiscoverproperties": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"entitlements_vcoresproduction_assigned": {
+				Type:     schema.TypeFloat,
+				Required: true,
+				Default:  0,
+			},
+			"entitlements_vcoresproduction_reassigned": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+			"entitlements_vcoressandbox_assigned": {
+				Type:     schema.TypeFloat,
+				Required: true,
+				Default:  0,
+			},
+			"entitlements_vcoressandbox_reassigned": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+			"entitlements_vcoresdesign_assigned": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+				Default:  0,
+			},
+			"entitlements_vcoresdesign_reassigned": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+			"entitlements_staticips_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"entitlements_staticips_reassigned": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"entitlements_vpcs_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"entitlements_vpcs_reassigned": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"entitlements_vpns_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"entitlements_vpns_reassigned": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"entitlements_workerloggingoverride_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_mqmessages_base": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_mqmessages_addon": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_mqrequests_base": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_mqrequests_addon": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_objectstorerequestunits_base": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_objectstorerequestunits_addon": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_objectstorekeys_base": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_objectstorekeys_addon": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_mqadvancedfeatures_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_gateways_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_designcenter_api": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_designcenter_mozart": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_partnersproduction_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_partnerssandbox_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_tradingpartnersproduction_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_tradingpartnerssandbox_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_loadbalancer_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"entitlements_loadbalancer_reassigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_externalidentity": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_autoscaling": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_armalerts": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_apis_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_apimonitoring_schedules": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_apicommunitymanager_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_monitoringcenter_productsku": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_apiquery_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_apiquery_productsku": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_apiqueryc360_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_anggovernance_level": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_crowd_hideapimanagerdesigner": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_crowd_hideformerapiplatform": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_crowd_environments": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_cam_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_exchange2_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_crowdselfservicemigration_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_kpidashboard_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_pcf": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_appviz": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_runtimefabric": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_anypointsecuritytokenization_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_anypointsecurityedgepolicies_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_runtimefabriccloud_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_servicemesh_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"entitlements_messaging_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_workerclouds_assigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"entitlements_workerclouds_reassigned": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_createdat": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_updatedat": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_organizationid": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_firstname": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_lastname": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_email": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_phonenumber": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_username": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_idprovider_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"owner_deleted": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"owner_lastlogin": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_mfaverificationexcluded": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"owner_mfaverifiersconfigured": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"owner_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"sessiontimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+			},
+		},
+	}
+}
+
+func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
+	pco := m.(ProviderConfOutput)
+
+	authctx := getBGAuthCtx(&pco)
+	body := newBGPostBody(d)
+
+	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsPost(authctx).BGPostReqBody(*body).Execute()
+	if err != nil {
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to Create Business Group",
+			Detail:   details,
+		})
+		return diags
+	}
+	defer httpr.Body.Close()
+
+	d.SetId(res.GetId())
+	resourceBGRead(ctx, d, m)
+
+	return diags
+}
+
+func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
+	pco := m.(ProviderConfOutput)
+	orgid := d.Id()
+
+	authctx := getBGAuthCtx(&pco)
+
+	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
+	if err != nil {
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to Get Business Group",
+			Detail:   details,
+		})
+		return diags
+	}
+	defer httpr.Body.Close()
+
+	orginstance := flattenBGData(&res)
+
+	if err := setBGCoreAttributesToResourceData(d, orginstance); err != nil {
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set Business Group",
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+
+	return diags
+}
+
+func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	pco := m.(ProviderConfOutput)
+	orgid := d.Id()
+
+	authctx := getBGAuthCtx(&pco)
+
+	if d.HasChanges(getBGUpdatableAttributes()...) {
+		body := newBGPutBody(d)
+		_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdPut(authctx, orgid).BGPutReqBody(*body).Execute()
+		if err != nil {
+			var details string
+			if httpr != nil {
+				b, _ := ioutil.ReadAll(httpr.Body)
+				details = string(b)
+			} else {
+				details = err.Error()
+			}
+			diags := append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to Update Business Group",
+				Detail:   details,
+			})
+			return diags
+		}
+		defer httpr.Body.Close()
+		d.Set("last_updated", time.Now().Format(time.RFC850))
+	}
+
+	return resourceVPCRead(ctx, d, m)
+}
+
+func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
+	pco := m.(ProviderConfOutput)
+	orgid := d.Id()
+
+	authctx := getBGAuthCtx(&pco)
+
+	_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdDelete(authctx, orgid).Execute()
+	if err != nil {
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to Delete Business Group",
+			Detail:   details,
+		})
+		return diags
+	}
+	defer httpr.Body.Close()
+	// d.SetId("") is automatically called assuming delete returns no errors, but
+	// it is added here for explicitness.
+	d.SetId("")
+
+	return diags
+}
+
+/*
+ * Creates body for B.G POST request
+ */
+func newBGPostBody(d *schema.ResourceData) *org.BGPostReqBody {
+	body := org.NewBGPostReqBodyWithDefaults()
+
+	body.SetName(d.Get("name").(string))
+	body.SetOwnerId(d.Get("ownerid").(string))
+	body.SetParentOrganizationId((d.Get("parentorganizationid").(string)))
+	body.SetEntitlements(*newEntitlementsFromD(d))
+
+	return body
+}
+
+/*
+ * Creates body for B.G PUT request
+ */
+func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
+	body := org.NewBGPutReqBodyWithDefaults()
+	body.SetName(d.Get("name").(string))
+	body.SetOwnerId(d.Get("ownerid").(string))
+	body.SetParentOrganizationId((d.Get("parentorganizationid").(string)))
+	body.SetEntitlements(*newEntitlementsFromD(d))
+	body.SetSessionTimeout(d.Get("sessiontimeout").(int32))
+
+	return body
+}
+
+/*
+ * Creates Entitlements from Resource Data Schema
+ */
+func newEntitlementsFromD(d *schema.ResourceData) *org.Entitlements {
+	entitlements := org.NewEntitlementsWithDefaults()
+	entitlements.SetCreateEnvironments(d.Get("entitlements_createenvironments").(bool))
+	entitlements.SetCreateSubOrgs(d.Get("entitlements_createsuborgs").(bool))
+	entitlements.SetGlobalDeployment(d.Get("entitlements_globaldeployment").(bool))
+	vcoreprod := org.NewVCoresProductionWithDefaults()
+	vcoreprod.SetAssigned(d.Get("entitlements_vcoresproduction_assigned").(float32))
+	entitlements.SetVCoresProduction(*vcoreprod)
+	vcoresandbox := org.NewVCoresSandboxWithDefaults()
+	vcoresandbox.SetAssigned(d.Get("entitlements_vcoressandbox_assigned").(float32))
+	entitlements.SetVCoresSandbox(*vcoresandbox)
+	vcoredesign := org.NewVCoresDesignWithDefaults()
+	vcoredesign.SetAssigned(d.Get("entitlements_vcoresdesign_assigned").(float32))
+	entitlements.SetVCoresDesign(*vcoredesign)
+	vpcs := org.NewVpcsWithDefaults()
+	vpcs.SetAssigned(d.Get("entitlements_vpcs_assigned").(int32))
+	entitlements.SetVpcs(*vpcs)
+	loadbalancer := org.NewLoadBalancerWithDefaults()
+	loadbalancer.SetAssigned(d.Get("entitlements_loadbalancer_assigned").(int32))
+	entitlements.SetLoadBalancer(*loadbalancer)
+	vpns := org.NewVpnsWithDefaults()
+	vpns.SetAssigned(d.Get("entitlements_vpns_assigned").(int32))
+	return entitlements
+}
+
+/*
+ * Returns authentication context (includes authorization header)
+ */
+func getBGAuthCtx(pco *ProviderConfOutput) context.Context {
+	ctxbckgrnd := context.Background()
+	return context.WithValue(ctxbckgrnd, org.ContextAccessToken, pco.access_token)
+}

@@ -157,27 +157,27 @@ func dataSourceBG() *schema.Resource {
 				Computed: true,
 			},
 			"entitlements_vcoresproduction_assigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_vcoresproduction_reassigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_vcoressandbox_assigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_vcoressandbox_reassigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_vcoresdesign_assigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_vcoresdesign_reassigned": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"entitlements_staticips_assigned": {
@@ -528,11 +528,6 @@ func setBGCoreAttributesToResourceData(d *schema.ResourceData, bg map[string]int
 	return nil
 }
 
-func getBGAuthCtx(pco *ProviderConfOutput) context.Context {
-	ctxbckgrnd := context.Background()
-	return context.WithValue(ctxbckgrnd, org.ContextAccessToken, pco.access_token)
-}
-
 /*
  * Flattens the Business Group object
  */
@@ -740,6 +735,15 @@ func getBGCoreAttributes() []string {
 		"owner_firstname", "owner_lastname", "owner_email", "owner_phonenumber", "owner_username", "owner_idprovider_id",
 		"owner_enabled", "owner_deleted", "owner_lastlogin", "owner_mfaverificationexcluded", "owner_mfaverifiersconfigured",
 		"owner_type", "sessiontimeout",
+	}
+	return attributes[:]
+}
+
+func getBGUpdatableAttributes() []string {
+	attributes := [...]string{
+		"name", "ownerid", "entitlements_createenvironments", "entitlements_createsuborgs",
+		"entitlements_globaldeployment", "entitlements_vcoresproduction_assigned", "entitlements_vcoressandbox_assigned",
+		"entitlements_vcoresdesign_assigned", "entitlements_vpcs_assigned", "entitlements_loadbalancer_assigned", "entitlements_vpns_assigned",
 	}
 	return attributes[:]
 }
