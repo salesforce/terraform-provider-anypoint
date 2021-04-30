@@ -176,7 +176,7 @@ func resourceBG() *schema.Resource {
 			},
 			"entitlements_vcoresproduction_assigned": {
 				Type:     schema.TypeFloat,
-				Required: true,
+				Optional: true,
 				Default:  0,
 			},
 			"entitlements_vcoresproduction_reassigned": {
@@ -185,7 +185,7 @@ func resourceBG() *schema.Resource {
 			},
 			"entitlements_vcoressandbox_assigned": {
 				Type:     schema.TypeFloat,
-				Required: true,
+				Optional: true,
 				Default:  0,
 			},
 			"entitlements_vcoressandbox_reassigned": {
