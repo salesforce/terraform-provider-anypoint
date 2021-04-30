@@ -16,6 +16,10 @@ func dataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceVPCsRead,
 		Schema: map[string]*schema.Schema{
+			"orgid": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"vpcs": {
 				Type:     schema.TypeList,
 				Computed: true,

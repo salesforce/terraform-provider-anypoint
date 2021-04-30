@@ -19,6 +19,10 @@ func dataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"orgid": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
