@@ -1,4 +1,4 @@
-package cloudhub
+package anypoint
 
 import (
 	"context"
@@ -16,6 +16,10 @@ func dataSourceVPC() *schema.Resource {
 		ReadContext: dataSourceVPCRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"orgid": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -119,16 +123,22 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("id").(string)
-	if vpcid == "" {
+	orgid := d.Get("orgid").(string)
+
+	if vpcid == "" || orgid == "" {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "VPC id is required",
-			Detail:   "VPC id must be provided",
+			Summary:  "VPC id (id) and Organization ID (orgid) are required",
+			Detail:   "VPC id (id) and Organization ID (orgid) must be provided",
 		})
 		return diags
 	}
+
+	authctx := getVPCAuthCtx(&pco)
+
 	//request vpcs
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(pco.authctx, pco.org_id, vpcid).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, orgid, vpcid).Execute()
+	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -144,7 +154,6 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 		})
 		return diags
 	}
-	defer httpr.Body.Close()
 	//process data
 	vpcinstance := flattenVPCData(&res)
 	//save in data source schema

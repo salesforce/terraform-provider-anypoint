@@ -1,7 +1,7 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 HOSTNAME=anypoint.mulesoft.com
 NAMESPACE=automation
-NAME=cloudhub
+NAME=anypoint
 BINARY=terraform-provider-${NAME}
 VERSION=0.2
 OS_ARCH=darwin_amd64
