@@ -28,12 +28,6 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_SECRET", nil),
 			},
-			"org_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   false,
-				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_ORG_ID", nil),
-			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -68,34 +62,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	client_secret := d.Get("client_secret").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
-	org_id := d.Get("org_id").(string)
-
-	if org_id == "" {
-		diags := append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Required org id",
-			Detail:   "The Organization Id is required.",
-		})
-		return newProviderConfOutput("", org_id), diags
-	}
 
 	if (username != "") && (password != "") {
 		authres, d := userPwdAuth(ctx, username, password)
 		if d != nil {
-			return newProviderConfOutput("", org_id), d
+			return newProviderConfOutput(""), d
 		}
-		return newProviderConfOutput(authres.GetAccessToken(), org_id), diags
+		return newProviderConfOutput(authres.GetAccessToken()), diags
 	}
 
 	if (client_id != "") && (client_secret != "") {
 		authres, d := connectedAppAuth(ctx, client_id, client_secret)
 		if d != nil {
-			return newProviderConfOutput("", org_id), d
+			return newProviderConfOutput(""), d
 		}
-		return newProviderConfOutput(authres.GetAccessToken(), org_id), diags
+		return newProviderConfOutput(authres.GetAccessToken()), diags
 	}
 
-	return newProviderConfOutput("", org_id), diags
+	return newProviderConfOutput(""), diags
 
 }
 
@@ -163,12 +147,11 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 
 type ProviderConfOutput struct {
 	access_token string
-	org_id       string
 	vpcclient    *vpc.APIClient
 	orgclient    *org.APIClient
 }
 
-func newProviderConfOutput(access_token string, org_id string) ProviderConfOutput {
+func newProviderConfOutput(access_token string) ProviderConfOutput {
 	//prepare request to get vpcs
 	//ctx := context.Background()
 	//authctx := context.WithValue(ctx, vpc.ContextAccessToken, access_token)
@@ -179,7 +162,6 @@ func newProviderConfOutput(access_token string, org_id string) ProviderConfOutpu
 
 	return ProviderConfOutput{
 		access_token: access_token,
-		org_id:       org_id,
 		vpcclient:    vpcclient,
 		orgclient:    orgclient,
 	}

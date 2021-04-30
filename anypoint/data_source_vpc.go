@@ -119,11 +119,13 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("id").(string)
-	if vpcid == "" {
+	orgid := d.Get("orgid").(string)
+
+	if vpcid == "" || orgid == "" {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "VPC id is required",
-			Detail:   "VPC id must be provided",
+			Summary:  "VPC id (id) and Organization ID (orgid) are required",
+			Detail:   "VPC id (id) and Organization ID (orgid) must be provided",
 		})
 		return diags
 	}
@@ -131,7 +133,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 	authctx := getVPCAuthCtx(&pco)
 
 	//request vpcs
-	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, pco.org_id, vpcid).Execute()
+	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, orgid, vpcid).Execute()
 	defer httpr.Body.Close()
 	if err != nil {
 		var details string
