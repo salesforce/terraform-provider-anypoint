@@ -45,7 +45,7 @@ provider "anypoint" {
 
 
 resource "anypoint_bg" "bg" {
-  name = "my beautiful business group"
+  name = "my beautiful BG"
   parentorganizationid = var.org_id
   ownerid = "18f23771-c78a-4be2-af8f-1bae66f43942"
   entitlements_createsuborgs = true

@@ -647,7 +647,7 @@ func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
 	body.SetOwnerId(d.Get("ownerid").(string))
 	body.SetParentOrganizationId((d.Get("parentorganizationid").(string)))
 	body.SetEntitlements(*newEntitlementsFromD(d))
-	body.SetSessionTimeout(d.Get("sessiontimeout").(int32))
+	body.SetSessionTimeout(int32(d.Get("sessiontimeout").(int)))
 
 	return body
 }
