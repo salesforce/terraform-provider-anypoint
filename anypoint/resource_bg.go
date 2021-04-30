@@ -56,11 +56,9 @@ func resourceBG() *schema.Resource {
 				Optional: true,
 			},
 			"parentorganizationid": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				ForceNew: true,
 			},
 			"parentorganizationids": {
 				Type:     schema.TypeList,
