@@ -656,27 +656,33 @@ func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
  * Creates Entitlements from Resource Data Schema
  */
 func newEntitlementsFromD(d *schema.ResourceData) *org.Entitlements {
-	entitlements := org.NewEntitlementsWithDefaults()
-	entitlements.SetCreateEnvironments(d.Get("entitlements_createenvironments").(bool))
-	entitlements.SetCreateSubOrgs(d.Get("entitlements_createsuborgs").(bool))
-	entitlements.SetGlobalDeployment(d.Get("entitlements_globaldeployment").(bool))
-	vcoreprod := org.NewVCoresProductionWithDefaults()
-	vcoreprod.SetAssigned(d.Get("entitlements_vcoresproduction_assigned").(float32))
-	entitlements.SetVCoresProduction(*vcoreprod)
-	vcoresandbox := org.NewVCoresSandboxWithDefaults()
-	vcoresandbox.SetAssigned(d.Get("entitlements_vcoressandbox_assigned").(float32))
-	entitlements.SetVCoresSandbox(*vcoresandbox)
-	vcoredesign := org.NewVCoresDesignWithDefaults()
-	vcoredesign.SetAssigned(d.Get("entitlements_vcoresdesign_assigned").(float32))
-	entitlements.SetVCoresDesign(*vcoredesign)
-	vpcs := org.NewVpcsWithDefaults()
-	vpcs.SetAssigned(d.Get("entitlements_vpcs_assigned").(int32))
-	entitlements.SetVpcs(*vpcs)
 	loadbalancer := org.NewLoadBalancerWithDefaults()
-	loadbalancer.SetAssigned(d.Get("entitlements_loadbalancer_assigned").(int32))
-	entitlements.SetLoadBalancer(*loadbalancer)
+	loadbalancer.SetAssigned(int32(d.Get("entitlements_loadbalancer_assigned").(int)))
+	staticips := org.NewStaticIpsWithDefaults()
+	staticips.SetAssigned(int32(d.Get("entitlements_staticips_assigned").(int)))
+	vcoresandbox := org.NewVCoresSandboxWithDefaults()
+	vcoresandbox.SetAssigned(float32(d.Get("entitlements_vcoressandbox_assigned").(float64)))
+	vcoredesign := org.NewVCoresDesignWithDefaults()
+	vcoredesign.SetAssigned(float32(d.Get("entitlements_vcoresdesign_assigned").(float64)))
 	vpns := org.NewVpnsWithDefaults()
-	vpns.SetAssigned(d.Get("entitlements_vpns_assigned").(int32))
+	vpns.SetAssigned(int32(d.Get("entitlements_vpns_assigned").(int)))
+	vpcs := org.NewVpcsWithDefaults()
+	vpcs.SetAssigned(int32(d.Get("entitlements_vpcs_assigned").(int)))
+	vcoreprod := org.NewVCoresProductionWithDefaults()
+	vcoreprod.SetAssigned(float32(d.Get("entitlements_vcoresproduction_assigned").(float64)))
+	entitlements := org.NewEntitlements(
+		d.Get("entitlements_createenvironments").(bool),
+		d.Get("entitlements_createsuborgs").(bool),
+		d.Get("entitlements_globaldeployment").(bool),
+		*loadbalancer,
+		*staticips,
+		*vcoredesign,
+		*vcoreprod,
+		*vcoresandbox,
+		*vpcs,
+		*vpns,
+	)
+
 	return entitlements
 }
 

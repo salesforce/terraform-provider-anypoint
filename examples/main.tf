@@ -41,16 +41,34 @@ variable org_id {
 provider "anypoint" {
   username = var.username
   password = var.password
-  org_id = var.org_id
 }
 
-data "anypoint_bg" "bg" {
-  id = var.org_id
+
+resource "anypoint_bg" "bg" {
+  name = "my beautiful business group"
+  parentorganizationid = var.org_id
+  ownerid = "18f23771-c78a-4be2-af8f-1bae66f43942"
+  entitlements_createsuborgs = true
+  entitlements_createenvironments = false
+  entitlements_globaldeployment = false
+  entitlements_vcoresproduction_assigned = 0.5
+  entitlements_vcoressandbox_assigned = 0.2
+  entitlements_vcoresdesign_assigned = 0.1
+  entitlements_staticips_assigned = 0
+  entitlements_vpcs_assigned = 1
+  entitlements_loadbalancer_assigned = 0
+  entitlements_vpns_assigned = 0
 }
 
 output "bg" {
-  value = data.anypoint_bg.bg
+  value = anypoint_bg.bg
 }
+
+# data "anypoint_vpcs" "all" {
+#   orgid = var.org_id
+# }
+
+
 
 # locals {
 #   csv_data = file("${path.module}/csv/vpcs.csv")
