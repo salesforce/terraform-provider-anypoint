@@ -589,7 +589,7 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
-	return resourceVPCRead(ctx, d, m)
+	return resourceBGRead(ctx, d, m)
 }
 
 func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -645,9 +645,8 @@ func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
 	body := org.NewBGPutReqBodyWithDefaults()
 	body.SetName(d.Get("name").(string))
 	body.SetOwnerId(d.Get("ownerid").(string))
-	body.SetParentOrganizationId((d.Get("parentorganizationid").(string)))
 	body.SetEntitlements(*newEntitlementsFromD(d))
-	body.SetSessionTimeout(d.Get("sessiontimeout").(int32))
+	body.SetSessionTimeout(int32(d.Get("sessiontimeout").(int)))
 
 	return body
 }
@@ -655,7 +654,7 @@ func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
 /*
  * Creates Entitlements from Resource Data Schema
  */
-func newEntitlementsFromD(d *schema.ResourceData) *org.Entitlements {
+func newEntitlementsFromD(d *schema.ResourceData) *org.EntitlementsCore {
 	loadbalancer := org.NewLoadBalancerWithDefaults()
 	loadbalancer.SetAssigned(int32(d.Get("entitlements_loadbalancer_assigned").(int)))
 	staticips := org.NewStaticIpsWithDefaults()
@@ -670,10 +669,10 @@ func newEntitlementsFromD(d *schema.ResourceData) *org.Entitlements {
 	vpcs.SetAssigned(int32(d.Get("entitlements_vpcs_assigned").(int)))
 	vcoreprod := org.NewVCoresProductionWithDefaults()
 	vcoreprod.SetAssigned(float32(d.Get("entitlements_vcoresproduction_assigned").(float64)))
-	entitlements := org.NewEntitlements(
+	entitlements := org.NewEntitlementsCore(
+		d.Get("entitlements_globaldeployment").(bool),
 		d.Get("entitlements_createenvironments").(bool),
 		d.Get("entitlements_createsuborgs").(bool),
-		d.Get("entitlements_globaldeployment").(bool),
 		*loadbalancer,
 		*staticips,
 		*vcoredesign,
