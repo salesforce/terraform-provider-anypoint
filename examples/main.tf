@@ -45,13 +45,13 @@ provider "anypoint" {
 
 
 resource "anypoint_bg" "bg" {
-  name = "my beautiful BG"
+  name = "my BG"
   parentorganizationid = var.org_id
   ownerid = "18f23771-c78a-4be2-af8f-1bae66f43942"
   entitlements_createsuborgs = true
   entitlements_createenvironments = false
   entitlements_globaldeployment = false
-  entitlements_vcoresproduction_assigned = 0.5
+  entitlements_vcoresproduction_assigned = 0.1
   entitlements_vcoressandbox_assigned = 0.2
   entitlements_vcoresdesign_assigned = 0.1
   entitlements_staticips_assigned = 0
