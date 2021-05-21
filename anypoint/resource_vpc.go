@@ -26,6 +26,7 @@ func resourceVPC() *schema.Resource {
 			"orgid": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
