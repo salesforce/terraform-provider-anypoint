@@ -25,17 +25,15 @@ func dataSourceVPC() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"region": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"cidr_block": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"internal_dns_servers": {
 				Type:     schema.TypeList,
@@ -65,7 +63,7 @@ func dataSourceVPC() *schema.Resource {
 			"owner_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"shared_with": {
 				Type:     schema.TypeList,
@@ -81,19 +79,19 @@ func dataSourceVPC() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"protocol": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"from_port": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Computed: true,
 						},
 						"to_port": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -105,11 +103,11 @@ func dataSourceVPC() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"next_hop": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"cidr": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
