@@ -130,7 +130,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("orgid").(string)
 	if orgid == "" {
-		diags := append(diags, diag.Diagnostic{
+		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Organization ID (orgid) is required",
 			Detail:   "Organization ID (orgid) must be provided",
@@ -150,7 +150,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 		} else {
 			details = err.Error()
 		}
-		diags := append(diags, diag.Diagnostic{
+		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get VPCs",
 			Detail:   details,
@@ -164,7 +164,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	vpcs := flattenVPCsData(&data)
 	//save in data source schema
 	if err := d.Set("vpcs", vpcs); err != nil {
-		diags := append(diags, diag.Diagnostic{
+		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set VPCs",
 			Detail:   "Unable to set VPCs in resource schema",
