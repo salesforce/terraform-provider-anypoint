@@ -480,7 +480,7 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diags
 	}
 
-	authctx := getBGAuthCtx(&pco)
+	authctx := getBGAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
 	defer httpr.Body.Close()

@@ -132,7 +132,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 
-	authctx := getVPCAuthCtx(&pco)
+	authctx := getVPCAuthCtx(ctx, &pco)
 
 	//request vpcs
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, orgid, vpcid).Execute()
