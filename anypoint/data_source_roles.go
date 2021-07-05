@@ -15,9 +15,48 @@ func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceRolesRead,
 		Schema: map[string]*schema.Schema{
-			"opts": {
-				Type:     schema.TypeMap,
-				Required: false,
+			"params": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"include_internal": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"search": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"offset": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						"limit": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  200,
+						},
+						"ascending": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
 			},
 			"roles": {
 				Type:     schema.TypeList,
@@ -58,6 +97,11 @@ func dataSourceRoles() *schema.Resource {
 					},
 				},
 			},
+			"len": {
+				Type:        schema.TypeInt,
+				Description: "The number of loaded results",
+				Computed:    true,
+			},
 			"total": {
 				Type:        schema.TypeInt,
 				Description: "The total number of available results",
@@ -71,11 +115,11 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interfac
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	searchOpts := d.Get("opts").(map[string]interface{})
+	searchOpts := d.Get("params").(*schema.Set)
 
 	authctx := getRoleAuthCtx(ctx, &pco)
 	req := pco.roleclient.DefaultApi.RolesGet(authctx)
-	errDiags := parseRoleSearchOpts(&req, searchOpts)
+	req, errDiags := parseRoleSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
@@ -106,7 +150,16 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("roles", roles); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set Roles",
+			Summary:  "Unable to set roles",
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+
+	if err := d.Set("len", len(roles)); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set length of roles",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -115,7 +168,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("total", res.GetTotal()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set Total Roles",
+			Summary:  "Unable to set total number roles",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -130,45 +183,45 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interfac
  * Parses the roles search options in order to check if the required search parameters are set correctly
  * Appends the parameters to the given request
  */
-func parseRoleSearchOpts(req *role.DefaultApiApiRolesGetRequest, params map[string]interface{}) diag.Diagnostics {
+func parseRoleSearchOpts(req role.DefaultApiApiRolesGetRequest, params *schema.Set) (role.DefaultApiApiRolesGetRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	if params.Len() == 0 {
+		return req, diags
+	}
+	opts := params.List()[0]
 
-	if params == nil {
-		return diags
+	for k, v := range opts.(map[string]interface{}) {
+		if k == "name" && len(v.(string)) > 0 {
+			req = req.Name(v.(string))
+			continue
+		}
+		if k == "description" && len(v.(string)) > 0 {
+			req = req.Description(v.(string))
+			continue
+		}
+		if k == "include_internal" {
+			req = req.IncludeInternal(v.(bool))
+			continue
+		}
+		if k == "search" && len(v.(string)) > 0 {
+			req = req.Search(v.(string))
+			continue
+		}
+		if k == "offset" {
+			req = req.Offset(int32(v.(int)))
+			continue
+		}
+		if k == "limit" {
+			req = req.Limit(int32(v.(int)))
+			continue
+		}
+		if k == "ascending" {
+			req = req.Ascending(v.(bool))
+			continue
+		}
 	}
 
-	for k, v := range params {
-		if k == "name" && IsString(v) {
-			req.Name(v.(string))
-			continue
-		}
-		if k == "description" && IsString(v) {
-			req.Description(v.(string))
-			continue
-		}
-		if k == "include_internal" && IsBool(v) {
-			req.IncludeInternal(v.(bool))
-			continue
-		}
-		if k == "search" && IsString(v) {
-			req.Search(v.(string))
-			continue
-		}
-		if k == "offset" && IsInt32(v) {
-			req.Offset(v.(int32))
-			continue
-		}
-		if k == "limit" && IsInt32(v) {
-			req.Limit(v.(int32))
-			continue
-		}
-		if k == "ascending" && IsBool(v) {
-			req.Ascending(v.(bool))
-			continue
-		}
-	}
-
-	return diags
+	return req, diags
 }
 
 /*
