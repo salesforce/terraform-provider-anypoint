@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -269,7 +268,7 @@ func newRolegroupRolesDeleteBody(d *schema.ResourceData) ([]map[string]interface
 
 func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	log.Printf("[DEBUG] Flatten assigned_roles %s", assigned_roles)
+
 	if len(assigned_roles) > 0 {
 		res := make([]map[string]interface{}, len(assigned_roles))
 
@@ -301,7 +300,7 @@ func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string
  */
 func setAssignedRolesAttributesToResourceData(d *schema.ResourceData, assigned_roles []map[string]interface{}) error {
 	attributes := getAssignedRolesAttributes()
-	log.Printf("[DEBUG] assigned_roles %s", assigned_roles)
+
 	if len(assigned_roles) == 0 {
 		return nil
 	}
