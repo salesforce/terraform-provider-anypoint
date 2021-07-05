@@ -251,6 +251,10 @@ github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.9 h1:e/L9NNRnlxuroYxj
 github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.9/go.mod h1:pe1s2nbylRVkYsmwQIth33UxLMT8C8wvvBTD4WJhCgg=
 github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.10 h1:ZZ2gbms1FO/i0wksym+t7RYfc03VK6gJa/hcZmlMXgU=
 github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.10/go.mod h1:pe1s2nbylRVkYsmwQIth33UxLMT8C8wvvBTD4WJhCgg=
+github.com/mulesoft-consulting/cloudhub-client-go/role v0.0.2 h1:BxYNv0oSdkDEPpAvrVw8Q4OnX+F5VLf98N3K5vSNLQA=
+github.com/mulesoft-consulting/cloudhub-client-go/role v0.0.2/go.mod h1:YsLEmZrZIET+vf1/psbGzhHu5/f/1p8MR+G0KjD4xdU=
+github.com/mulesoft-consulting/cloudhub-client-go/rolegroup v0.0.1 h1:GNAsVa7W/S/rTs+KxBO7AU0c4xMXciUTTnUkg6knJG0=
+github.com/mulesoft-consulting/cloudhub-client-go/rolegroup v0.0.1/go.mod h1:5zJ7IJHi9It2r/QaazBCHi9mmZRZkZ+A9zRAVe1x3b4=
 github.com/mulesoft-consulting/cloudhub-client-go/vpc v0.0.1 h1:cy7uBrDtTS/2aY0jUHFkmtbzd6kU4rRIKzkA7ksD3ZE=
 github.com/mulesoft-consulting/cloudhub-client-go/vpc v0.0.1/go.mod h1:YY5FNABSPharKosdHF9Aehvwt5z9nSJDWI4IydZPStU=
 github.com/mulesoft-consulting/cloudhub-client-go/vpc v0.0.2 h1:5huRMBBx6czrQ/rWzsEa9kUrVfCPvlkBBWmrIblqOsI=

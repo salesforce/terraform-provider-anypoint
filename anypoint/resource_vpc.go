@@ -26,6 +26,7 @@ func resourceVPC() *schema.Resource {
 			"orgid": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -129,7 +130,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("orgid").(string)
 
-	authctx := getVPCAuthCtx(&pco)
+	authctx := getVPCAuthCtx(ctx, &pco)
 
 	body := newVPCBody(d)
 
@@ -166,7 +167,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	vpcid := d.Id()
 	orgid := d.Get("orgid").(string)
 
-	authctx := getVPCAuthCtx(&pco)
+	authctx := getVPCAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, orgid, vpcid).Execute()
 	if err != nil {
@@ -206,7 +207,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	vpcid := d.Id()
 	orgid := d.Get("orgid").(string)
 
-	authctx := getVPCAuthCtx(&pco)
+	authctx := getVPCAuthCtx(ctx, &pco)
 
 	if d.HasChanges(getVPCCoreAttributes()...) {
 		body := newVPCBody(d)
@@ -242,7 +243,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	vpcid := d.Id()
 	orgid := d.Get("orgid").(string)
 
-	authctx := getVPCAuthCtx(&pco)
+	authctx := getVPCAuthCtx(ctx, &pco)
 
 	httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdDelete(authctx, orgid, vpcid).Execute()
 	if err != nil {
@@ -331,7 +332,6 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 /*
  * Returns authentication context (includes authorization header)
  */
-func getVPCAuthCtx(pco *ProviderConfOutput) context.Context {
-	ctxbckgrnd := context.Background()
-	return context.WithValue(ctxbckgrnd, vpc.ContextAccessToken, pco.access_token)
+func getVPCAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
+	return context.WithValue(ctx, vpc.ContextAccessToken, pco.access_token)
 }

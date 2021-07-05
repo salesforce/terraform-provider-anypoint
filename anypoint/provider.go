@@ -9,6 +9,8 @@ import (
 
 	auth "github.com/mulesoft-consulting/cloudhub-client-go/authorization"
 	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
+	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
+	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
 	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
 )
 
@@ -42,13 +44,15 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"anypoint_vpc": resourceVPC(),
-			"anypoint_bg":  resourceBG(),
+			"anypoint_vpc":             resourceVPC(),
+			"anypoint_bg":              resourceBG(),
+			"anypoint_rolegroup_roles": resourceRoleGroupRoles(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"anypoint_vpcs": dataSourceVPCs(),
-			"anypoint_vpc":  dataSourceVPC(),
-			"anypoint_bg":   dataSourceBG(),
+			"anypoint_vpcs":  dataSourceVPCs(),
+			"anypoint_vpc":   dataSourceVPC(),
+			"anypoint_bg":    dataSourceBG(),
+			"anypoint_roles": dataSourceRoles(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -146,9 +150,11 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 }
 
 type ProviderConfOutput struct {
-	access_token string
-	vpcclient    *vpc.APIClient
-	orgclient    *org.APIClient
+	access_token    string
+	vpcclient       *vpc.APIClient
+	orgclient       *org.APIClient
+	roleclient      *role.APIClient
+	rolegroupclient *rolegroup.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -157,12 +163,19 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	//authctx := context.WithValue(ctx, vpc.ContextAccessToken, access_token)
 	vpccfg := vpc.NewConfiguration()
 	orgcfg := org.NewConfiguration()
+	rolecfg := role.NewConfiguration()
+	rolegroupcfg := rolegroup.NewConfiguration()
+
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
+	roleclient := role.NewAPIClient(rolecfg)
+	rolegroupclient := rolegroup.NewAPIClient(rolegroupcfg)
 
 	return ProviderConfOutput{
-		access_token: access_token,
-		vpcclient:    vpcclient,
-		orgclient:    orgclient,
+		access_token:    access_token,
+		vpcclient:       vpcclient,
+		orgclient:       orgclient,
+		roleclient:      roleclient,
+		rolegroupclient: rolegroupclient,
 	}
 }
