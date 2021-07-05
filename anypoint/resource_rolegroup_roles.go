@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,21 +30,20 @@ func resourceRoleGroupRoles() *schema.Resource {
 			},
 			"total": {
 				Type:     schema.TypeInt,
+				ForceNew: true,
 				Computed: true,
 			},
 			"roles": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"context_params": {
-							Type: schema.TypeSet,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"org": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"created_at": {
@@ -155,7 +155,7 @@ func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m i
 
 	//process data
 	data := res.GetData()
-	assigned_roles, errDiags := flattenRoleGroupRolesData(&data)
+	assigned_roles, errDiags := flattenRoleGroupRolesData(data)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
@@ -165,6 +165,15 @@ func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m i
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to assign roles to rolegroup",
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+
+	if err := d.Set("total", res.GetTotal()); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set total number rolegroup roles",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -217,15 +226,15 @@ func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m
  */
 func newRolegroupRolesPostBody(org_id string, rolegroup_id string, d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	roles := d.Get("roles").([]map[string]interface{})
+	roles := d.Get("roles").([]interface{})
 
-	if roles == nil || len(roles) == 0 {
+	if len(roles) == 0 {
 		return nil, diags
 	}
 	res := make([]map[string]interface{}, len(roles))
 	for i, role := range roles {
 		item := make(map[string]interface{})
-		item["role_id"] = role["role_id"].(string)
+		item["role_id"] = role.(map[string]interface{})["role_id"].(string)
 		item["context_params"] = map[string]string{
 			"org": org_id,
 		}
@@ -239,32 +248,32 @@ func newRolegroupRolesPostBody(org_id string, rolegroup_id string, d *schema.Res
  */
 func newRolegroupRolesDeleteBody(d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	roles := d.Get("roles").([]map[string]interface{})
+	roles := d.Get("roles").([]interface{})
 
-	if roles == nil || len(roles) == 0 {
+	if len(roles) == 0 {
 		return nil, diags
 	}
 	res := make([]map[string]interface{}, len(roles))
 	for i, role := range roles {
 		item := make(map[string]interface{})
-		item["role_id"] = role["role_id"]
+		item["role_id"] = role.(map[string]interface{})["role_id"]
 		item["context_params"] = map[string]string{
-			"org": role["context_params"].(map[string]interface{})["org"].(string),
+			"org": role.(map[string]interface{})["context_params"].(map[string]interface{})["org"].(string),
 		}
-		item["role_group_assignment_id"] = role["role_group_assignment_id"]
-		item["role_group_id"] = role["role_group_id"]
+		item["role_group_assignment_id"] = role.(map[string]interface{})["role_group_assignment_id"]
+		item["role_group_id"] = role.(map[string]interface{})["role_group_id"]
 		res[i] = item
 	}
 	return res, diags
 }
 
-func flattenRoleGroupRolesData(assigned_roles *[]role.AssignedRole) ([]map[string]interface{}, diag.Diagnostics) {
+func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	log.Printf("[DEBUG] Flatten assigned_roles %s", assigned_roles)
+	if len(assigned_roles) > 0 {
+		res := make([]map[string]interface{}, len(assigned_roles))
 
-	if assigned_roles != nil && len(*assigned_roles) > 0 {
-		res := make([]map[string]interface{}, len(*assigned_roles))
-
-		for i, role := range *assigned_roles {
+		for i, role := range assigned_roles {
 			item := make(map[string]interface{})
 			item["context_params"] = map[string]string{
 				"org": *role.GetContextParams().Org,
@@ -292,14 +301,17 @@ func flattenRoleGroupRolesData(assigned_roles *[]role.AssignedRole) ([]map[strin
  */
 func setAssignedRolesAttributesToResourceData(d *schema.ResourceData, assigned_roles []map[string]interface{}) error {
 	attributes := getAssignedRolesAttributes()
-	if assigned_roles == nil {
+	log.Printf("[DEBUG] assigned_roles %s", assigned_roles)
+	if len(assigned_roles) == 0 {
 		return nil
 	}
 	roles := make([]map[string]interface{}, len(assigned_roles))
-	for i, role := range roles {
+	for i, assigned_role := range assigned_roles {
+		role := make(map[string]interface{})
 		for _, attr := range attributes {
-			role[attr] = assigned_roles[i][attr]
+			role[attr] = assigned_role[attr]
 		}
+		roles[i] = role
 	}
 	if err := d.Set("roles", roles); err != nil {
 		return fmt.Errorf("unable to set assigned roles attribute \n details: %s", err)
