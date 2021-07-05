@@ -33,7 +33,7 @@ func dataSourceRoles() *schema.Resource {
 						"include_internal": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Default:  false,
 						},
 						"search": {
 							Type:     schema.TypeString,
