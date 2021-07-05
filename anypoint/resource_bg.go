@@ -493,7 +493,7 @@ func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 
-	authctx := getBGAuthCtx(&pco)
+	authctx := getBGAuthCtx(ctx, &pco)
 	body := newBGPostBody(d)
 
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsPost(authctx).BGPostReqBody(*body).Execute()
@@ -526,7 +526,7 @@ func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
 
-	authctx := getBGAuthCtx(&pco)
+	authctx := getBGAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
 	if err != nil {
@@ -565,7 +565,7 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
 
-	authctx := getBGAuthCtx(&pco)
+	authctx := getBGAuthCtx(ctx, &pco)
 
 	if d.HasChanges(getBGUpdatableAttributes()...) {
 		body := newBGPutBody(d)
@@ -598,7 +598,7 @@ func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
 
-	authctx := getBGAuthCtx(&pco)
+	authctx := getBGAuthCtx(ctx, &pco)
 
 	_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdDelete(authctx, orgid).Execute()
 	if err != nil {
@@ -688,7 +688,6 @@ func newEntitlementsFromD(d *schema.ResourceData) *org.EntitlementsCore {
 /*
  * Returns authentication context (includes authorization header)
  */
-func getBGAuthCtx(pco *ProviderConfOutput) context.Context {
-	ctxbckgrnd := context.Background()
-	return context.WithValue(ctxbckgrnd, org.ContextAccessToken, pco.access_token)
+func getBGAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
+	return context.WithValue(ctx, org.ContextAccessToken, pco.access_token)
 }
