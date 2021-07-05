@@ -64,3 +64,11 @@ Now you can run terraform using the debugger, here's an example:
 ```bash
 $ TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol":"grpc","Pid":69612,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/yc/k0_j_x0945jdthsw7fzw5ysh0000gp/T/plugin598168131"}}}' terraform apply --auto-approve -var-file="params.tfvars.json"
 ```
+
+### How to log
+
+Use `log` package to log. Here's an exampe: 
+
+```go
+log.Println("[DEBUG] Something happened!")
+```
