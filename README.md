@@ -36,3 +36,31 @@ Make sure to add the params file when you apply your terraform configuration as 
 ```bash
 $ terraform init && terraform apply -var-file="params.tfvars.json"
 ```
+
+## Debugging mode
+
+First build the project using
+```bash
+$ go build
+```
+
+You should have a new file `terraform-provider-anypoint` in the root of the project. To start the provider in debug mode execute the following: 
+```bash
+$ dlv exec --headless ./terraform-provider-anypoint -- --debug
+```
+
+Once executed, connect your debugger (whether it's your IDE or the debugger client) to the debugger server. The following is an example of how to start a client debugger:
+```bash
+$ dlv connect 127.0.0.1:51495
+```
+
+Then have your client debugger `continue` execution (check the help for more info) then your provider should print something like: 
+```bash
+TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol":"grpc","Pid":69612,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/yc/k0_j_x0945jdthsw7fzw5ysh0000gp/T/plugin598168131"}}}'
+```
+
+Now you can run terraform using the debugger, here's an example: 
+
+```bash
+$ TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol":"grpc","Pid":69612,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/yc/k0_j_x0945jdthsw7fzw5ysh0000gp/T/plugin598168131"}}}' terraform apply --auto-approve -var-file="params.tfvars.json"
+```
