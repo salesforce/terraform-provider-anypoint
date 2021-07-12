@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
-	"google.golang.org/appengine/log"
 )
 
 func resourceRoleGroup() *schema.Resource {
@@ -99,7 +99,7 @@ func resourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("id").(string)
+	rolegroupid := d.Id()
 
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
 
@@ -140,7 +140,7 @@ func resourceRoleGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("id").(string)
+	rolegroupid := d.Id()
 
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
 
@@ -179,7 +179,7 @@ func resourceRoleGroupDelete(ctx context.Context, d *schema.ResourceData, m inte
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("id").(string)
+	rolegroupid := d.Id()
 
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
 
@@ -220,7 +220,14 @@ func newRolegroupPostBody(d *schema.ResourceData) (*rolegroup.RolegroupPostBody,
 
 	body.SetName(name)
 	if external_names != nil {
-		body.SetExternalNames(external_names.([]string))
+		list := external_names.([]interface{})
+		ext_names := make([]string, 0)
+		for _, val := range list {
+			if val != nil {
+				ext_names = append(ext_names, val.(string))
+			}
+		}
+		body.SetExternalNames(ext_names)
 	}
 	if description != nil {
 		body.SetDescription(description.(string))
@@ -265,7 +272,7 @@ func setRolegroupAttributesToResourceData(d *schema.ResourceData, rolegroup map[
 				return fmt.Errorf("unable to set assigned rolegroup attribute %s with value: %s \n details:%s", attr, val, err)
 			}
 		} else {
-			log.Warningf(context.Background(), "The attribute %s not found in rolegroup.\n", attr)
+			log.Println(context.Background(), "The attribute %s not found in rolegroup.\n", attr)
 		}
 	}
 	return nil
