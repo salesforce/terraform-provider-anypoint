@@ -11,6 +11,7 @@ import (
 	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
 	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
+	"github.com/mulesoft-consulting/cloudhub-client-go/user"
 	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
 )
 
@@ -56,6 +57,7 @@ func Provider() *schema.Provider {
 			"anypoint_roles":      dataSourceRoles(),
 			"anypoint_rolegroup":  dataSourceRoleGroup(),
 			"anypoint_rolegroups": dataSourceRoleGroups(),
+			"anypoint_users":      dataSourceUsers(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -158,6 +160,7 @@ type ProviderConfOutput struct {
 	orgclient       *org.APIClient
 	roleclient      *role.APIClient
 	rolegroupclient *rolegroup.APIClient
+	userclient      *user.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -168,11 +171,13 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	orgcfg := org.NewConfiguration()
 	rolecfg := role.NewConfiguration()
 	rolegroupcfg := rolegroup.NewConfiguration()
+	usercfg := user.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
 	roleclient := role.NewAPIClient(rolecfg)
 	rolegroupclient := rolegroup.NewAPIClient(rolegroupcfg)
+	userclient := user.NewAPIClient(usercfg)
 
 	return ProviderConfOutput{
 		access_token:    access_token,
@@ -180,5 +185,6 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 		orgclient:       orgclient,
 		roleclient:      roleclient,
 		rolegroupclient: rolegroupclient,
+		userclient:      userclient,
 	}
 }
