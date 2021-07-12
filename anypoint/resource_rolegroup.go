@@ -250,7 +250,14 @@ func newRolegroupPutBody(d *schema.ResourceData) (*rolegroup.RolegroupPutBody, d
 
 	body.SetName(name)
 	if external_names != nil {
-		body.SetExternalNames(external_names.([]string))
+		list := external_names.([]interface{})
+		ext_names := make([]string, 0)
+		for _, val := range list {
+			if val != nil {
+				ext_names = append(ext_names, val.(string))
+			}
+		}
+		body.SetExternalNames(ext_names)
 	}
 	if description != nil {
 		body.SetDescription(description.(string))
@@ -272,7 +279,7 @@ func setRolegroupAttributesToResourceData(d *schema.ResourceData, rolegroup map[
 				return fmt.Errorf("unable to set assigned rolegroup attribute %s with value: %s \n details:%s", attr, val, err)
 			}
 		} else {
-			log.Println(context.Background(), "The attribute %s not found in rolegroup.\n", attr)
+			log.Printf("The attribute %s not found in rolegroup.\n", attr)
 		}
 	}
 	return nil
@@ -280,7 +287,7 @@ func setRolegroupAttributesToResourceData(d *schema.ResourceData, rolegroup map[
 
 func getWatchAttributes() []string {
 	attributes := [...]string{
-		"name", "external_names", "desription",
+		"name", "external_names", "description",
 	}
 	return attributes[:]
 }
