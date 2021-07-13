@@ -6,6 +6,7 @@ require (
 	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.4
 	github.com/mulesoft-consulting/cloudhub-client-go/authorization v0.1.0
+	github.com/mulesoft-consulting/cloudhub-client-go/env v0.0.4
 	github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.10
 	github.com/mulesoft-consulting/cloudhub-client-go/role v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/rolegroup v0.0.1
