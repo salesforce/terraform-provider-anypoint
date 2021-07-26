@@ -250,7 +250,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Id()
-	orgid := d.Get("orgid").(string)
+	orgid := d.Get("org_id").(string)
 
 	authctx := getUserAuthCtx(ctx, &pco)
 
