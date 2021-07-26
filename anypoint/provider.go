@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	auth "github.com/mulesoft-consulting/cloudhub-client-go/authorization"
+	env "github.com/mulesoft-consulting/cloudhub-client-go/env"
 	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
 	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
+	"github.com/mulesoft-consulting/cloudhub-client-go/user"
 	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
 )
 
@@ -48,6 +50,8 @@ func Provider() *schema.Provider {
 			"anypoint_bg":              resourceBG(),
 			"anypoint_rolegroup_roles": resourceRoleGroupRoles(),
 			"anypoint_rolegroup":       resourceRoleGroup(),
+			"anypoint_env":             resourceENV(),
+			"anypoint_user":            resourceUser(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":       dataSourceVPCs(),
@@ -56,6 +60,9 @@ func Provider() *schema.Provider {
 			"anypoint_roles":      dataSourceRoles(),
 			"anypoint_rolegroup":  dataSourceRoleGroup(),
 			"anypoint_rolegroups": dataSourceRoleGroups(),
+			"anypoint_users":      dataSourceUsers(),
+			"anypoint_user":       dataSourceUser(),
+			"anypoint_env":        dataSourceENV(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -158,6 +165,8 @@ type ProviderConfOutput struct {
 	orgclient       *org.APIClient
 	roleclient      *role.APIClient
 	rolegroupclient *rolegroup.APIClient
+	userclient      *user.APIClient
+	envclient       *env.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -168,11 +177,15 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	orgcfg := org.NewConfiguration()
 	rolecfg := role.NewConfiguration()
 	rolegroupcfg := rolegroup.NewConfiguration()
+	usercfg := user.NewConfiguration()
+	envcfg := env.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
 	roleclient := role.NewAPIClient(rolecfg)
 	rolegroupclient := rolegroup.NewAPIClient(rolegroupcfg)
+	userclient := user.NewAPIClient(usercfg)
+	envclient := env.NewAPIClient(envcfg)
 
 	return ProviderConfOutput{
 		access_token:    access_token,
@@ -180,5 +193,7 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 		orgclient:       orgclient,
 		roleclient:      roleclient,
 		rolegroupclient: rolegroupclient,
+		userclient:      userclient,
+		envclient:       envclient,
 	}
 }
