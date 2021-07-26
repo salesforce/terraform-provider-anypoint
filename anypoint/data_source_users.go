@@ -274,7 +274,7 @@ func flattenUsersData(users *[]user.User) []interface{} {
 			"name": primaryOrg.GetName(),
 		}
 		usrOrgData := usr.GetOrganization()
-		item["organization"] = flattenUsrOrgData(&usrOrgData)
+		item["organization"] = flattenUserOrganizationData(&usrOrgData)
 
 		res[i] = item
 	}
@@ -284,7 +284,7 @@ func flattenUsersData(users *[]user.User) []interface{} {
 /*
  * Transforms a user organization to a generic map
  */
-func flattenUsrOrgData(usrOrgData *user.Organization) map[string]interface{} {
+func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]interface{} {
 	if usrOrgData == nil {
 		return nil
 	}

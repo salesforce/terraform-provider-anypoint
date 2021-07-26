@@ -60,6 +60,7 @@ func Provider() *schema.Provider {
 			"anypoint_rolegroup":  dataSourceRoleGroup(),
 			"anypoint_rolegroups": dataSourceRoleGroups(),
 			"anypoint_users":      dataSourceUsers(),
+			"anypoint_user":       dataSourceUser(),
 			"anypoint_env":        dataSourceENV(),
 		},
 		ConfigureContextFunc: providerConfigure,
