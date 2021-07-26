@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"strconv"
 	"time"
@@ -254,66 +253,7 @@ func flattenUsersData(users *[]user.User) []interface{} {
 
 	res := make([]interface{}, len(*users))
 	for i, usr := range *users {
-		item := make(map[string]interface{})
-
-		item["id"] = usr.GetId()
-		item["created_at"] = usr.GetCreatedAt()
-		item["updated_at"] = usr.GetUpdatedAt()
-		item["organization_id"] = usr.GetOrganizationId()
-		item["enabled"] = usr.GetEnabled()
-		item["idprovider_id"] = usr.GetIdproviderId()
-		item["last_login"] = usr.GetLastLogin()
-		item["mfa_verifiers_configured"] = usr.GetMfaVerifiersConfigured()
-		item["mfa_verification_excluded"] = usr.GetMfaVerificationExcluded()
-		item["is_federated"] = usr.GetIsFederated()
-		item["username"] = usr.GetUsername()
-		item["type"] = usr.GetType()
-		primaryOrg := usr.GetPrimaryOrganization()
-		item["primary_organization"] = map[string]string{
-			"id":   primaryOrg.GetId(),
-			"name": primaryOrg.GetName(),
-		}
-		usrOrgData := usr.GetOrganization()
-		item["organization"] = flattenUserOrganizationData(&usrOrgData)
-
-		res[i] = item
+		res[i] = flattenUserData(&usr)
 	}
-	return res
-}
-
-/*
- * Transforms a user organization to a generic map
- */
-func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]interface{} {
-	if usrOrgData == nil {
-		return nil
-	}
-	res := make(map[string]interface{})
-
-	res["name"] = usrOrgData.GetName()
-	res["id"] = usrOrgData.GetId()
-	res["created_at"] = usrOrgData.GetCreatedAt()
-	res["updated_at"] = usrOrgData.GetUpdatedAt()
-	res["owner_id"] = usrOrgData.GetOwnerId()
-	res["client_id"] = usrOrgData.GetClientId()
-	res["idprovider_id"] = usrOrgData.GetIdproviderId()
-	res["is_federated"] = strconv.FormatBool(usrOrgData.GetIsFederated())
-	jsonParentOrgs, _ := json.Marshal(usrOrgData.GetParentOrganizationIds())
-	res["parent_organization_ids"] = string(jsonParentOrgs)
-	jsonSubOrgIds, _ := json.Marshal(usrOrgData.GetSubOrganizationIds())
-	res["sub_organization_ids"] = string(jsonSubOrgIds)
-	jsonTenantOrgIds, _ := json.Marshal(usrOrgData.GetTenantOrganizationIds())
-	res["tenant_organization_ids"] = string(jsonTenantOrgIds)
-	res["mfa_required"] = usrOrgData.GetMfaRequired()
-	res["is_automatic_admin_promotion_exempt"] = strconv.FormatBool(usrOrgData.GetIsAutomaticAdminPromotionExempt())
-	res["domain"] = usrOrgData.GetDomain()
-	res["is_master"] = strconv.FormatBool(usrOrgData.GetIsMaster())
-	jsonSub, _ := json.Marshal(usrOrgData.GetSubscription())
-	res["subscription"] = string(jsonSub)
-	jsonProps, _ := json.Marshal(usrOrgData.GetProperties())
-	res["properties"] = string(jsonProps)
-	jsonEntitlments, _ := json.Marshal(usrOrgData.GetEntitlements())
-	res["entitlements"] = string(jsonEntitlments)
-
 	return res
 }

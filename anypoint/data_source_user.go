@@ -175,73 +175,231 @@ func flattenUserData(usr *user.User) map[string]interface{} {
 		return res
 	}
 
-	res["id"] = usr.GetId()
-	res["created_at"] = usr.GetCreatedAt()
-	res["updated_at"] = usr.GetUpdatedAt()
-	res["organization_id"] = usr.GetOrganizationId()
-	res["phone_number"] = usr.GetPhoneNumber()
-	res["enabled"] = usr.GetEnabled()
-	res["deleted"] = usr.GetDeleted()
-	res["idprovider_id"] = usr.GetIdproviderId()
-	res["last_login"] = usr.GetLastLogin()
-	res["mfa_verifiers_configured"] = usr.GetMfaVerifiersConfigured()
-	res["mfa_verification_excluded"] = usr.GetMfaVerificationExcluded()
-	res["is_federated"] = usr.GetIsFederated()
-	res["username"] = usr.GetUsername()
-	res["type"] = usr.GetType()
-	res["organization_preferences"] = usr.GetOrganizationPreferences()
-	usrOrgData := usr.GetOrganization()
-	res["organization"] = flattenUserOrganizationData(&usrOrgData)
-	jsonProps, _ := json.Marshal(usr.GetProperties())
-	res["properties"] = string(jsonProps)
-	res["member_of_organizations"] = flattenUserOrgsData(usr.GetMemberOfOrganizations())
-	res["contributor_of_organizations"] = flattenUserOrgsData(usr.GetContributorOfOrganizations())
+	if val, ok := usr.GetIdOk(); ok {
+		res["id"] = val
+	}
+	if val, ok := usr.GetCreatedAtOk(); ok {
+		res["created_at"] = val
+	}
+	if val, ok := usr.GetUpdatedAtOk(); ok {
+		res["updated_at"] = val
+	}
+	if val, ok := usr.GetOrganizationIdOk(); ok {
+		res["organization_id"] = val
+	}
+	if val, ok := usr.GetPhoneNumberOk(); ok {
+		res["phone_number"] = val
+	}
+	if val, ok := usr.GetEnabledOk(); ok {
+		res["enabled"] = val
+	}
+	if val, ok := usr.GetDeletedOk(); ok {
+		res["deleted"] = val
+	}
+	if val, ok := usr.GetIdproviderIdOk(); ok {
+		res["idprovider_id"] = val
+	}
+	if val, ok := usr.GetLastLoginOk(); ok {
+		res["last_login"] = val
+	}
+	if val, ok := usr.GetIsFederatedOk(); ok {
+		res["is_federated"] = val
+	}
+	if val, ok := usr.GetUsernameOk(); ok {
+		res["username"] = val
+	}
+	if val, ok := usr.GetTypeOk(); ok {
+		res["type"] = val
+	}
+	if val, ok := usr.GetMfaVerifiersConfiguredOk(); ok {
+		res["mfa_verifiers_configured"] = val
+	}
+	if val, ok := usr.GetMfaVerificationExcludedOk(); ok {
+		res["mfa_verification_excluded"] = val
+	}
+	if val, ok := usr.GetOrganizationOk(); ok {
+		usrOrgData := val
+		res["organization"] = flattenUserOrganizationData(usrOrgData)
+	}
+	if val, ok := usr.GetOrganizationPreferencesOk(); ok {
+		res["organization_preferences"] = val
+	}
+	if val, ok := usr.GetPropertiesOk(); ok {
+		jsonProps, _ := json.Marshal(val)
+		res["properties"] = string(jsonProps)
+	}
+	if val, ok := usr.GetMemberOfOrganizationsOk(); ok {
+		res["member_of_organizations"] = flattenUserOrgsData(val)
+	}
+	if val, ok := usr.GetContributorOfOrganizationsOk(); ok {
+		res["contributor_of_organizations"] = flattenUserOrgsData(val)
+	}
 
 	return res
+}
+
+/*
+ * Transforms a user organization array to a generic map array
+ */
+func flattenUserOrgsData(userOrgs *[]user.Org) []map[string]interface{} {
+	if userOrgs == nil || len(*userOrgs) <= 0 {
+		return make([]map[string]interface{}, 0)
+	}
+	res := make([]map[string]interface{}, len(*userOrgs))
+
+	for i, usrOrgData := range *userOrgs {
+		res[i] = flattenUserOrgData(&usrOrgData)
+	}
+
+	return res
+}
+
+/*
+ * Transforms a user org data to generic map
+ */
+func flattenUserOrgData(usrOrgData *user.Org) map[string]interface{} {
+	item := make(map[string]interface{})
+	if usrOrgData == nil {
+		return item
+	}
+
+	if val, ok := usrOrgData.GetParentNameOk(); ok {
+		item["parent_name"] = val
+	}
+	if val, ok := usrOrgData.GetParentIdOk(); ok {
+		item["parent_id"] = val
+	}
+	if val, ok := usrOrgData.GetDomainOk(); ok {
+		item["domain"] = val
+	}
+	if val, ok := usrOrgData.GetNameOk(); ok {
+		item["name"] = val
+	}
+	if val, ok := usrOrgData.GetIdOk(); ok {
+		item["id"] = val
+	}
+	if val, ok := usrOrgData.GetCreatedAtOk(); ok {
+		item["created_at"] = val
+	}
+	if val, ok := usrOrgData.GetUpdatedAtOk(); ok {
+		item["updated_at"] = val
+	}
+	if val, ok := usrOrgData.GetOwnerIdOk(); ok {
+		item["owner_id"] = val
+	}
+	if val, ok := usrOrgData.GetClientIdOk(); ok {
+		item["client_id"] = val
+	}
+	if val, ok := usrOrgData.GetIdproviderIdOk(); ok {
+		item["idprovider_id"] = val
+	}
+	if val, ok := usrOrgData.GetIsFederatedOk(); ok {
+		item["is_federated"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetParentOrganizationIdsOk(); ok {
+		jsonParentOrgs, _ := json.Marshal(val)
+		item["parent_organization_ids"] = string(jsonParentOrgs)
+	}
+	if val, ok := usrOrgData.GetSubOrganizationIdsOk(); ok {
+		jsonSubOrgIds, _ := json.Marshal(val)
+		item["sub_organization_ids"] = string(jsonSubOrgIds)
+	}
+	if val, ok := usrOrgData.GetTenantOrganizationIdsOk(); ok {
+		jsonTenantOrgIds, _ := json.Marshal(val)
+		item["tenant_organization_ids"] = string(jsonTenantOrgIds)
+	}
+	if val, ok := usrOrgData.GetMfaRequiredOk(); ok {
+		item["mfa_required"] = val
+	}
+	if val, ok := usrOrgData.GetIsAutomaticAdminPromotionExemptOk(); ok {
+		item["is_automatic_admin_promotion_exempt"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetIsMasterOk(); ok {
+		item["is_master"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetSubscriptionOk(); ok {
+		jsonSub, _ := json.Marshal(val)
+		item["subscription"] = string(jsonSub)
+	}
+
+	return item
 }
 
 /*
  * Transforms a user organization to a generic map
  */
-func flattenUserOrgsData(userOrgs []user.Org) []map[string]interface{} {
-	if userOrgs == nil || len(userOrgs) <= 0 {
-		return make([]map[string]interface{}, 0)
+func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]interface{} {
+	if usrOrgData == nil {
+		return nil
 	}
-	res := make([]map[string]interface{}, len(userOrgs))
+	res := make(map[string]interface{})
 
-	for i, usrOrgData := range userOrgs {
-		item := make(map[string]interface{})
-		item["parent_name"] = usrOrgData.GetParentName()
-		item["parent_id"] = usrOrgData.GetParentId()
-		item["domain"] = usrOrgData.GetDomain()
-		item["name"] = usrOrgData.GetName()
-		item["id"] = usrOrgData.GetId()
-		item["created_at"] = usrOrgData.GetCreatedAt()
-		item["updated_at"] = usrOrgData.GetUpdatedAt()
-		item["owner_id"] = usrOrgData.GetOwnerId()
-		item["client_id"] = usrOrgData.GetClientId()
-		item["idprovider_id"] = usrOrgData.GetIdproviderId()
-		item["is_federated"] = strconv.FormatBool(usrOrgData.GetIsFederated())
-		jsonParentOrgs, _ := json.Marshal(usrOrgData.GetParentOrganizationIds())
-		item["parent_organization_ids"] = string(jsonParentOrgs)
-		jsonSubOrgIds, _ := json.Marshal(usrOrgData.GetSubOrganizationIds())
-		item["sub_organization_ids"] = string(jsonSubOrgIds)
-		jsonTenantOrgIds, _ := json.Marshal(usrOrgData.GetTenantOrganizationIds())
-		item["tenant_organization_ids"] = string(jsonTenantOrgIds)
-		item["mfa_required"] = usrOrgData.GetMfaRequired()
-		item["is_automatic_admin_promotion_exempt"] = strconv.FormatBool(usrOrgData.GetIsAutomaticAdminPromotionExempt())
-		item["is_master"] = strconv.FormatBool(usrOrgData.GetIsMaster())
-		jsonSub, _ := json.Marshal(usrOrgData.GetSubscription())
-		item["subscription"] = string(jsonSub)
-
-		res[i] = item
+	if val, ok := usrOrgData.GetNameOk(); ok {
+		res["name"] = val
+	}
+	if val, ok := usrOrgData.GetIdOk(); ok {
+		res["id"] = val
+	}
+	if val, ok := usrOrgData.GetCreatedAtOk(); ok {
+		res["created_at"] = val
+	}
+	if val, ok := usrOrgData.GetUpdatedAtOk(); ok {
+		res["updated_at"] = val
+	}
+	if val, ok := usrOrgData.GetOwnerIdOk(); ok {
+		res["owner_id"] = val
+	}
+	if val, ok := usrOrgData.GetClientIdOk(); ok {
+		res["client_id"] = val
+	}
+	if val, ok := usrOrgData.GetIdproviderIdOk(); ok {
+		res["idprovider_id"] = val
+	}
+	if val, ok := usrOrgData.GetIsFederatedOk(); ok {
+		res["is_federated"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetParentOrganizationIdsOk(); ok {
+		jsonParentOrgs, _ := json.Marshal(val)
+		res["parent_organization_ids"] = string(jsonParentOrgs)
+	}
+	if val, ok := usrOrgData.GetSubOrganizationIdsOk(); ok {
+		jsonSubOrgIds, _ := json.Marshal(val)
+		res["sub_organization_ids"] = string(jsonSubOrgIds)
+	}
+	if val, ok := usrOrgData.GetTenantOrganizationIdsOk(); ok {
+		jsonTenantOrgIds, _ := json.Marshal(val)
+		res["tenant_organization_ids"] = string(jsonTenantOrgIds)
+	}
+	if val, ok := usrOrgData.GetMfaRequiredOk(); ok {
+		res["mfa_required"] = val
+	}
+	if val, ok := usrOrgData.GetIsAutomaticAdminPromotionExemptOk(); ok {
+		res["is_automatic_admin_promotion_exempt"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetDomainOk(); ok {
+		res["domain"] = val
+	}
+	if val, ok := usrOrgData.GetIsMasterOk(); ok {
+		res["is_master"] = strconv.FormatBool(*val)
+	}
+	if val, ok := usrOrgData.GetSubscriptionOk(); ok {
+		jsonSub, _ := json.Marshal(val)
+		res["subscription"] = string(jsonSub)
+	}
+	if val, ok := usrOrgData.GetPropertiesOk(); ok {
+		jsonProps, _ := json.Marshal(val)
+		res["properties"] = string(jsonProps)
+	}
+	if val, ok := usrOrgData.GetEntitlementsOk(); ok {
+		jsonEntitlments, _ := json.Marshal(val)
+		res["entitlements"] = string(jsonEntitlments)
 	}
 
 	return res
 }
 
 /*
- * Copies the given user instance into the given resource data
+ * Copies the given user instance into the given Source data
  */
 func setUserAttributesToResourceData(d *schema.ResourceData, usr map[string]interface{}) error {
 	attributes := getUserAttributes()
