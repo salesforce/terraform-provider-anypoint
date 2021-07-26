@@ -3,6 +3,7 @@ package anypoint
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"strconv"
 	"time"
 
@@ -164,13 +165,12 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, m interfac
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		// if httpr != nil {
-		// 	b, _ := ioutil.ReadAll(httpr.Body)
-		// 	details = string(b)
-		// } else {
-		// 	details = err.Error()
-		// }
-		details = err.Error()
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get users",
