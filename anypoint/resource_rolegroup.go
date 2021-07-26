@@ -144,7 +144,7 @@ func resourceRoleGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
 
-	if d.HasChanges(getWatchAttributes()...) {
+	if d.HasChanges(getRolegroupWatchAttributes()...) {
 		body, errDiags := newRolegroupPutBody(d)
 		if errDiags.HasError() {
 			diags = append(diags, errDiags...)
@@ -285,7 +285,7 @@ func setRolegroupAttributesToResourceData(d *schema.ResourceData, rolegroup map[
 	return nil
 }
 
-func getWatchAttributes() []string {
+func getRolegroupWatchAttributes() []string {
 	attributes := [...]string{
 		"name", "external_names", "description",
 	}
