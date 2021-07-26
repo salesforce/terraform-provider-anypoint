@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -88,7 +88,7 @@ func dataSourceUsers() *schema.Resource {
 							Computed: true,
 						},
 						"mfa_verifiers_configured": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"mfa_verification_excluded": {
@@ -162,15 +162,15 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	//request roles
 	res, httpr, err := req.Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		// if httpr != nil {
+		// 	b, _ := ioutil.ReadAll(httpr.Body)
+		// 	details = string(b)
+		// } else {
+		// 	details = err.Error()
+		// }
+		details = err.Error()
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get users",
@@ -178,6 +178,7 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, m interfac
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	data := res.GetData()
 	users := flattenUsersData(&data)
@@ -247,45 +248,46 @@ func parseUsersSearchOpts(req user.DefaultApiApiOrganizationsOrgIdUsersGetReques
  Transforms a set of users to the dataSourceUsers schema
 */
 func flattenUsersData(users *[]user.User) []interface{} {
-	if users != nil && len(*users) > 0 {
-		res := make([]interface{}, len(*users))
-
-		for i, usr := range *users {
-			item := make(map[string]interface{})
-
-			item["id"] = usr.GetId()
-			item["created_at"] = usr.GetCreatedAt()
-			item["updated_at"] = usr.GetUpdatedAt()
-			item["organization_id"] = usr.GetOrganizationId()
-			item["enabled"] = usr.GetEnabled()
-			item["idprovider_id"] = usr.GetIdproviderId()
-			item["created_at"] = usr.GetCreatedAt()
-			item["updated_at"] = usr.GetUpdatedAt()
-			item["last_login"] = usr.GetLastLogin()
-			item["mfa_verifiers_configured"] = usr.GetMfaVerifiersConfigured()
-			item["mfa_verification_excluded"] = usr.GetMfaVerificationExcluded()
-			item["is_federated"] = usr.GetIsFederated()
-			item["username"] = usr.GetUsername()
-			item["type"] = usr.GetType()
-			primaryOrg := usr.GetPrimaryOrganization()
-			item["primary_orgnization"] = map[string]string{
-				"id":   primaryOrg.GetId(),
-				"name": primaryOrg.GetName(),
-			}
-			item["organization"] = flattenUsrOrgData(usr.GetOrganization())
-
-			res[i] = item
-		}
-		return res
+	if users == nil || len(*users) <= 0 {
+		return make([]interface{}, 0)
 	}
 
-	return make([]interface{}, 0)
+	res := make([]interface{}, len(*users))
+	for i, usr := range *users {
+		item := make(map[string]interface{})
+
+		item["id"] = usr.GetId()
+		item["created_at"] = usr.GetCreatedAt()
+		item["updated_at"] = usr.GetUpdatedAt()
+		item["organization_id"] = usr.GetOrganizationId()
+		item["enabled"] = usr.GetEnabled()
+		item["idprovider_id"] = usr.GetIdproviderId()
+		item["last_login"] = usr.GetLastLogin()
+		item["mfa_verifiers_configured"] = usr.GetMfaVerifiersConfigured()
+		item["mfa_verification_excluded"] = usr.GetMfaVerificationExcluded()
+		item["is_federated"] = usr.GetIsFederated()
+		item["username"] = usr.GetUsername()
+		item["type"] = usr.GetType()
+		primaryOrg := usr.GetPrimaryOrganization()
+		item["primary_organization"] = map[string]string{
+			"id":   primaryOrg.GetId(),
+			"name": primaryOrg.GetName(),
+		}
+		usrOrgData := usr.GetOrganization()
+		item["organization"] = flattenUsrOrgData(&usrOrgData)
+
+		res[i] = item
+	}
+	return res
 }
 
 /*
  * Transforms a user organization to a generic map
  */
-func flattenUsrOrgData(usrOrgData user.Organization) map[string]interface{} {
+func flattenUsrOrgData(usrOrgData *user.Organization) map[string]interface{} {
+	if usrOrgData == nil {
+		return nil
+	}
 	res := make(map[string]interface{})
 
 	res["name"] = usrOrgData.GetName()
@@ -295,22 +297,23 @@ func flattenUsrOrgData(usrOrgData user.Organization) map[string]interface{} {
 	res["owner_id"] = usrOrgData.GetOwnerId()
 	res["client_id"] = usrOrgData.GetClientId()
 	res["idprovider_id"] = usrOrgData.GetIdproviderId()
-	res["is_federated"] = usrOrgData.GetIsFederated()
-	res["parent_organization_ids"] = usrOrgData.GetParentOrganizationIds()
-	res["sub_organization_ids"] = usrOrgData.GetSubOrganizationIds()
-	res["tenant_organization_ids"] = usrOrgData.GetTenantOrganizationIds()
+	res["is_federated"] = strconv.FormatBool(usrOrgData.GetIsFederated())
+	jsonParentOrgs, _ := json.Marshal(usrOrgData.GetParentOrganizationIds())
+	res["parent_organization_ids"] = string(jsonParentOrgs)
+	jsonSubOrgIds, _ := json.Marshal(usrOrgData.GetSubOrganizationIds())
+	res["sub_organization_ids"] = string(jsonSubOrgIds)
+	jsonTenantOrgIds, _ := json.Marshal(usrOrgData.GetTenantOrganizationIds())
+	res["tenant_organization_ids"] = string(jsonTenantOrgIds)
 	res["mfa_required"] = usrOrgData.GetMfaRequired()
-	res["is_automatic_admin_promotion_exempt"] = usrOrgData.GetIsAutomaticAdminPromotionExempt()
+	res["is_automatic_admin_promotion_exempt"] = strconv.FormatBool(usrOrgData.GetIsAutomaticAdminPromotionExempt())
 	res["domain"] = usrOrgData.GetDomain()
-	res["is_master"] = usrOrgData.GetIsMaster()
-	sub := usrOrgData.GetSubscription()
-	res["subscription"] = map[string]string{
-		"category":   sub.GetCategory(),
-		"type":       sub.GetType(),
-		"expiration": sub.GetExpiration(),
-	}
-	res["properties"] = usrOrgData.GetProperties()
-	res["entitlements"] = usrOrgData.GetEntitlements()
+	res["is_master"] = strconv.FormatBool(usrOrgData.GetIsMaster())
+	jsonSub, _ := json.Marshal(usrOrgData.GetSubscription())
+	res["subscription"] = string(jsonSub)
+	jsonProps, _ := json.Marshal(usrOrgData.GetProperties())
+	res["properties"] = string(jsonProps)
+	jsonEntitlments, _ := json.Marshal(usrOrgData.GetEntitlements())
+	res["entitlements"] = string(jsonEntitlments)
 
 	return res
 }
