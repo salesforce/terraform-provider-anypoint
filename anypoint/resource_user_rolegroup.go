@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -174,83 +173,6 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
 	d.SetId("")
 
 	return diags
-}
-
-/*
-  Searches for the rolegroup in the list of results that has the same id as the one given by the user (rolegroup_id)
-*/
-func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interface{}) (*user_rolegroups.Rolegroup, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	pco := m.(ProviderConfOutput)
-	userid := d.Get("user_id").(string)
-	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("rolegroup_id").(string)
-	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
-
-	limit := 50
-	offset := 0
-	count := 0
-	end := false
-
-	for !end {
-		req := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsGet(authctx, orgid, userid)
-		req = req.Limit(int32(limit))
-		req = req.Offset(int32(offset))
-		res, httpr, err := req.Execute()
-		if err != nil {
-			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
-			diags := append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to get user " + userid + " rolegroup " + rolegroupid,
-				Detail:   details,
-			})
-			return nil, diags
-		}
-		data := res.GetData()
-		for _, rg := range data {
-			if rg.GetRoleGroupId() == rolegroupid {
-				end = true
-				return &rg, diags
-			}
-		}
-		l := len(data)
-		count += l
-		if count >= int(res.GetTotal()) || l == 0 {
-			end = true
-		} else {
-			offset += limit
-		}
-	}
-	return nil, diags
-}
-
-/*
- Copies the given user rolegroup instance into the given Source data
-*/
-func setUserRolegroupAttributesToResourceData(d *schema.ResourceData, rg map[string]interface{}) error {
-	attributes := getUserRolegroupAttributes()
-	if rg != nil {
-		for _, attr := range attributes {
-			if err := d.Set(attr, rg[attr]); err != nil {
-				return fmt.Errorf("unable to set user rolegroup attribute %s\n details: %s", attr, err)
-			}
-		}
-	}
-	return nil
-}
-
-func getUserRolegroupAttributes() []string {
-	attributes := [...]string{
-		"role_group_id", "name", "description", "external_names", "editable", "created_at",
-		"updated_at", "context_params", "user_role_group_id",
-	}
-	return attributes[:]
 }
 
 /*
