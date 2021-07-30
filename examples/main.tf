@@ -43,8 +43,34 @@ provider "anypoint" {
   password = var.password
 }
 
+resource "anypoint_env" "env" {
+  name = "my-ENV1"
+  type = "sandbox"
+  org_id = var.org_id
+}
 
-resource "anypoint_bg" "bg" {
+output "env" {
+  value = anypoint_env.env
+}
+
+/*resource "anypoint_mq" "amq" {
+  defaultttl = 604800000
+  defaultlockttl = 120000
+  type = "queue"
+  encrypted = true
+  org_id = var.org_id
+  //env_id = var.env_id
+  env_id = "3d5af0fe-ba6b-4c52-8b5e-ed9da2fa8167"
+  region_id = "eu-west-2"
+  queue_id = "tq-test11"
+}
+
+output "amq" {
+  value = anypoint_mq.amq
+}*/
+
+
+ /* resource "anypoint_bg" "bg" {
   name = "my BG"
   parentorganizationid = var.org_id
   ownerid = "18f23771-c78a-4be2-af8f-1bae66f43942"
@@ -62,7 +88,7 @@ resource "anypoint_bg" "bg" {
 
 output "bg" {
   value = anypoint_bg.bg
-}
+} */
 
 # data "anypoint_vpcs" "all" {
 #   orgid = var.org_id

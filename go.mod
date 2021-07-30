@@ -13,6 +13,7 @@ require (
 	github.com/mulesoft-consulting/cloudhub-client-go/user v0.1.3
 	github.com/mulesoft-consulting/cloudhub-client-go/user_rolegroups v0.0.1
 	github.com/mulesoft-consulting/cloudhub-client-go/vpc v0.4.1
+	github.com/mulesoft-consulting/cloudhub-client-go/mq v0.0.3
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4 // indirect
 	golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84 // indirect
 )

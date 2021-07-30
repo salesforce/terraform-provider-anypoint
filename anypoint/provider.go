@@ -9,6 +9,7 @@ import (
 
 	auth "github.com/mulesoft-consulting/cloudhub-client-go/authorization"
 	env "github.com/mulesoft-consulting/cloudhub-client-go/env"
+	amq "github.com/mulesoft-consulting/cloudhub-client-go/mq"
 	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
 	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
@@ -54,6 +55,7 @@ func Provider() *schema.Provider {
 			"anypoint_env":             resourceENV(),
 			"anypoint_user":            resourceUser(),
 			"anypoint_user_rolegroup":  resourceUserRolegroup(),
+			"anypoint_mq":              resourceMQ(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":            dataSourceVPCs(),
@@ -67,6 +69,7 @@ func Provider() *schema.Provider {
 			"anypoint_env":             dataSourceENV(),
 			"anypoint_user_rolegroup":  dataSourceUserRolegroup(),
 			"anypoint_user_rolegroups": dataSourceUserRolegroups(),
+			"anypoint_mq":              dataSourceMQ(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -172,6 +175,7 @@ type ProviderConfOutput struct {
 	userclient      *user.APIClient
 	envclient       *env.APIClient
 	userrgpclient   *user_rolegroups.APIClient
+	amqclient       *amq.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -185,6 +189,7 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	usercfg := user.NewConfiguration()
 	envcfg := env.NewConfiguration()
 	userrolegroupscfg := user_rolegroups.NewConfiguration()
+	amqcfg := amq.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
@@ -193,6 +198,7 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	userclient := user.NewAPIClient(usercfg)
 	envclient := env.NewAPIClient(envcfg)
 	userrgpclient := user_rolegroups.NewAPIClient(userrolegroupscfg)
+	amqclient := amq.NewAPIClient(amqcfg)
 
 	return ProviderConfOutput{
 		access_token:    access_token,
@@ -203,5 +209,6 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 		userclient:      userclient,
 		envclient:       envclient,
 		userrgpclient:   userrgpclient,
+		amqclient:       amqclient,
 	}
 }
