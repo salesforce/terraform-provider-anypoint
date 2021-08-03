@@ -21,13 +21,9 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"organization_id": {
 				Type:     schema.TypeString,
@@ -128,7 +124,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface
 	pco := m.(ProviderConfOutput)
 
 	orgid := d.Get("org_id").(string)
-	userid := d.Get("user_id").(string)
+	userid := d.Get("id").(string)
 	authctx := getUserAuthCtx(ctx, &pco)
 
 	//request roles
