@@ -12,8 +12,11 @@ import (
 	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
 	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
-	"github.com/mulesoft-consulting/cloudhub-client-go/user"
-	"github.com/mulesoft-consulting/cloudhub-client-go/user_rolegroups"
+	team "github.com/mulesoft-consulting/cloudhub-client-go/team"
+	team_members "github.com/mulesoft-consulting/cloudhub-client-go/team_members"
+	team_roles "github.com/mulesoft-consulting/cloudhub-client-go/team_roles"
+	user "github.com/mulesoft-consulting/cloudhub-client-go/user"
+	user_rolegroups "github.com/mulesoft-consulting/cloudhub-client-go/user_rolegroups"
 	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
 )
 
@@ -54,6 +57,7 @@ func Provider() *schema.Provider {
 			"anypoint_env":             resourceENV(),
 			"anypoint_user":            resourceUser(),
 			"anypoint_user_rolegroup":  resourceUserRolegroup(),
+			"anypoint_team":            resourceTeam(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":            dataSourceVPCs(),
@@ -67,6 +71,8 @@ func Provider() *schema.Provider {
 			"anypoint_env":             dataSourceENV(),
 			"anypoint_user_rolegroup":  dataSourceUserRolegroup(),
 			"anypoint_user_rolegroups": dataSourceUserRolegroups(),
+			"anypoint_team":            dataSourceTeam(),
+			"anypoint_teams":           dataSourceTeams(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -164,14 +170,17 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 }
 
 type ProviderConfOutput struct {
-	access_token    string
-	vpcclient       *vpc.APIClient
-	orgclient       *org.APIClient
-	roleclient      *role.APIClient
-	rolegroupclient *rolegroup.APIClient
-	userclient      *user.APIClient
-	envclient       *env.APIClient
-	userrgpclient   *user_rolegroups.APIClient
+	access_token     string
+	vpcclient        *vpc.APIClient
+	orgclient        *org.APIClient
+	roleclient       *role.APIClient
+	rolegroupclient  *rolegroup.APIClient
+	userclient       *user.APIClient
+	envclient        *env.APIClient
+	userrgpclient    *user_rolegroups.APIClient
+	teamclient       *team.APIClient
+	teamembersclient *team_members.APIClient
+	teamrolesclient  *team_roles.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -185,6 +194,9 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	usercfg := user.NewConfiguration()
 	envcfg := env.NewConfiguration()
 	userrolegroupscfg := user_rolegroups.NewConfiguration()
+	teamcfg := team.NewConfiguration()
+	teamemberscfg := team_members.NewConfiguration()
+	teamrolescfg := team_roles.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
@@ -193,15 +205,21 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	userclient := user.NewAPIClient(usercfg)
 	envclient := env.NewAPIClient(envcfg)
 	userrgpclient := user_rolegroups.NewAPIClient(userrolegroupscfg)
+	teamclient := team.NewAPIClient(teamcfg)
+	teamembersclient := team_members.NewAPIClient(teamemberscfg)
+	teamrolesclient := team_roles.NewAPIClient(teamrolescfg)
 
 	return ProviderConfOutput{
-		access_token:    access_token,
-		vpcclient:       vpcclient,
-		orgclient:       orgclient,
-		roleclient:      roleclient,
-		rolegroupclient: rolegroupclient,
-		userclient:      userclient,
-		envclient:       envclient,
-		userrgpclient:   userrgpclient,
+		access_token:     access_token,
+		vpcclient:        vpcclient,
+		orgclient:        orgclient,
+		roleclient:       roleclient,
+		rolegroupclient:  rolegroupclient,
+		userclient:       userclient,
+		envclient:        envclient,
+		userrgpclient:    userrgpclient,
+		teamclient:       teamclient,
+		teamembersclient: teamembersclient,
+		teamrolesclient:  teamrolesclient,
 	}
 }
