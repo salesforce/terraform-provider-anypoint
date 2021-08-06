@@ -37,7 +37,8 @@ func resourceTeam() *schema.Resource {
 			},
 			"team_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "internal",
 			},
 			"team_id": {
 				Type:     schema.TypeString,
