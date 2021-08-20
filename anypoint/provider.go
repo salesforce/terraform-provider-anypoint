@@ -58,6 +58,7 @@ func Provider() *schema.Provider {
 			"anypoint_user":            resourceUser(),
 			"anypoint_user_rolegroup":  resourceUserRolegroup(),
 			"anypoint_team":            resourceTeam(),
+			"anypoint_team_roles":      resourceTeamRoles(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":            dataSourceVPCs(),
@@ -73,6 +74,7 @@ func Provider() *schema.Provider {
 			"anypoint_user_rolegroups": dataSourceUserRolegroups(),
 			"anypoint_team":            dataSourceTeam(),
 			"anypoint_teams":           dataSourceTeams(),
+			"anypoint_team_roles":      dataSourceTeamRoles(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
