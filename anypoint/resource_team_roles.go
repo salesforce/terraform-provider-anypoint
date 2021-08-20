@@ -160,7 +160,9 @@ func resourceTeamRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 	teamid := split[1]
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
 
-	httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdDelete(authctx, orgid, teamid).Execute()
+	body := newTeamRolesDeleteBody(d)
+
+	httpr, err := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesDelete(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -171,7 +173,7 @@ func resourceTeamRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete team " + teamid,
+			Summary:  "Unable to delete team " + teamid + " roles",
 			Detail:   details,
 		})
 		return diags
@@ -185,6 +187,26 @@ func resourceTeamRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func newTeamRolesPostBody(d *schema.ResourceData) []map[string]interface{} {
+	roles := d.Get("roles").([]interface{})
+
+	if roles == nil || len(roles) <= 0 {
+		return make([]map[string]interface{}, 0)
+	}
+
+	body := make([]map[string]interface{}, len(roles))
+
+	for i, role := range roles {
+		content := role.(map[string]interface{})
+		item := make(map[string]interface{})
+		item["role_id"] = content["role"]
+		item["content_params"] = content["content_params"]
+		body[i] = item
+	}
+
+	return body
+}
+
+func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 	roles := d.Get("roles").([]interface{})
 
 	if roles == nil || len(roles) <= 0 {
