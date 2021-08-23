@@ -59,6 +59,7 @@ func Provider() *schema.Provider {
 			"anypoint_user_rolegroup":  resourceUserRolegroup(),
 			"anypoint_team":            resourceTeam(),
 			"anypoint_team_roles":      resourceTeamRoles(),
+			"anypoint_team_members":    resourceTeamMembers(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":            dataSourceVPCs(),
@@ -75,6 +76,7 @@ func Provider() *schema.Provider {
 			"anypoint_team":            dataSourceTeam(),
 			"anypoint_teams":           dataSourceTeams(),
 			"anypoint_team_roles":      dataSourceTeamRoles(),
+			"anypoint_team_members":    dataSourceTeamMembers(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -172,17 +174,17 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 }
 
 type ProviderConfOutput struct {
-	access_token     string
-	vpcclient        *vpc.APIClient
-	orgclient        *org.APIClient
-	roleclient       *role.APIClient
-	rolegroupclient  *rolegroup.APIClient
-	userclient       *user.APIClient
-	envclient        *env.APIClient
-	userrgpclient    *user_rolegroups.APIClient
-	teamclient       *team.APIClient
-	teamembersclient *team_members.APIClient
-	teamrolesclient  *team_roles.APIClient
+	access_token      string
+	vpcclient         *vpc.APIClient
+	orgclient         *org.APIClient
+	roleclient        *role.APIClient
+	rolegroupclient   *rolegroup.APIClient
+	userclient        *user.APIClient
+	envclient         *env.APIClient
+	userrgpclient     *user_rolegroups.APIClient
+	teamclient        *team.APIClient
+	teammembersclient *team_members.APIClient
+	teamrolesclient   *team_roles.APIClient
 }
 
 func newProviderConfOutput(access_token string) ProviderConfOutput {
@@ -197,7 +199,7 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	envcfg := env.NewConfiguration()
 	userrolegroupscfg := user_rolegroups.NewConfiguration()
 	teamcfg := team.NewConfiguration()
-	teamemberscfg := team_members.NewConfiguration()
+	teammemberscfg := team_members.NewConfiguration()
 	teamrolescfg := team_roles.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
@@ -208,20 +210,20 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 	envclient := env.NewAPIClient(envcfg)
 	userrgpclient := user_rolegroups.NewAPIClient(userrolegroupscfg)
 	teamclient := team.NewAPIClient(teamcfg)
-	teamembersclient := team_members.NewAPIClient(teamemberscfg)
+	teammembersclient := team_members.NewAPIClient(teammemberscfg)
 	teamrolesclient := team_roles.NewAPIClient(teamrolescfg)
 
 	return ProviderConfOutput{
-		access_token:     access_token,
-		vpcclient:        vpcclient,
-		orgclient:        orgclient,
-		roleclient:       roleclient,
-		rolegroupclient:  rolegroupclient,
-		userclient:       userclient,
-		envclient:        envclient,
-		userrgpclient:    userrgpclient,
-		teamclient:       teamclient,
-		teamembersclient: teamembersclient,
-		teamrolesclient:  teamrolesclient,
+		access_token:      access_token,
+		vpcclient:         vpcclient,
+		orgclient:         orgclient,
+		roleclient:        roleclient,
+		rolegroupclient:   rolegroupclient,
+		userclient:        userclient,
+		envclient:         envclient,
+		userrgpclient:     userrgpclient,
+		teamclient:        teamclient,
+		teammembersclient: teammembersclient,
+		teamrolesclient:   teamrolesclient,
 	}
 }
