@@ -37,37 +37,43 @@ variable org_id {
   description = "the anypoint organization id"
 }
 
+variable env_id {
+  type        = string
+  default     = "3d5af0fe-ba6b-4c52-8b5e-ed9da2fa8167"
+  description = "the anypoint environment id"
+}
+
 
 provider "anypoint" {
   username = var.username
   password = var.password
 }
 
-resource "anypoint_env" "env" {
-  name = "my-ENV1"
-  type = "sandbox"
-  org_id = var.org_id
-}
+# resource "anypoint_env" "env" {
+#   name = "my-ENV1"
+#   type = "sandbox"
+#   org_id = var.org_id
+# }
 
-output "env" {
-  value = anypoint_env.env
-}
+# output "env" {
+#   value = anypoint_env.env
+# }
 
-/*resource "anypoint_mq" "amq" {
+resource "anypoint_mq" "amq" {
   defaultttl = 604800000
   defaultlockttl = 120000
   type = "queue"
   encrypted = true
   org_id = var.org_id
-  //env_id = var.env_id
-  env_id = "3d5af0fe-ba6b-4c52-8b5e-ed9da2fa8167"
+  env_id = var.env_id
+  //env_id = "3d5af0fe-ba6b-4c52-8b5e-ed9da2fa8167"
   region_id = "eu-west-2"
-  queue_id = "tq-test11"
+  queue_id = "tq-test6"
 }
 
 output "amq" {
   value = anypoint_mq.amq
-}*/
+}
 
 
  /* resource "anypoint_bg" "bg" {

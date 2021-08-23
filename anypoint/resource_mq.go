@@ -41,6 +41,7 @@ func resourceMQ() *schema.Resource {
 			"queue_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"org_id": {
 				Type:     schema.TypeString,
@@ -68,7 +69,7 @@ func resourceMQCreate(ctx context.Context, d *schema.ResourceData, m interface{}
 	body := newMQPutBody(d)
 
 	//request mq creation
-	_, httpr, err := pco.amqclient.DefaultApi.V1OrganizationsOrgIdEnvironmentsEnvIdRegionsRegionIdDestinationsQueuesQueueIdPut(authctx, orgid, envid, regionid, queueid).QueueOptional(*body).Execute()
+	res, httpr, err := pco.amqclient.DefaultApi.V1OrganizationsOrgIdEnvironmentsEnvIdRegionsRegionIdDestinationsQueuesQueueIdPut(authctx, orgid, envid, regionid, queueid).QueueOptional(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -86,7 +87,7 @@ func resourceMQCreate(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	defer httpr.Body.Close()
 
-	d.SetId(queueid)
+	d.SetId(res.GetQueueId())
 
 	resourceMQRead(ctx, d, m)
 
@@ -97,11 +98,10 @@ func resourceMQRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	//queueid := d.Id()
+	queueid := d.Id()
 	envid := d.Get("env_id").(string)
 	orgid := d.Get("org_id").(string)
 	regionid := d.Get("region_id").(string)
-	queueid := d.Get("queue_id").(string)
 
 	authctx := getMQAuthCtx(ctx, &pco)
 
@@ -143,7 +143,7 @@ func resourceMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 	envid := d.Get("env_id").(string)
 	orgid := d.Get("org_id").(string)
 	regionid := d.Get("region_id").(string)
-	queueid := d.Get("queue_id").(string)
+	queueid := d.Id()
 
 	authctx := getMQAuthCtx(ctx, &pco)
 
@@ -181,7 +181,7 @@ func resourceMQDelete(ctx context.Context, d *schema.ResourceData, m interface{}
 	envid := d.Get("env_id").(string)
 	orgid := d.Get("org_id").(string)
 	regionid := d.Get("region_id").(string)
-	queueid := d.Get("queue_id").(string)
+	queueid := d.Id()
 
 	authctx := getMQAuthCtx(ctx, &pco)
 
@@ -214,10 +214,10 @@ func resourceMQDelete(ctx context.Context, d *schema.ResourceData, m interface{}
  */
 func newMQPutBody(d *schema.ResourceData) *amq.QueueOptional {
 	body := amq.NewQueueOptionalWithDefaults()
-	//body.SetDefaultTtl(d.Get("defaultttl").(int32))
-	//body.SetDefaultLockTtl(d.Get("defaultlockttl").(int32))
-	body.SetDefaultTtl(604800000)
-	body.SetDefaultLockTtl(120000)
+	body.SetDefaultTtl(d.Get("defaultttl").(int32))
+	body.SetDefaultLockTtl(d.Get("defaultlockttl").(int32))
+	// body.SetDefaultTtl(604800000)
+	// body.SetDefaultLockTtl(120000)
 	body.SetType(d.Get("type").(string))
 	body.SetEncrypted(d.Get("encrypted").(bool))
 	return body
