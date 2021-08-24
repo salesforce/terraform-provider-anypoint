@@ -13,7 +13,7 @@ func dataSourceRoleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceRoleGroupRead,
 		Schema: map[string]*schema.Schema{
-			"role_group_id": {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("role_group_id").(string)
+	rolegroupid := d.Get("id").(string)
 
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
 

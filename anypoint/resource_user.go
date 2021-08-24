@@ -25,6 +25,7 @@ func resourceUser() *schema.Resource {
 			"org_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"username": {
 				Type:     schema.TypeString,
