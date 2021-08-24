@@ -198,8 +198,8 @@ func newTeamRolesPostBody(d *schema.ResourceData) []map[string]interface{} {
 	for i, role := range roles {
 		content := role.(map[string]interface{})
 		item := make(map[string]interface{})
-		item["role_id"] = content["role"]
-		item["content_params"] = content["content_params"]
+		item["role_id"] = content["role_id"]
+		item["context_params"] = content["context_params"]
 		body[i] = item
 	}
 
