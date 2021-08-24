@@ -93,7 +93,7 @@ func resourceTeamRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 
 	d.SetId(orgid + "_" + teamid + "_roles")
 
-	resourceUserRead(ctx, d, m)
+	resourceTeamRolesRead(ctx, d, m)
 
 	return diags
 }
