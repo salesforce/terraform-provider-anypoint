@@ -84,7 +84,7 @@ func resourceTeamRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team ",
+			Summary:  "Unable to create team roles ",
 			Detail:   details,
 		})
 		return diags
