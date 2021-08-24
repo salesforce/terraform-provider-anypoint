@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
@@ -40,49 +39,29 @@ func resourceTeamMembers() *schema.Resource {
 			},
 			"membership_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "member",
 				ForceNew: true,
 			},
-			"teammebers": {
-				Type:     schema.TypeList,
+			"identity_type": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"identity_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"membership_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_assigned_via_external_groups": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"created_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"updated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
-			"total": {
-				Type:        schema.TypeInt,
-				Description: "The total number of available results",
-				Computed:    true,
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_assigned_via_external_groups": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -135,7 +114,8 @@ func resourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m inte
 	teamid := split[1]
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
 	//request members
-	_, httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersGet(authctx, orgid, teamid).Execute()
+	res, httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersGet(authctx, orgid, teamid).Execute()
+
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -152,27 +132,52 @@ func resourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m inte
 		return diags
 	}
 	defer httpr.Body.Close()
-	log.Printf("good")
-	//process data
-	// members := flattenTeamMembersData(res.Data)
-	// //save in data source scheman
-	// if err := d.Set("members", members); err != nil {
-	// 	diags = append(diags, diag.Diagnostic{
-	// 		Severity: diag.Error,
-	// 		Summary:  "Unable to set 2 members for team " + teamid,
-	// 		Detail:   err.Error(),
-	// 	})
-	// 	return diags
-	// }
 
-	// if err := d.Set("total", res.Total); err != nil {
-	// 	diags = append(diags, diag.Diagnostic{
-	// 		Severity: diag.Error,
-	// 		Summary:  "Unable to set total number of team " + teamid + " members",
-	// 		Detail:   err.Error(),
-	// 	})
-	// 	return diags
-	// }
+	//save name
+	if err := d.Set("name", *res.GetData()[0].Name); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set member name for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+	//save created_at
+	if err := d.Set("created_at", *res.GetData()[0].CreatedAt); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set member created_at for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+	//save identity_type
+	if err := d.Set("identity_type", *res.GetData()[0].IdentityType); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set member identity_type for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+	//save updated_at
+	if err := d.Set("updated_at", *res.GetData()[0].UpdatedAt); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set member updated_at for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+	//save is_assigned_via_external_groups
+	if err := d.Set("is_assigned_via_external_groups", *res.GetData()[0].IsAssignedViaExternalGroups); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set member is_assigned_via_external_groups for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
 
 	return diags
 }

@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"strconv"
 	"time"
 
@@ -69,7 +68,7 @@ func dataSourceTeamMembers() *schema.Resource {
 					},
 				},
 			},
-			"teammebers": {
+			"teammembers": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -129,7 +128,7 @@ func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m in
 		return diags
 	}
 
-	//request roles
+	//request members
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
@@ -148,9 +147,9 @@ func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 	defer httpr.Body.Close()
 	//process data
-	teammebers := flattenTeamMembersData(res.Data)
+	teammembers := flattenTeamMembersData(res.Data)
 	//save in data source schema
-	if err := d.Set("teammebers", teammebers); err != nil {
+	if err := d.Set("teammembers", teammembers); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set members for team " + teamid,
@@ -223,46 +222,42 @@ func parseTeamMembersSearchOpts(req team_members.DefaultApiApiOrganizationsOrgId
 	return req, diags
 }
 
-func flattenTeamMembersData(teammebers *[]team_members.TeamMember) []interface{} {
-	log.Printf("err1")
-	if teammebers != nil && len(*teammebers) > 0 {
-		res := make([]interface{}, len(*teammebers))
-		for i, teammeber := range *teammebers {
-			log.Printf("loop")
-			res[i] = flattenTeamMemberData(&teammeber)
+func flattenTeamMembersData(teammembers *[]team_members.TeamMember) []interface{} {
+	if teammembers != nil && len(*teammembers) > 0 {
+		res := make([]interface{}, len(*teammembers))
+		for i, teammember := range *teammembers {
+			res[i] = flattenTeamMemberData(&teammember)
 		}
 		return res
 	}
-	log.Printf("tm empty")
 	return make([]interface{}, 0)
 }
 
-func flattenTeamMemberData(teammeber *team_members.TeamMember) map[string]interface{} {
+func flattenTeamMemberData(teammember *team_members.TeamMember) map[string]interface{} {
 	item := make(map[string]interface{})
-	if teammeber == nil {
-		log.Printf("tm nil")
+	if teammember == nil {
+		//log.Printf("tm nil")
 		return item
 	}
-	log.Printf("tm not null")
-	if val, ok := teammeber.GetIdentityTypeOk(); ok {
+	if val, ok := teammember.GetIdentityTypeOk(); ok {
 		item["identity_type"] = *val
 	}
-	if val, ok := teammeber.GetIdOk(); ok {
+	if val, ok := teammember.GetIdOk(); ok {
 		item["id"] = *val
 	}
-	if val, ok := teammeber.GetNameOk(); ok {
+	if val, ok := teammember.GetNameOk(); ok {
 		item["name"] = *val
 	}
-	if val, ok := teammeber.GetMembershipTypeOk(); ok {
+	if val, ok := teammember.GetMembershipTypeOk(); ok {
 		item["membership_type"] = *val
 	}
-	if val, ok := teammeber.GetIsAssignedViaExternalGroupsOk(); ok {
+	if val, ok := teammember.GetIsAssignedViaExternalGroupsOk(); ok {
 		item["is_assigned_via_external_groups"] = *val
 	}
-	if val, ok := teammeber.GetCreatedAtOk(); ok {
+	if val, ok := teammember.GetCreatedAtOk(); ok {
 		item["created_at"] = *val
 	}
-	if val, ok := teammeber.GetUpdatedAtOk(); ok {
+	if val, ok := teammember.GetUpdatedAtOk(); ok {
 		item["updated_at"] = *val
 	}
 	return item
