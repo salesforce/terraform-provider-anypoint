@@ -19,7 +19,6 @@ func resourceTeam() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"org_id": {
@@ -92,7 +91,7 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	d.SetId(res.GetTeamId())
 
-	resourceUserRead(ctx, d, m)
+	resourceTeamRead(ctx, d, m)
 
 	return diags
 }
@@ -194,7 +193,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
-	return resourceUserRead(ctx, d, m)
+	return resourceTeamRead(ctx, d, m)
 }
 
 func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
