@@ -19,7 +19,7 @@ func dataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"orgid": {
+			"org_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -121,17 +121,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("id").(string)
-	orgid := d.Get("orgid").(string)
-
-	if vpcid == "" || orgid == "" {
-		diags := append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "VPC id (id) and Organization ID (orgid) are required",
-			Detail:   "VPC id (id) and Organization ID (orgid) must be provided",
-		})
-		return diags
-	}
-
+	orgid := d.Get("org_id").(string)
 	authctx := getVPCAuthCtx(ctx, &pco)
 
 	//request vpcs

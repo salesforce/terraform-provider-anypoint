@@ -23,7 +23,7 @@ func resourceVPC() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"orgid": {
+			"org_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -128,7 +128,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid := d.Get("orgid").(string)
+	orgid := d.Get("org_id").(string)
 
 	authctx := getVPCAuthCtx(ctx, &pco)
 
@@ -165,7 +165,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
-	orgid := d.Get("orgid").(string)
+	orgid := d.Get("org_id").(string)
 
 	authctx := getVPCAuthCtx(ctx, &pco)
 
@@ -205,7 +205,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
-	orgid := d.Get("orgid").(string)
+	orgid := d.Get("org_id").(string)
 
 	authctx := getVPCAuthCtx(ctx, &pco)
 
@@ -241,7 +241,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
-	orgid := d.Get("orgid").(string)
+	orgid := d.Get("org_id").(string)
 
 	authctx := getVPCAuthCtx(ctx, &pco)
 
