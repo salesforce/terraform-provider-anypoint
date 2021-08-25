@@ -59,7 +59,7 @@ func Provider() *schema.Provider {
 			"anypoint_user_rolegroup":  resourceUserRolegroup(),
 			"anypoint_team":            resourceTeam(),
 			"anypoint_team_roles":      resourceTeamRoles(),
-			"anypoint_team_members":    resourceTeamMembers(),
+			"anypoint_team_member":     resourceTeamMember(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":            dataSourceVPCs(),

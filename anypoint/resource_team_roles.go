@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -228,8 +227,6 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 		item["context_params"] = content["context_params"]
 		body[i-delta] = item
 	}
-
-	log.Println("[DEBUG] delete body ", body)
 
 	return body
 }

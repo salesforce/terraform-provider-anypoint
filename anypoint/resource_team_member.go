@@ -2,6 +2,7 @@ package anypoint
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -11,11 +12,11 @@ import (
 	team_members "github.com/mulesoft-consulting/cloudhub-client-go/team_members"
 )
 
-func resourceTeamMembers() *schema.Resource {
+func resourceTeamMember() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTeamMembersCreate,
-		ReadContext:   resourceTeamMembersRead,
-		DeleteContext: resourceTeamMembersDelete,
+		CreateContext: resourceTeamMemberCreate,
+		ReadContext:   resourceTeamMemberRead,
+		DeleteContext: resourceTeamMemberDelete,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,
@@ -67,7 +68,7 @@ func resourceTeamMembers() *schema.Resource {
 	}
 }
 
-func resourceTeamMembersCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -75,7 +76,7 @@ func resourceTeamMembersCreate(ctx context.Context, d *schema.ResourceData, m in
 	teamid := d.Get("team_id").(string)
 	userid := d.Get("user_id").(string)
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
-	body := newTeamMembersPutBody(d)
+	body := newTeamMemberPutBody(d)
 
 	//request user creation
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdPut(authctx, orgid, teamid, userid).TeamMemberPutBody(*body).Execute()
@@ -99,12 +100,12 @@ func resourceTeamMembersCreate(ctx context.Context, d *schema.ResourceData, m in
 	d.SetId(orgid + "_" + teamid + "_" + userid + "_members")
 	d.Set("last_updated", time.Now().Format(time.RFC850))
 
-	resourceTeamMembersRead(ctx, d, m)
+	resourceTeamMemberRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -133,47 +134,13 @@ func resourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 	defer httpr.Body.Close()
 
-	//save name
-	if err := d.Set("name", *res.GetData()[0].Name); err != nil {
+	item := res.GetData()[0]
+	teammember := flattenTeamMemberData(&item)
+
+	if err := setTeamMemberAttributesToResourceData(d, teammember); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set member name for team " + teamid,
-			Detail:   err.Error(),
-		})
-		return diags
-	}
-	//save created_at
-	if err := d.Set("created_at", *res.GetData()[0].CreatedAt); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to set member created_at for team " + teamid,
-			Detail:   err.Error(),
-		})
-		return diags
-	}
-	//save identity_type
-	if err := d.Set("identity_type", *res.GetData()[0].IdentityType); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to set member identity_type for team " + teamid,
-			Detail:   err.Error(),
-		})
-		return diags
-	}
-	//save updated_at
-	if err := d.Set("updated_at", *res.GetData()[0].UpdatedAt); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to set member updated_at for team " + teamid,
-			Detail:   err.Error(),
-		})
-		return diags
-	}
-	//save is_assigned_via_external_groups
-	if err := d.Set("is_assigned_via_external_groups", *res.GetData()[0].IsAssignedViaExternalGroups); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to set member is_assigned_via_external_groups for team " + teamid,
+			Summary:  "Unable to set member " + id + " attributes for team " + teamid,
 			Detail:   err.Error(),
 		})
 		return diags
@@ -182,7 +149,7 @@ func resourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m inte
 	return diags
 }
 
-func resourceTeamMembersDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -217,11 +184,33 @@ func resourceTeamMembersDelete(ctx context.Context, d *schema.ResourceData, m in
 	return diags
 }
 
-func newTeamMembersPutBody(d *schema.ResourceData) *team_members.TeamMemberPutBody {
+func newTeamMemberPutBody(d *schema.ResourceData) *team_members.TeamMemberPutBody {
 	body := team_members.NewTeamMemberPutBodyWithDefaults()
 	body.SetMembershipType(d.Get("membership_type").(string))
 
 	return body
+}
+
+/*
+ * Copies the given user instance into the given Source data
+ */
+func setTeamMemberAttributesToResourceData(d *schema.ResourceData, teammember map[string]interface{}) error {
+	attributes := getTeamMemberAttributes()
+	if teammember != nil {
+		for _, attr := range attributes {
+			if err := d.Set(attr, teammember[attr]); err != nil {
+				return fmt.Errorf("unable to set team member attribute %s\n details: %s", attr, err)
+			}
+		}
+	}
+	return nil
+}
+
+func getTeamMemberAttributes() []string {
+	attributes := [...]string{
+		"identity_type", "name", "is_assigned_via_external_groups", "created_at", "updated_at",
+	}
+	return attributes[:]
 }
 
 /*
