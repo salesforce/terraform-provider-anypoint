@@ -209,8 +209,15 @@ func flattenTeamRoleData(role *team_roles.TeamRole) map[string]interface{} {
 		item["role_id"] = *val
 	}
 	if val, ok := role.GetContextParamsOk(); ok {
-		item["context_params"] = map[string]interface{}{
-			"org": val.GetOrg(),
+		if env, ok := val.GetEnvIdOk(); ok {
+			item["context_params"] = map[string]interface{}{
+				"org":   val.GetOrg(),
+				"envId": *env,
+			}
+		} else {
+			item["context_params"] = map[string]interface{}{
+				"org": val.GetOrg(),
+			}
 		}
 	}
 	return item
