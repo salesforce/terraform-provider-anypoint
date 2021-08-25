@@ -1,0 +1,2 @@
+name,parent_org_id,ownerid,create_suborgs,create_env,global_deployment,vcores_prod,vcores_sandbox,vcores_design,static_ips,vpcs,lbs,vpns
+myAwesomeTFBG,aa1f55d6-213d-4f60-845c-207286484cd1,18f23771-c78a-4be2-af8f-1bae66f43942,true,true,true,0.1,0.2,0.1,0,1,0,0
