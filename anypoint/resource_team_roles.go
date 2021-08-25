@@ -3,6 +3,7 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -84,7 +85,7 @@ func resourceTeamRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team ",
+			Summary:  "Unable to create team roles ",
 			Detail:   details,
 		})
 		return diags
@@ -93,7 +94,7 @@ func resourceTeamRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 
 	d.SetId(orgid + "_" + teamid + "_roles")
 
-	resourceUserRead(ctx, d, m)
+	resourceTeamRolesRead(ctx, d, m)
 
 	return diags
 }
@@ -198,8 +199,8 @@ func newTeamRolesPostBody(d *schema.ResourceData) []map[string]interface{} {
 	for i, role := range roles {
 		content := role.(map[string]interface{})
 		item := make(map[string]interface{})
-		item["role_id"] = content["role"]
-		item["content_params"] = content["content_params"]
+		item["role_id"] = content["role_id"]
+		item["context_params"] = content["context_params"]
 		body[i] = item
 	}
 
@@ -213,15 +214,22 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 		return make([]map[string]interface{}, 0)
 	}
 
-	body := make([]map[string]interface{}, len(roles))
+	body := make([]map[string]interface{}, len(roles)-1) // It is forbidden to remove the Business Group Viewer role
+	delta := 0
 
 	for i, role := range roles {
 		content := role.(map[string]interface{})
+		if content["role_id"] == "833ab9ca-0c72-45ba-9764-1df83240db57" { // It is forbidden to remove the Business Group Viewer role
+			delta++
+			continue
+		}
 		item := make(map[string]interface{})
-		item["role_id"] = content["role"]
-		item["content_params"] = content["content_params"]
-		body[i] = item
+		item["role_id"] = content["role_id"]
+		item["context_params"] = content["context_params"]
+		body[i-delta] = item
 	}
+
+	log.Println("[DEBUG] delete body ", body)
 
 	return body
 }

@@ -10,9 +10,9 @@ require (
 	github.com/mulesoft-consulting/cloudhub-client-go/org v0.2.10
 	github.com/mulesoft-consulting/cloudhub-client-go/role v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/rolegroup v0.0.2
-	github.com/mulesoft-consulting/cloudhub-client-go/team v0.0.2
+	github.com/mulesoft-consulting/cloudhub-client-go/team v0.1.0
 	github.com/mulesoft-consulting/cloudhub-client-go/team_members v0.0.2
-	github.com/mulesoft-consulting/cloudhub-client-go/team_roles v0.0.1
+	github.com/mulesoft-consulting/cloudhub-client-go/team_roles v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/user v0.1.3
 	github.com/mulesoft-consulting/cloudhub-client-go/user_rolegroups v0.0.1
 	github.com/mulesoft-consulting/cloudhub-client-go/vpc v0.4.1

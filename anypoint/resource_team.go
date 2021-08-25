@@ -172,7 +172,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if d.HasChanges(getTeamPutWatchAttributes()...) {
 		body := newTeamPutBody(d)
 		//request user creation
-		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdPut(authctx, orgid, teamid).TeamPutBody(*body).Execute()
+		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdParentPut(authctx, orgid, teamid).TeamPutBody(*body).Execute()
 		if err != nil {
 			var details string
 			if httpr != nil {
