@@ -16,6 +16,11 @@ func resourceUser() *schema.Resource {
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
+		Description: `
+		Creates a ` + "`" + `user` + "`" + ` for your org. 
+
+**N.B:** you can use a username only once even after it's deleted.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

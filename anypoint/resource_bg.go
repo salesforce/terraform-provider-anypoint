@@ -17,6 +17,9 @@ func resourceBG() *schema.Resource {
 		ReadContext:   resourceBGRead,
 		UpdateContext: resourceBGUpdate,
 		DeleteContext: resourceBGDelete,
+		Description: `
+		Creates a business group (org).
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

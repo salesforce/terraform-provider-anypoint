@@ -14,8 +14,13 @@ func resourceRoleGroupRoles() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceRoleGroupRolesCreate,
 		ReadContext:   resourceRoleGroupRolesRead,
-		// UpdateContext: resourceRoleGroupRolesUpdate,
 		DeleteContext: resourceRoleGroupRolesDelete,
+		DeprecationMessage: `
+		This resource is deprecated, please use ` + "`" + `teams` + "`" + `, ` + "`" + `team_members` + "`" + `team_roles` + "`" + ` instead.
+		`,
+		Description: `
+		Assignes ` + "`" + `roles` + "`" + ` to a ` + "`" + `rolegroup` + "`" + ` for your ` + "`" + `org` + "`" + `.
+		`,
 		Schema: map[string]*schema.Schema{
 			"role_group_id": {
 				Type:     schema.TypeString,

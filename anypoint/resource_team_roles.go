@@ -15,6 +15,13 @@ func resourceTeamRoles() *schema.Resource {
 		CreateContext: resourceTeamRolesCreate,
 		ReadContext:   resourceTeamRolesRead,
 		DeleteContext: resourceTeamRolesDelete,
+		Description: `
+		Attributes ` + "`" + `roles` + "`" + ` to your selected ` + "`" + `team` + "`" + ` for your ` + "`" + `org` + "`" + `.
+
+Depending on the ` + "`" + `role` + "`" + `, some roles are environment scoped others are business group scoped :
+* For environment scoped roles, the org id and environment id needs to be specified.
+* For business group scoped roles, only the org id is needed.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

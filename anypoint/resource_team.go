@@ -16,6 +16,9 @@ func resourceTeam() *schema.Resource {
 		ReadContext:   resourceTeamRead,
 		UpdateContext: resourceTeamUpdate,
 		DeleteContext: resourceTeamDelete,
+		Description: `
+		Creates a ` + "`" + `team` + "`" + ` for your ` + "`" + `org` + "`" + `.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

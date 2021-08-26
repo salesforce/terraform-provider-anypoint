@@ -17,6 +17,9 @@ func resourceENV() *schema.Resource {
 		ReadContext:   resourceENVRead,
 		UpdateContext: resourceENVUpdate,
 		DeleteContext: resourceENVDelete,
+		Description: `
+		Creates an ` + "`" + `environement` + "`" + ` for your ` + "`" + `org` + "`" + `.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

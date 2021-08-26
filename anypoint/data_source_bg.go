@@ -14,6 +14,9 @@ import (
 func dataSourceBG() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceBGRead,
+		Description: `
+		Reads a specific ` + "`" + `business group` + "`" + `.
+		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,

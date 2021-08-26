@@ -14,6 +14,9 @@ import (
 func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceRolesRead,
+		Description: `
+		Reads all ` + "`" + `roles` + "`" + ` availabble.
+		`,
 		Schema: map[string]*schema.Schema{
 			"params": {
 				Type:     schema.TypeSet,
