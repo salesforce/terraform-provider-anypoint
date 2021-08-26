@@ -3,12 +3,12 @@
 page_title: "anypoint_vpcs Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads the `vpcs` available in the business group.
 ---
 
 # anypoint_vpcs (Data Source)
 
-
+Reads the `vpcs` available in the business group.
 
 
 

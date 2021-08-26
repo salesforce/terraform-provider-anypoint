@@ -3,12 +3,12 @@
 page_title: "anypoint_team_roles Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads all `team` roles in the business group.
 ---
 
 # anypoint_team_roles (Data Source)
 
-
+Reads all `team` roles in the business group.
 
 
 

@@ -3,12 +3,12 @@
 page_title: "anypoint_user Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads a specific `user` in the business group.
 ---
 
 # anypoint_user (Data Source)
 
-
+Reads a specific `user` in the business group.
 
 
 

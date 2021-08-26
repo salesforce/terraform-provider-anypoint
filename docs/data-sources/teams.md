@@ -3,12 +3,12 @@
 page_title: "anypoint_teams Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads all `teams` available in the business group.
 ---
 
 # anypoint_teams (Data Source)
 
-
+Reads all `teams` available in the business group.
 
 
 
