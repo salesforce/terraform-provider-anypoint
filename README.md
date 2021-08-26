@@ -76,3 +76,7 @@ Use `log` package to log. Here's an exampe:
 ```go
 log.Println("[DEBUG] Something happened!")
 ```
+
+## Create Release
+
+Follow [documentation](https://www.terraform.io/docs/registry/providers/publishing.html#using-goreleaser-locally)
