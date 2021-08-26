@@ -3,12 +3,12 @@
 page_title: "anypoint_rolegroups Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads all `rolegroups` available in your business group.
 ---
 
 # anypoint_rolegroups (Data Source)
 
-
+Reads all `rolegroups` available in your business group.
 
 
 

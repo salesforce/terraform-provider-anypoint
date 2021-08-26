@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Creates a `user` for your org. 
   
-      **N.B:** you can use a username only once even after it's deleted.
+  N.B: you can use a username only once even after it's deleted.
 ---
 
 # anypoint_user (Resource)
