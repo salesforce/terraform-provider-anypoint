@@ -79,6 +79,7 @@ func Provider() *schema.Provider {
 			"anypoint_team_members":    dataSourceTeamMembers(),
 		},
 		ConfigureContextFunc: providerConfigure,
+		TerraformVersion:     "v1.0.1",
 	}
 }
 

@@ -16,6 +16,9 @@ import (
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceUserRead,
+		Description: `
+		Reads a specific ` + "`" + `user` + "`" + ` in the business group.
+		`,
 		Schema: map[string]*schema.Schema{
 			"org_id": {
 				Type:     schema.TypeString,

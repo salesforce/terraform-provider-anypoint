@@ -13,14 +13,21 @@ import (
 func dataSourceENV() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceENVRead,
+		Description: `
+		Reads all ` + "`" + `environments` + "`" + ` in your business group.
+		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"organization_id": {
+			"org_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"organization_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,

@@ -15,6 +15,12 @@ import (
 func dataSourceUserRolegroup() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceUserRolegroupRead,
+		DeprecationMessage: `
+		This resource is deprecated, please use ` + "`" + `teams` + "`" + `, ` + "`" + `team_members` + "`" + `team_roles` + "`" + ` instead.
+		`,
+		Description: `
+		Reads the ` + "`" + `user` + "`" + ` related ` + "`" + `rolegroup` + "`" + ` in the business group.
+		`,
 		Schema: map[string]*schema.Schema{
 			"org_id": {
 				Type:     schema.TypeString,
