@@ -67,3 +67,5 @@ terraform
 **/.vscode/**
 
 **/params.tfvars.json
+
+release.sh
