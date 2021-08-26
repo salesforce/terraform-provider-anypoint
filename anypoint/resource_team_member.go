@@ -17,6 +17,9 @@ func resourceTeamMember() *schema.Resource {
 		CreateContext: resourceTeamMemberCreate,
 		ReadContext:   resourceTeamMemberRead,
 		DeleteContext: resourceTeamMemberDelete,
+		Description: `
+		Assignes a ` + "`" + `user` + "`" + ` to a ` + "`" + `team` + "`" + ` for your ` + "`" + `org` + "`" + `.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

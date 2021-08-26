@@ -14,6 +14,9 @@ import (
 func dataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceVPCRead,
+		Description: `
+		Reads a specific ` + "`" + `vpc` + "`" + ` in the business group.
+		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,

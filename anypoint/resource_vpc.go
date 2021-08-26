@@ -17,6 +17,9 @@ func resourceVPC() *schema.Resource {
 		ReadContext:   resourceVPCRead,
 		UpdateContext: resourceVPCUpdate,
 		DeleteContext: resourceVPCDelete,
+		Description: `
+		Creates a ` + "`" + `vpc` + "`" + `component.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,
