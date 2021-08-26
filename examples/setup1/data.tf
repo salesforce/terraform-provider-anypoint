@@ -23,21 +23,16 @@ locals {
   teams_lvl2_roles_list = csvdecode(local.teams_lvl2_roles_csv_data)
   teams_lvl2_members_list = csvdecode(local.teams_lvl2_members_csv_data)
 
+  role_names_list = distinct( concat([ for role in local.teams_lvl1_roles_list : role.name ], [ for role in local.teams_lvl2_roles_list : role.name ]) )
+
+  #flattened result from roles data source
+  data_roles_list = flatten([for iter in data.anypoint_roles.roles : iter.roles])
 }
 
-# data "anypoint_vpcs" "all" {
-#   orgid = var.org_id
-# }
 
-# data "anypoint_vpcs" "all" {}
-
-
-# data "anypoint_team_roles" "troles" {
-#   org_id = var.org_id
-#   team_id = "9363290f-e795-4be6-9ca9-9efc1229b8f2"
-# }
-
-
-# data "anypoint_teams" "teams" {
-#   org_id = var.org_id
-# }
+data "anypoint_roles" "roles" {
+  count = length(local.role_names_list)
+  params {
+    search = element(local.role_names_list, count.index)
+  }
+}

@@ -69,9 +69,12 @@ resource "anypoint_team_roles" "lvl1_teams_roles" {
       if tonumber(role.team_index) == count.index
     ]
     content {
-      role_id = roles.value.role_id
+      role_id = element([
+        for iter in local.data_roles_list : iter.role_id
+        if iter.name == roles.value.name
+      ], 0)
       context_params = {
-        org = anypoint_bg.bgs[tonumber(roles.value["context_org_index"])].id
+        org = tonumber(roles.value["context_org_index"]) == -1 ? var.root_org : anypoint_bg.bgs[tonumber(roles.value["context_org_index"])].id
         envId = length(roles.value["context_env_index"]) > 0 ? anypoint_env.envs[tonumber(roles.value["context_env_index"])].id : null
       }
     }
@@ -89,9 +92,12 @@ resource "anypoint_team_roles" "lvl2_teams_roles" {
       if tonumber(role.team_index) == count.index
     ]
     content {
-      role_id = roles.value.role_id
+      role_id = element([
+        for iter in local.data_roles_list : iter.role_id
+        if iter.name == roles.value.name
+      ], 0)
       context_params = {
-        org = anypoint_bg.bgs[tonumber(roles.value["context_org_index"])].id
+        org = tonumber(roles.value["context_org_index"]) == -1 ? var.root_org : anypoint_bg.bgs[tonumber(roles.value["context_org_index"])].id
         envId = length(roles.value["context_env_index"]) > 0 ? anypoint_env.envs[tonumber(roles.value["context_env_index"])].id : null
       }
     }
