@@ -1,0 +1,6 @@
+name,parent_team_index,type
+Org Admins,1,internal
+Consumers,1,internal
+Developers,1,internal
+Ops,1,internal
+Testers,1,internal

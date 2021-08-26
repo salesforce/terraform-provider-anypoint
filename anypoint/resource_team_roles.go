@@ -213,19 +213,17 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 		return make([]map[string]interface{}, 0)
 	}
 
-	body := make([]map[string]interface{}, len(roles)-1) // It is forbidden to remove the Business Group Viewer role
-	delta := 0
+	body := make([]map[string]interface{}, 0) // It is forbidden to remove the Business Group Viewer role
 
-	for i, role := range roles {
+	for _, role := range roles {
 		content := role.(map[string]interface{})
 		if content["role_id"] == "833ab9ca-0c72-45ba-9764-1df83240db57" { // It is forbidden to remove the Business Group Viewer role
-			delta++
 			continue
 		}
 		item := make(map[string]interface{})
 		item["role_id"] = content["role_id"]
 		item["context_params"] = content["context_params"]
-		body[i-delta] = item
+		body = append(body, item)
 	}
 
 	return body
