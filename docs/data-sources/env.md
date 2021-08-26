@@ -3,12 +3,12 @@
 page_title: "anypoint_env Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  
+  Reads all `environments` in your business group.
 ---
 
 # anypoint_env (Data Source)
 
-
+Reads all `environments` in your business group.
 
 
 
@@ -18,13 +18,14 @@ description: |-
 ### Required
 
 - **id** (String) The ID of this resource.
-- **organization_id** (String)
+- **org_id** (String)
 
 ### Read-Only
 
 - **client_id** (String)
 - **is_production** (Boolean)
 - **name** (String)
+- **organization_id** (String)
 - **type** (String)
 
 
