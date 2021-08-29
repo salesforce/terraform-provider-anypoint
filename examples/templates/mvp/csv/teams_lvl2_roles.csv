@@ -1,0 +1,135 @@
+team_index,name,context_org_index,context_env_index
+0,API Manager Environment Administrator,0,0
+0,API Group Administrator,0,
+0,API Versions Owner,0,
+0,Anypoint Monitoring User,0,
+0,Exchange Administrator,0,
+0,Organization Administrator,0,
+0,Cloudhub Network Administrator,0,
+0,Visualizer Editor,0,
+1,Portals Viewer,0,
+1,Exchange Viewer,0,
+1,Exchange Viewer,-1,
+2,API Manager Environment Administrator,0,0
+2,Deploy API Proxies,0,0
+2,Manage API Alerts,0,0
+2,Manage APIs Configuration,0,0
+2,Manage Contracts,0,0
+2,Manage Policies,0,0
+2,View API Alerts,0,0
+2,View Contracts,0,0
+2,View Policies,0,0
+2,API Creator,0,
+2,API Versions Owner,0,
+2,Anypoint Monitoring User,0,
+2,Design Center Developer,0,
+2,Exchange Contributor,0,
+2,Clear destinations,0,0
+2,Manage clients,0,0
+2,Manage destinations,0,0
+2,View clients,0,0
+2,View destinations,0,0
+2,Cloudhub Network Viewer,0,
+2,Delete Applications,0,0
+2,Download Applications,0,0
+2,Manage Alerts,0,0
+2,Manage Application Data,0,0
+2,Manage Queues,0,0
+2,Manage Schedules,0,0
+2,Manage Settings,0,0
+2,Manage Tenants,0,0
+2,Read Alerts,0,0
+2,Read Applications,0,0
+2,Manage Application Flows,0,0
+2,Create Applications,0,0
+2,Visualizer Editor,-1,
+3,API Manager Environment Administrator,0,1
+3,Deploy API Proxies,0,1
+3,Manage API Alerts,0,1
+3,Manage APIs Configuration,0,1
+3,Manage Contracts,0,1
+3,Manage Policies,0,1
+3,View API Alerts,0,1
+3,View Contracts,0,1
+3,View Policies,0,1
+3,API Creator,0,
+3,API Versions Owner,0,
+3,Anypoint Monitoring User,0,
+3,Exchange Contributor,0,
+3,Clear destinations,0,1
+3,Manage clients,0,1
+3,Manage destinations,0,1
+3,View clients,0,1
+3,View destinations,0,1
+3,Cloudhub Network Viewer,0,
+3,Delete Applications,0,1
+3,Download Applications,0,1
+3,Manage Alerts,0,1
+3,Manage Application Data,0,1
+3,Manage Queues,0,1
+3,Manage Schedules,0,1
+3,Manage Settings,0,1
+3,Manage Tenants,0,1
+3,Read Alerts,0,1
+3,Read Applications,0,1
+3,Manage Application Flows,0,1
+3,Create Applications,0,1
+3,Visualizer Editor,-1,
+4,API Manager Environment Administrator,0,0
+4,API Manager Environment Administrator,0,1
+4,Deploy API Proxies,0,0
+4,Deploy API Proxies,0,1
+4,Manage API Alerts,0,0
+4,Manage API Alerts,0,1
+4,Manage APIs Configuration,0,0
+4,Manage APIs Configuration,0,1
+4,Manage Contracts,0,0
+4,Manage Contracts,0,1
+4,Manage Policies,0,0
+4,Manage Policies,0,1
+4,View API Alerts,0,0
+4,View API Alerts,0,1
+4,View Contracts,0,0
+4,View Contracts,0,1
+4,View Policies,0,0
+4,View Policies,0,1
+4,API Creator,0,
+4,API Versions Owner,0,
+4,Anypoint Monitoring User,0,
+4,Exchange Contributor,0,
+4,Clear destinations,0,0
+4,Clear destinations,0,1
+4,Manage clients,0,0
+4,Manage clients,0,1
+4,Manage destinations,0,0
+4,Manage destinations,0,1
+4,View clients,0,0
+4,View clients,0,1
+4,View destinations,0,0
+4,View destinations,0,1
+4,Cloudhub Network Viewer,0,
+4,Delete Applications,0,0
+4,Delete Applications,0,1
+4,Download Applications,0,0
+4,Download Applications,0,1
+4,Manage Alerts,0,0
+4,Manage Alerts,0,1
+4,Manage Application Data,0,0
+4,Manage Application Data,0,1
+4,Manage Queues,0,0
+4,Manage Queues,0,1
+4,Manage Schedules,0,0
+4,Manage Schedules,0,1
+4,Manage Settings,0,0
+4,Manage Settings,0,1
+4,Manage Tenants,0,0
+4,Manage Tenants,0,1
+4,Read Alerts,0,0
+4,Read Alerts,0,1
+4,Read Applications,0,0
+4,Read Applications,0,1
+4,Manage Application Flows,0,0
+4,Manage Application Flows,0,1
+4,Create Applications,0,0
+4,Create Applications,0,1
+4,Visualizer Editor,-1,
