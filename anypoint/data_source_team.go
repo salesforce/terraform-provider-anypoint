@@ -110,7 +110,7 @@ func flattenTeamData(team *team.Team) map[string]interface{} {
 		item["org_id"] = *val
 	}
 	if val, ok := team.GetTeamIdOk(); ok {
-		item["team_id"] = val
+		item["team_id"] = *val
 	}
 	if val, ok := team.GetTeamNameOk(); ok {
 		item["team_name"] = *val

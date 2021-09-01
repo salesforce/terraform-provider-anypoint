@@ -175,53 +175,53 @@ func flattenUserData(usr *user.User) map[string]interface{} {
 	}
 
 	if val, ok := usr.GetIdOk(); ok {
-		res["id"] = val
+		res["id"] = *val
 	}
 	if val, ok := usr.GetCreatedAtOk(); ok {
-		res["created_at"] = val
+		res["created_at"] = *val
 	}
 	if val, ok := usr.GetUpdatedAtOk(); ok {
-		res["updated_at"] = val
+		res["updated_at"] = *val
 	}
 	if val, ok := usr.GetOrganizationIdOk(); ok {
-		res["organization_id"] = val
+		res["organization_id"] = *val
 	}
 	if val, ok := usr.GetPhoneNumberOk(); ok {
-		res["phone_number"] = val
+		res["phone_number"] = *val
 	}
 	if val, ok := usr.GetEnabledOk(); ok {
-		res["enabled"] = val
+		res["enabled"] = *val
 	}
 	if val, ok := usr.GetDeletedOk(); ok {
-		res["deleted"] = val
+		res["deleted"] = *val
 	}
 	if val, ok := usr.GetIdproviderIdOk(); ok {
-		res["idprovider_id"] = val
+		res["idprovider_id"] = *val
 	}
 	if val, ok := usr.GetLastLoginOk(); ok {
-		res["last_login"] = val
+		res["last_login"] = *val
 	}
 	if val, ok := usr.GetIsFederatedOk(); ok {
-		res["is_federated"] = val
+		res["is_federated"] = *val
 	}
 	if val, ok := usr.GetUsernameOk(); ok {
-		res["username"] = val
+		res["username"] = *val
 	}
 	if val, ok := usr.GetTypeOk(); ok {
-		res["type"] = val
+		res["type"] = *val
 	}
 	if val, ok := usr.GetMfaVerifiersConfiguredOk(); ok {
-		res["mfa_verifiers_configured"] = val
+		res["mfa_verifiers_configured"] = *val
 	}
 	if val, ok := usr.GetMfaVerificationExcludedOk(); ok {
-		res["mfa_verification_excluded"] = val
+		res["mfa_verification_excluded"] = *val
 	}
 	if val, ok := usr.GetOrganizationOk(); ok {
 		usrOrgData := val
 		res["organization"] = flattenUserOrganizationData(usrOrgData)
 	}
 	if val, ok := usr.GetOrganizationPreferencesOk(); ok {
-		res["organization_preferences"] = val
+		res["organization_preferences"] = *val
 	}
 	if val, ok := usr.GetPropertiesOk(); ok {
 		jsonProps, _ := json.Marshal(val)
