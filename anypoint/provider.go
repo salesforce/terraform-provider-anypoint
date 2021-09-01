@@ -155,7 +155,6 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 	cfgauth := auth.NewConfiguration()
 	authclient := auth.NewAPIClient(cfgauth)
 	authres, httpr, err := authclient.DefaultApi.ApiV2Oauth2TokenPost(ctx).Credentials(*creds).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -171,6 +170,7 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 		})
 		return auth.NewInlineResponse200(), diags
 	}
+	defer httpr.Body.Close()
 	return &authres, diags
 }
 
