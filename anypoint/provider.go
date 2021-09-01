@@ -2,6 +2,7 @@ package anypoint
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -53,12 +54,17 @@ func Provider() *schema.Provider {
 				Description: "the user's password",
 			},
 			"cplane": {
-				Type:         schema.TypeString,
-				ExactlyOneOf: []string{"us", "eu"},
-				Optional:     true,
-				Default:      "us",
-				DefaultFunc:  schema.EnvDefaultFunc("ANYPOINT_CPLANE", nil),
-				Description:  "the user's password",
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CPLANE", "us"),
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "us" && v != "eu" {
+						errs = append(errs, fmt.Errorf("%q must be 'eu‘ or 'us', got: %s", key, v))
+					}
+					return
+				},
+				Description: "the user's password",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
