@@ -22,7 +22,8 @@ We recommand using a **user** as the **connected app** has some limitations on s
 
 ### Optional
 
-- **client_id** (String, Sensitive)
-- **client_secret** (String, Sensitive)
-- **password** (String, Sensitive)
-- **username** (String, Sensitive)
+- **client_id** (String, Sensitive) the connected app's id
+- **client_secret** (String, Sensitive) the connected app's secret
+- **cplane** (String) the user's password
+- **password** (String, Sensitive) the user's password
+- **username** (String, Sensitive) the user's username

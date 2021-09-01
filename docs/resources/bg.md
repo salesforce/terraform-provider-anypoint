@@ -120,7 +120,7 @@ Creates a business group (org).
 - **ismaster** (Boolean)
 - **mfarequired** (String)
 - **parentorganizationids** (List of String)
-- **properties** (Map of String)
+- **properties** (String)
 - **suborganizationids** (List of String)
 - **subscription_category** (String)
 - **subscription_expiration** (String)

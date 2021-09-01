@@ -114,7 +114,7 @@ Reads a specific `business group`.
 - **owner_username** (String)
 - **ownerid** (String)
 - **parentorganizationids** (List of String)
-- **properties** (Map of String)
+- **properties** (String)
 - **sessiontimeout** (Number)
 - **suborganizationids** (List of String)
 - **subscription_category** (String)
