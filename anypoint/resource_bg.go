@@ -113,7 +113,7 @@ func resourceBG() *schema.Resource {
 				Computed: true,
 			},
 			"properties": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"environments": {

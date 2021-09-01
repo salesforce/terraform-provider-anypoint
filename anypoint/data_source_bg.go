@@ -100,7 +100,7 @@ func dataSourceBG() *schema.Resource {
 				Computed: true,
 			},
 			"properties": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"environments": {
@@ -554,7 +554,7 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 		item["domain"] = bg.GetDomain()
 		item["ismaster"] = bg.GetIsMaster()
 
-		item["properties"] = bg.GetProperties()
+		item["properties"] = fmt.Sprint(bg.GetProperties())
 
 		subscription := bg.GetSubscription()
 		item["subscription_category"] = subscription.GetCategory()
