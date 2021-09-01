@@ -302,5 +302,6 @@ func getRolegroupWatchAttributes() []string {
  * Returns authentication context (includes authorization header)
  */
 func getRoleGroupAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, rolegroup.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, rolegroup.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, rolegroup.ContextServerIndex, pco.server_index)
 }

@@ -293,5 +293,6 @@ func getTeamPutWatchAttributes() []string {
  * Returns authentication context (includes authorization header)
  */
 func getTeamAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, team.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, team.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, team.ContextServerIndex, pco.server_index)
 }

@@ -240,5 +240,6 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
  * Returns authentication context (includes authorization header)
  */
 func getTeamRolesAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, team_roles.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, team_roles.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, team_roles.ContextServerIndex, pco.server_index)
 }

@@ -345,5 +345,6 @@ func getUserWatchAttributes() []string {
  * Returns authentication context (includes authorization header)
  */
 func getUserAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, user.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, user.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, user.ContextServerIndex, pco.server_index)
 }

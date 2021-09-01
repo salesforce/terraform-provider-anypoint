@@ -225,5 +225,6 @@ func newENVPutBody(d *schema.ResourceData) *env.EnvCore {
  * Returns authentication context (includes authorization header)
  */
 func getENVAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, env.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, env.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, env.ContextServerIndex, pco.server_index)
 }

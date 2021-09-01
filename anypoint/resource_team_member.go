@@ -220,5 +220,6 @@ func getTeamMemberAttributes() []string {
  * Returns authentication context (includes authorization header)
  */
 func getTeamMembersAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, team_members.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, team_members.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, team_members.ContextServerIndex, pco.server_index)
 }

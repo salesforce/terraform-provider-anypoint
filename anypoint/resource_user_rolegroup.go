@@ -185,5 +185,6 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
   Returns authentication context (includes authorization header)
 */
 func getUserRolegroupsAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, user_rolegroups.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, user_rolegroups.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, user_rolegroups.ContextServerIndex, pco.server_index)
 }

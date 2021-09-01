@@ -29,24 +29,36 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_ID", nil),
+				Description: "the connected app's id",
 			},
 			"client_secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_SECRET", nil),
+				Description: "the connected app's secret",
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_USERNAME", nil),
+				Description: "the user's username",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_PASSWORD", nil),
+				Description: "the user's password",
+			},
+			"cplane": {
+				Type:         schema.TypeString,
+				ExactlyOneOf: []string{"us", "eu"},
+				Optional:     true,
+				Default:      "us",
+				DefaultFunc:  schema.EnvDefaultFunc("ANYPOINT_CPLANE", nil),
+				Description:  "the user's password",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -91,30 +103,34 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	client_secret := d.Get("client_secret").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
+	cplane := d.Get("cplane").(string)
+
+	server_index := cplane2serverindex(cplane)
+	auth_ctx := context.WithValue(ctx, auth.ContextServerIndex, server_index)
 
 	if (username != "") && (password != "") {
-		authres, d := userPwdAuth(ctx, username, password)
+		authres, d := userPwdAuth(auth_ctx, username, password)
 		if d != nil {
-			return newProviderConfOutput(""), d
+			return newProviderConfOutput("", server_index), d
 		}
-		return newProviderConfOutput(authres.GetAccessToken()), diags
+		return newProviderConfOutput(authres.GetAccessToken(), server_index), diags
 	}
 
 	if (client_id != "") && (client_secret != "") {
-		authres, d := connectedAppAuth(ctx, client_id, client_secret)
+		authres, d := connectedAppAuth(auth_ctx, client_id, client_secret)
 		if d != nil {
-			return newProviderConfOutput(""), d
+			return newProviderConfOutput("", server_index), d
 		}
-		return newProviderConfOutput(authres.GetAccessToken()), diags
+		return newProviderConfOutput(authres.GetAccessToken(), server_index), diags
 	}
 
-	return newProviderConfOutput(""), diags
+	return newProviderConfOutput("", server_index), diags
 
 }
 
 /*
- * Authenticates a user using username and password
- */
+ Authenticates a user using username and password
+*/
 func userPwdAuth(ctx context.Context, username string, password string) (*auth.InlineResponse2001, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	creds := auth.NewUserPwdCredentialsWithDefaults()
@@ -144,8 +160,8 @@ func userPwdAuth(ctx context.Context, username string, password string) (*auth.I
 }
 
 /*
- * Authenticates a connected app
- */
+ Authenticates a connected app
+*/
 func connectedAppAuth(ctx context.Context, client_id string, client_secret string) (*auth.InlineResponse200, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	creds := auth.NewCredentialsWithDefaults()
@@ -174,8 +190,22 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 	return &authres, diags
 }
 
+/*
+	returns the server index depending on the control plane name
+	if the control plane is not recognized, returns -1
+*/
+func cplane2serverindex(cplane string) int {
+	if cplane == "eu" {
+		return 1
+	} else if cplane == "us" {
+		return 0
+	}
+	return -1
+}
+
 type ProviderConfOutput struct {
 	access_token      string
+	server_index      int
 	vpcclient         *vpc.APIClient
 	orgclient         *org.APIClient
 	roleclient        *role.APIClient
@@ -188,10 +218,9 @@ type ProviderConfOutput struct {
 	teamrolesclient   *team_roles.APIClient
 }
 
-func newProviderConfOutput(access_token string) ProviderConfOutput {
-	//prepare request to get vpcs
-	//ctx := context.Background()
-	//authctx := context.WithValue(ctx, vpc.ContextAccessToken, access_token)
+func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
+	//preparing clients
+	vpc.NewConfiguration()
 	vpccfg := vpc.NewConfiguration()
 	orgcfg := org.NewConfiguration()
 	rolecfg := role.NewConfiguration()
@@ -216,6 +245,7 @@ func newProviderConfOutput(access_token string) ProviderConfOutput {
 
 	return ProviderConfOutput{
 		access_token:      access_token,
+		server_index:      server_index,
 		vpcclient:         vpcclient,
 		orgclient:         orgclient,
 		roleclient:        roleclient,

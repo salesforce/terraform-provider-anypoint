@@ -692,5 +692,6 @@ func newEntitlementsFromD(d *schema.ResourceData) *org.EntitlementsCore {
  * Returns authentication context (includes authorization header)
  */
 func getBGAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, org.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, org.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, org.ContextServerIndex, pco.server_index)
 }

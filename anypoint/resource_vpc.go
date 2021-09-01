@@ -336,5 +336,6 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
  * Returns authentication context (includes authorization header)
  */
 func getVPCAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	return context.WithValue(ctx, vpc.ContextAccessToken, pco.access_token)
+	tmp := context.WithValue(ctx, vpc.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, vpc.ContextServerIndex, pco.server_index)
 }
