@@ -124,7 +124,6 @@ func userPwdAuth(ctx context.Context, username string, password string) (*auth.I
 	cfgauth := auth.NewConfiguration()
 	authclient := auth.NewAPIClient(cfgauth)
 	authres, httpr, err := authclient.DefaultApi.LoginPost(ctx).UserPwdCredentials(*creds).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -140,6 +139,7 @@ func userPwdAuth(ctx context.Context, username string, password string) (*auth.I
 		})
 		return auth.NewInlineResponse2001(), diags
 	}
+	defer httpr.Body.Close()
 	return &authres, diags
 }
 
