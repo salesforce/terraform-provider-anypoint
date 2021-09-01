@@ -1,0 +1,4 @@
+username,firstname,lastname,email,phone,pwd
+max_tf_user1,max,mule,max@mulesoft.com,0000000001,maxmule
+max_tf_user2,max,mule,max@mulesoft.com,0000000002,maxmule
+max_tf_user3,max,mule,max@mulesoft.com,0000000003,maxmule
