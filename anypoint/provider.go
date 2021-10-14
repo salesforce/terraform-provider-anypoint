@@ -14,6 +14,7 @@ import (
 	role "github.com/mulesoft-consulting/cloudhub-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/cloudhub-client-go/rolegroup"
 	team "github.com/mulesoft-consulting/cloudhub-client-go/team"
+	team_group_mappings "github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings"
 	team_members "github.com/mulesoft-consulting/cloudhub-client-go/team_members"
 	team_roles "github.com/mulesoft-consulting/cloudhub-client-go/team_roles"
 	user "github.com/mulesoft-consulting/cloudhub-client-go/user"
@@ -68,33 +69,35 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"anypoint_vpc":             resourceVPC(),
-			"anypoint_bg":              resourceBG(),
-			"anypoint_rolegroup_roles": resourceRoleGroupRoles(),
-			"anypoint_rolegroup":       resourceRoleGroup(),
-			"anypoint_env":             resourceENV(),
-			"anypoint_user":            resourceUser(),
-			"anypoint_user_rolegroup":  resourceUserRolegroup(),
-			"anypoint_team":            resourceTeam(),
-			"anypoint_team_roles":      resourceTeamRoles(),
-			"anypoint_team_member":     resourceTeamMember(),
+			"anypoint_vpc":                 resourceVPC(),
+			"anypoint_bg":                  resourceBG(),
+			"anypoint_rolegroup_roles":     resourceRoleGroupRoles(),
+			"anypoint_rolegroup":           resourceRoleGroup(),
+			"anypoint_env":                 resourceENV(),
+			"anypoint_user":                resourceUser(),
+			"anypoint_user_rolegroup":      resourceUserRolegroup(),
+			"anypoint_team":                resourceTeam(),
+			"anypoint_team_roles":          resourceTeamRoles(),
+			"anypoint_team_member":         resourceTeamMember(),
+			"anypoint_team_group_mappings": resourceTeamGroupMappings(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"anypoint_vpcs":            dataSourceVPCs(),
-			"anypoint_vpc":             dataSourceVPC(),
-			"anypoint_bg":              dataSourceBG(),
-			"anypoint_roles":           dataSourceRoles(),
-			"anypoint_rolegroup":       dataSourceRoleGroup(),
-			"anypoint_rolegroups":      dataSourceRoleGroups(),
-			"anypoint_users":           dataSourceUsers(),
-			"anypoint_user":            dataSourceUser(),
-			"anypoint_env":             dataSourceENV(),
-			"anypoint_user_rolegroup":  dataSourceUserRolegroup(),
-			"anypoint_user_rolegroups": dataSourceUserRolegroups(),
-			"anypoint_team":            dataSourceTeam(),
-			"anypoint_teams":           dataSourceTeams(),
-			"anypoint_team_roles":      dataSourceTeamRoles(),
-			"anypoint_team_members":    dataSourceTeamMembers(),
+			"anypoint_vpcs":                dataSourceVPCs(),
+			"anypoint_vpc":                 dataSourceVPC(),
+			"anypoint_bg":                  dataSourceBG(),
+			"anypoint_roles":               dataSourceRoles(),
+			"anypoint_rolegroup":           dataSourceRoleGroup(),
+			"anypoint_rolegroups":          dataSourceRoleGroups(),
+			"anypoint_users":               dataSourceUsers(),
+			"anypoint_user":                dataSourceUser(),
+			"anypoint_env":                 dataSourceENV(),
+			"anypoint_user_rolegroup":      dataSourceUserRolegroup(),
+			"anypoint_user_rolegroups":     dataSourceUserRolegroups(),
+			"anypoint_team":                dataSourceTeam(),
+			"anypoint_teams":               dataSourceTeams(),
+			"anypoint_team_roles":          dataSourceTeamRoles(),
+			"anypoint_team_members":        dataSourceTeamMembers(),
+			"anypoint_team_group_mappings": dataSourceTeamGroupMappings(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -210,18 +213,19 @@ func cplane2serverindex(cplane string) int {
 }
 
 type ProviderConfOutput struct {
-	access_token      string
-	server_index      int
-	vpcclient         *vpc.APIClient
-	orgclient         *org.APIClient
-	roleclient        *role.APIClient
-	rolegroupclient   *rolegroup.APIClient
-	userclient        *user.APIClient
-	envclient         *env.APIClient
-	userrgpclient     *user_rolegroups.APIClient
-	teamclient        *team.APIClient
-	teammembersclient *team_members.APIClient
-	teamrolesclient   *team_roles.APIClient
+	access_token            string
+	server_index            int
+	vpcclient               *vpc.APIClient
+	orgclient               *org.APIClient
+	roleclient              *role.APIClient
+	rolegroupclient         *rolegroup.APIClient
+	userclient              *user.APIClient
+	envclient               *env.APIClient
+	userrgpclient           *user_rolegroups.APIClient
+	teamclient              *team.APIClient
+	teammembersclient       *team_members.APIClient
+	teamrolesclient         *team_roles.APIClient
+	teamgroupmappingsclient *team_group_mappings.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -237,6 +241,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamcfg := team.NewConfiguration()
 	teammemberscfg := team_members.NewConfiguration()
 	teamrolescfg := team_roles.NewConfiguration()
+	teamgroupmappingscfg := team_group_mappings.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
@@ -248,19 +253,21 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamclient := team.NewAPIClient(teamcfg)
 	teammembersclient := team_members.NewAPIClient(teammemberscfg)
 	teamrolesclient := team_roles.NewAPIClient(teamrolescfg)
+	teamgroupmappingsclient := team_group_mappings.NewAPIClient(teamgroupmappingscfg)
 
 	return ProviderConfOutput{
-		access_token:      access_token,
-		server_index:      server_index,
-		vpcclient:         vpcclient,
-		orgclient:         orgclient,
-		roleclient:        roleclient,
-		rolegroupclient:   rolegroupclient,
-		userclient:        userclient,
-		envclient:         envclient,
-		userrgpclient:     userrgpclient,
-		teamclient:        teamclient,
-		teammembersclient: teammembersclient,
-		teamrolesclient:   teamrolesclient,
+		access_token:            access_token,
+		server_index:            server_index,
+		vpcclient:               vpcclient,
+		orgclient:               orgclient,
+		roleclient:              roleclient,
+		rolegroupclient:         rolegroupclient,
+		userclient:              userclient,
+		envclient:               envclient,
+		userrgpclient:           userrgpclient,
+		teamclient:              teamclient,
+		teammembersclient:       teammembersclient,
+		teamrolesclient:         teamrolesclient,
+		teamgroupmappingsclient: teamgroupmappingsclient,
 	}
 }

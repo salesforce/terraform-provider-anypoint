@@ -11,6 +11,7 @@ require (
 	github.com/mulesoft-consulting/cloudhub-client-go/role v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/rolegroup v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/team v0.1.0
+	github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings v0.0.3
 	github.com/mulesoft-consulting/cloudhub-client-go/team_members v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/team_roles v0.0.2
 	github.com/mulesoft-consulting/cloudhub-client-go/user v0.1.3
