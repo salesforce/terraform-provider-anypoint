@@ -2,7 +2,7 @@ team_index,name,context_org_index,context_env_index
 0,API Manager Environment Administrator,0,0
 0,API Group Administrator,0,
 0,API Versions Owner,0,
-0,Anypoint Monitoring User,0,
+0,Monitoring Administrator,0,
 0,Exchange Administrator,0,
 0,Organization Administrator,0,
 0,Cloudhub Network Administrator,0,
@@ -21,7 +21,7 @@ team_index,name,context_org_index,context_env_index
 2,View Policies,0,0
 2,API Creator,0,
 2,API Versions Owner,0,
-2,Anypoint Monitoring User,0,
+2,Monitoring Administrator,0,
 2,Design Center Developer,0,
 2,Exchange Contributor,0,
 2,Clear destinations,0,0
@@ -54,7 +54,7 @@ team_index,name,context_org_index,context_env_index
 3,View Policies,0,1
 3,API Creator,0,
 3,API Versions Owner,0,
-3,Anypoint Monitoring User,0,
+3,Monitoring Administrator,0,
 3,Exchange Contributor,0,
 3,Clear destinations,0,1
 3,Manage clients,0,1
@@ -95,7 +95,7 @@ team_index,name,context_org_index,context_env_index
 4,View Policies,0,1
 4,API Creator,0,
 4,API Versions Owner,0,
-4,Anypoint Monitoring User,0,
+4,Monitoring Administrator,0,
 4,Exchange Contributor,0,
 4,Clear destinations,0,0
 4,Clear destinations,0,1

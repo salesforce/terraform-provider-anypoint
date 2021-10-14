@@ -9,6 +9,7 @@ locals {
   teams_lvl2_csv_data = file("${local.csv_folder}/teams_lvl2.csv")
   teams_lvl2_roles_csv_data = file("${local.csv_folder}/teams_lvl2_roles.csv")
   teams_lvl2_members_csv_data = file("${local.csv_folder}/teams_lvl2_members.csv")
+  teams_lvl1_groupmappings_csv_data = file("${local.csv_folder}/teams_lvl1_groupmappings.csv")
 
 
   bgs_list = csvdecode(local.bg_csv_data)
@@ -18,6 +19,7 @@ locals {
   teams_lvl1_list = csvdecode(local.teams_lvl1_csv_data)
   teams_lvl1_roles_list = csvdecode(local.teams_lvl1_roles_csv_data)
   teams_lvl1_members_list = csvdecode(local.teams_lvl1_members_csv_data)
+  teams_lvl1_groupmappings_list = csvdecode(local.teams_lvl1_groupmappings_csv_data)
   
   teams_lvl2_list = csvdecode(local.teams_lvl2_csv_data)
   teams_lvl2_roles_list = csvdecode(local.teams_lvl2_roles_csv_data)
