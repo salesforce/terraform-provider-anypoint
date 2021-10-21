@@ -119,3 +119,21 @@ resource "anypoint_team_member" "lvl2_teams_members" {
   team_id = anypoint_team.lvl2_teams[tonumber(element(local.teams_lvl2_members_list, count.index).team_index)].id
   user_id = anypoint_user.users[tonumber(element(local.teams_lvl2_members_list, count.index).user_index)].id
 }
+
+resource "anypoint_team_group_mappings" "lvl1_teams_groupmappings" {
+  count = length(local.teams_lvl1_list)
+
+  org_id = var.root_org
+  team_id = anypoint_team.lvl1_teams[count.index].id
+  
+  dynamic "groupmappings" {
+    for_each = [
+      for iter in local.teams_lvl1_groupmappings_list : iter
+      if tonumber(iter.team_index) == count.index
+    ]
+    content {
+      external_group_name = groupmappings.value["external_group_name"]
+      membership_type = groupmappings.value["membership_type"]
+    }
+  }
+}
