@@ -15,7 +15,7 @@ func resourceTeamGroupMappings() *schema.Resource {
 		CreateContext: resourceTeamGroupMappingsCreate,
 		ReadContext:   resourceTeamGroupMappingsRead,
 		DeleteContext: resourceTeamGroupMappingsDelete,
-		UpdateContext: resourceTeamGroupMappingsCreate,
+		UpdateContext: resourceTeamGroupMappingsUpdate,
 		Description: `
 		TBD `,
 		Schema: map[string]*schema.Schema{
@@ -99,6 +99,41 @@ func resourceTeamGroupMappingsCreate(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
+func resourceTeamGroupMappingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Warning or errors can be collected in a slice type
+	var diags diag.Diagnostics
+	pco := m.(ProviderConfOutput)
+	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
+	body := newTeamGroupMappingsPutBody(d)
+	id := d.Id()
+	split := strings.Split(id, "_")
+	orgid := split[0]
+	teamid := split[1]
+
+	//request put
+	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
+	if err != nil {
+		var details string
+		if httpr != nil {
+			b, _ := ioutil.ReadAll(httpr.Body)
+			details = string(b)
+		} else {
+			details = err.Error()
+		}
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create team group mappings ",
+			Detail:   details,
+		})
+		return diags
+	}
+	defer httpr.Body.Close()
+
+	resourceTeamGroupMappingsRead(ctx, d, m)
+
+	return diags
+}
+
 func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
@@ -128,8 +163,6 @@ func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData
 	defer httpr.Body.Close()
 
 	d.SetId("")
-
-	resourceTeamGroupMappingsRead(ctx, d, m)
 
 	return diags
 }
