@@ -269,6 +269,8 @@ github.com/mulesoft-consulting/cloudhub-client-go/team v0.0.2 h1:naQ90l7zyzqz+Ro
 github.com/mulesoft-consulting/cloudhub-client-go/team v0.0.2/go.mod h1:qZB6apWiLUIO6mKFKcGFKEOTZZfwZyZWr6GxKoINvxo=
 github.com/mulesoft-consulting/cloudhub-client-go/team v0.1.0 h1:P6RWdCQ2BGXpvVtwd9Yny1+KCDQ+KQVdacfkO1obpOE=
 github.com/mulesoft-consulting/cloudhub-client-go/team v0.1.0/go.mod h1:qZB6apWiLUIO6mKFKcGFKEOTZZfwZyZWr6GxKoINvxo=
+github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings v0.0.3 h1:JDDDLB3X4dEQ2CYy5A6iy8bKC45fHkdDN0PStYU5A0I=
+github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings v0.0.3/go.mod h1:Pd6lr8d/gbB6BH5h2h63GeeyFRdb7scwjyXLNtLLkkM=
 github.com/mulesoft-consulting/cloudhub-client-go/team_members v0.0.1 h1:8nTVcg5dW2e4O03/26k/fE8OTYFOdNbKSEqt7lz3nV8=
 github.com/mulesoft-consulting/cloudhub-client-go/team_members v0.0.1/go.mod h1:bD8Vt2iDmyzPMM8vW1GnOdXLXtowLq3PuFfZ9ebUgYE=
 github.com/mulesoft-consulting/cloudhub-client-go/team_members v0.0.2 h1:1Vn5kI+ggECNR2eNeIP7AKP9Kke8iFSndofQkkLwefQ=

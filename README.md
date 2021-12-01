@@ -1,5 +1,32 @@
 # Terraform Provider Anypoint
+This is the first terraform provider for anypoint platform! We aim to provide a sustainable tool to automate your actions in anypoint.
 
+This project was initiated by Mulesoft's consultants and architects from the professional team. We welcome any volunteers interested in joining the initiative no matter where you're from ! 
+
+## How it works
+This provider uses the anypoint platform APIs to perform actions for each one of the implemented resources. 
+
+![alt text](resources/imgs/provider-arch.png)
+
+We use the **anypoint client library** as an abstraction layer to perform actions on the platform.
+
+For better maintainability and in order to speed up the development process, the **anypoint client library** is a library generated from OAS3 specifications written by the community. 
+
+The following image describes the delivery cycle:
+
+![alt text](resources/imgs/provider-deliver.png)
+
+The cycle is composed of 3 steps: 
+  1. Pick one resource and understand how it works using tools like Postman, anypoint's documentation and your favorite browser's inspector. 
+  2. Create the OAS3 specification. The specification should at least contain GET, POST and DELETE operations.
+  The specification should be contributed [here](https://github.com/mulesoft-consulting/anypoint-automation-client-generator). Using the OAS spec, a go module will be generated and pushed [here](https://github.com/mulesoft-consulting/anypoint-client-go).
+
+  ![alt text](resources/imgs/provider-cycle.png)
+
+  3. Implement the resource and related data sources in the provider using the generated library. 
+
+
+## How to use
 Run the following command to build the provider
 
 ```bash
@@ -42,7 +69,6 @@ $ terraform init && terraform apply -var-file="params.tfvars.json"
 ```
 
 ## Debugging mode
-
 First build the project using
 ```bash
 $ go build
@@ -70,13 +96,26 @@ $ TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol
 ```
 
 ### How to log
-
 Use `log` package to log. Here's an exampe: 
 
 ```go
 log.Println("[DEBUG] Something happened!")
 ```
 
-## Create Release
+## Documentation
+In order to generate a documentation, we use [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs).
 
-Follow [documentation](https://www.terraform.io/docs/registry/providers/publishing.html#using-goreleaser-locally)
+
+## Create Release
+Follow [documentation](https://www.terraform.io/docs/registry/providers/publishing.html#using-goreleaser-locally).
+
+
+## How to contribute
+You can contribute by: 
+  * Testing the tool and letting us know of any problems you encounter. 
+  * Contributing specifications for resources [here](https://github.com/mulesoft-consulting/anypoint-automation-client-generator).
+  * Contributing code in the provider itself here. 
+
+
+## Credits
+Made with love. 
