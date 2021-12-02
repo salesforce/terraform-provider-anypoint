@@ -317,7 +317,7 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	orules := d.Get("firewall_rules").([]interface{})
 	frules := make([]vpc.FirewallRule, len(orules))
 	for index, rule := range orules {
-		frules[index] = *vpc.NewFirewallRule(rule.(map[string]interface{})["cidr_block"].(string), rule.(map[string]interface{})["from_port"].(int32), rule.(map[string]interface{})["protocol"].(string), rule.(map[string]interface{})["to_port"].(int32))
+		frules[index] = *vpc.NewFirewallRule(rule.(map[string]interface{})["cidr_block"].(string), int32(rule.(map[string]interface{})["from_port"].(int)), rule.(map[string]interface{})["protocol"].(string), int32(rule.(map[string]interface{})["to_port"].(int)))
 	}
 	body.SetFirewallRules(frules)
 
