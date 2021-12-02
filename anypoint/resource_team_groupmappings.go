@@ -17,7 +17,10 @@ func resourceTeamGroupMappings() *schema.Resource {
 		DeleteContext: resourceTeamGroupMappingsDelete,
 		UpdateContext: resourceTeamGroupMappingsUpdate,
 		Description: `
-		TBD `,
+		Maps identity providers' groups to a team.
+		You can map users in a federated organization’s group to a team or role. Your Anypoint Platform organization must use an external identity provider, such as PingFederate.
+		After you have mapped them, users in an organization can log in to Anypoint Platform using the same organizational credentials and access permissions that an organization maintains using SAML, OpenID Connect (OIDC), or LDAP.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

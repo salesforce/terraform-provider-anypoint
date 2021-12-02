@@ -1,4 +1,4 @@
-resource "anypoint_team_groupmappings" "team_gmap" {
+resource "anypoint_team_group_mappings" "team_gmap" {
   org_id  = var.root_org
   team_id = anypoint_team.team.id
 
