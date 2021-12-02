@@ -26,7 +26,7 @@ func dataSourceTeam() *schema.Resource {
 			},
 			"id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"team_id": {
 				Type:     schema.TypeString,
