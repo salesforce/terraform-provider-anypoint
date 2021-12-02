@@ -7,3 +7,8 @@ resource "anypoint_user" "user" {
   phone_number = "0756224452"
   password = "my_super_secret_pwd"
 }
+
+output "user" {
+  value = data.anypoint_user.user
+  sensitive = true
+}
