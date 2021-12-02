@@ -19,12 +19,14 @@ func dataSourceVPC() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC id",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The business group id",
 			},
 			"name": {
 				Type:     schema.TypeString,

@@ -28,19 +28,22 @@ func dataSourceUsers() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"offset": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "The number of records to omit from the response.",
 						},
 						"limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  200,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     200,
+							Description: "Maximum records to retrieve per request. default 25, min 0, max 500",
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "all",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "all",
+							Description: "specify the type of the user you want to retrive [all, host, proxy]",
 						},
 					},
 				},

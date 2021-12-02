@@ -18,12 +18,14 @@ func dataSourceENV() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The environment id",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The business group id",
 			},
 			"organization_id": {
 				Type:     schema.TypeString,
