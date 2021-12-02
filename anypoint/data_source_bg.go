@@ -26,6 +26,10 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -391,7 +395,7 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"owner_id": {
+			"owner_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -539,6 +543,7 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 		item["created_at"] = bg.GetCreatedAt()
 		item["updated_at"] = bg.GetUpdatedAt()
 		item["owner_id"] = bg.GetOwnerId()
+		item["owner_identifier"] = bg.GetOwnerId()
 		item["client_id"] = bg.GetClientId()
 		item["idprovider_id"] = bg.GetIdproviderId()
 		item["is_federated"] = bg.GetIsFederated()
@@ -730,7 +735,7 @@ func getBGCoreAttributes() []string {
 		"entitlements_appviz", "entitlements_runtimefabric", "entitlements_anypointsecuritytokenization_enabled",
 		"entitlements_anypointsecurityedgepolicies_enabled", "entitlements_runtimefabriccloud_enabled",
 		"entitlements_servicemesh_enabled", "entitlements_messaging_assigned", "entitlements_workerclouds_assigned",
-		"entitlements_workerclouds_reassigned", "owner_created_at", "owner_updated_at", "owner_organization_id",
+		"entitlements_workerclouds_reassigned", "owner_identifier", "owner_created_at", "owner_updated_at", "owner_organization_id",
 		"owner_firstname", "owner_lastname", "owner_email", "owner_phonenumber", "owner_username", "owner_idprovider_id",
 		"owner_enabled", "owner_deleted", "owner_lastlogin", "owner_mfaverification_excluded", "owner_mfaverifiers_configured",
 		"owner_type", "session_timeout",
