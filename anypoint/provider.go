@@ -65,7 +65,7 @@ func Provider() *schema.Provider {
 					}
 					return
 				},
-				Description: "the user's password",
+				Description: "the anypoint control plane",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
