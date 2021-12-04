@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mulesoft-consulting/cloudhub-client-go/user_rolegroups"
+	"github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups"
 )
 
 func resourceUserRolegroup() *schema.Resource {
