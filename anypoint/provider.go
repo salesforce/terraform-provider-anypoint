@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
+	dlb "github.com/mulesoft-consulting/anypoint-client-go/dlb"
 	env "github.com/mulesoft-consulting/anypoint-client-go/env"
 	org "github.com/mulesoft-consulting/anypoint-client-go/org"
 	role "github.com/mulesoft-consulting/anypoint-client-go/role"
@@ -98,6 +99,7 @@ func Provider() *schema.Provider {
 			"anypoint_team_roles":          dataSourceTeamRoles(),
 			"anypoint_team_members":        dataSourceTeamMembers(),
 			"anypoint_team_group_mappings": dataSourceTeamGroupMappings(),
+			"anypoint_dlb":                 dataSourceDLB(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -226,6 +228,7 @@ type ProviderConfOutput struct {
 	teammembersclient       *team_members.APIClient
 	teamrolesclient         *team_roles.APIClient
 	teamgroupmappingsclient *team_group_mappings.APIClient
+	dlbclient               *dlb.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -242,6 +245,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teammemberscfg := team_members.NewConfiguration()
 	teamrolescfg := team_roles.NewConfiguration()
 	teamgroupmappingscfg := team_group_mappings.NewConfiguration()
+	dlbcfg := dlb.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
@@ -254,6 +258,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teammembersclient := team_members.NewAPIClient(teammemberscfg)
 	teamrolesclient := team_roles.NewAPIClient(teamrolescfg)
 	teamgroupmappingsclient := team_group_mappings.NewAPIClient(teamgroupmappingscfg)
+	dlbclient := dlb.NewAPIClient(dlbcfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -269,5 +274,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		teammembersclient:       teammembersclient,
 		teamrolesclient:         teamrolesclient,
 		teamgroupmappingsclient: teamgroupmappingsclient,
+		dlbclient:               dlbclient,
 	}
 }
