@@ -26,19 +26,19 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"createdat": {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"updatedat": {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ownerid": {
+			"updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"clientid": {
+			"client_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,36 +46,36 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"isfederated": {
+			"is_federated": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"parentorganizationids": {
+			"parent_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"suborganizationids": {
+			"sub_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"tenantorganizationids": {
+			"tenant_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"mfarequired": {
+			"mfa_required": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"isautomaticadminpromotionexempt": {
+			"is_automatic_admin_promotion_exempt": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ismaster": {
+			"is_master": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -116,11 +116,11 @@ func dataSourceBG() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"organizationid": {
+						"organization_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"isproduction": {
+						"is_production": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -128,7 +128,7 @@ func dataSourceBG() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"clientid": {
+						"client_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -147,7 +147,7 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"entitlements_hybrid_enabled": {
+			"entitlements_hybridenabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -395,19 +395,19 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"owner_id": {
+			"owner_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_createdat": {
+			"owner_created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_updatedat": {
+			"owner_updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_organizationid": {
+			"owner_organization_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -447,11 +447,11 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_mfaverificationexcluded": {
+			"owner_mfaverification_excluded": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"owner_mfaverifiersconfigured": {
+			"owner_mfaverifiers_configured": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -459,7 +459,7 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"sessiontimeout": {
+			"session_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -540,19 +540,20 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 
 		item["id"] = bg.GetId()
 		item["name"] = bg.GetName()
-		item["createdat"] = bg.GetCreatedAt()
-		item["updatedat"] = bg.GetUpdatedAt()
-		item["ownerid"] = bg.GetOwnerId()
-		item["clientid"] = bg.GetClientId()
+		item["created_at"] = bg.GetCreatedAt()
+		item["updated_at"] = bg.GetUpdatedAt()
+		item["owner_id"] = bg.GetOwnerId()
+		item["owner_identifier"] = bg.GetOwnerId()
+		item["client_id"] = bg.GetClientId()
 		item["idprovider_id"] = bg.GetIdproviderId()
-		item["isfederated"] = bg.GetIsFederated()
-		item["parentorganizationids"] = bg.GetParentOrganizationIds()
-		item["suborganizationids"] = bg.GetSubOrganizationIds()
-		item["tenantorganizationids"] = bg.GetTenantOrganizationIds()
-		item["mfarequired"] = bg.GetMfaRequired()
-		item["isautomaticadminpromotionexempt"] = bg.GetIsAutomaticAdminPromotionExempt()
+		item["is_federated"] = bg.GetIsFederated()
+		item["parent_organization_ids"] = bg.GetParentOrganizationIds()
+		item["sub_organization_ids"] = bg.GetSubOrganizationIds()
+		item["tenant_organization_ids"] = bg.GetTenantOrganizationIds()
+		item["mfa_required"] = bg.GetMfaRequired()
+		item["is_automatic_admin_promotion_exempt"] = bg.GetIsAutomaticAdminPromotionExempt()
 		item["domain"] = bg.GetDomain()
-		item["ismaster"] = bg.GetIsMaster()
+		item["is_master"] = bg.GetIsMaster()
 
 		item["properties"] = fmt.Sprint(bg.GetProperties())
 
@@ -566,10 +567,10 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 			env := make(map[string]interface{})
 			env["id"] = currentEnv.GetId()
 			env["name"] = currentEnv.GetName()
-			env["organizationid"] = currentEnv.GetOrganizationId()
-			env["isproduction"] = currentEnv.GetIsProduction()
+			env["organization_id"] = currentEnv.GetOrganizationId()
+			env["is_production"] = currentEnv.GetIsProduction()
 			env["type"] = currentEnv.GetType()
-			env["clientid"] = currentEnv.GetClientId()
+			env["client_id"] = currentEnv.GetClientId()
 			environments[i] = env
 		}
 		item["environments"] = environments
@@ -579,7 +580,7 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 		item["entitlements_globaldeployment"] = entitlements.GetGlobalDeployment()
 		item["entitlements_createsuborgs"] = entitlements.GetCreateSubOrgs()
 		hybrid := entitlements.GetHybrid()
-		item["entitlements_hybrid_enabled"] = hybrid.GetEnabled()
+		item["entitlements_hybridenabled"] = hybrid.GetEnabled()
 		item["entitlements_hybridinsight"] = entitlements.GetHybridInsight()
 		item["entitlements_hybridautodiscoverproperties"] = entitlements.GetHybridAutoDiscoverProperties()
 		vCoresProduction := entitlements.GetVCoresProduction()
@@ -681,9 +682,9 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 
 		owner := bg.GetOwner()
 		item["owner_id"] = owner.GetId()
-		item["owner_createdat"] = owner.GetCreatedAt()
-		item["owner_updatedat"] = owner.GetUpdatedAt()
-		item["owner_organizationid"] = owner.GetOrganizationId()
+		item["owner_created_at"] = owner.GetCreatedAt()
+		item["owner_updated_at"] = owner.GetUpdatedAt()
+		item["owner_organization_id"] = owner.GetOrganizationId()
 		item["owner_firstname"] = owner.GetFirstName()
 		item["owner_lastname"] = owner.GetLastName()
 		item["owner_email"] = owner.GetEmail()
@@ -693,11 +694,11 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 		item["owner_enabled"] = owner.GetEnabled()
 		item["owner_deleted"] = owner.GetDeleted()
 		item["owner_lastlogin"] = owner.GetLastLogin()
-		item["owner_mfaverificationexcluded"] = owner.GetMfaVerificationExcluded()
-		item["owner_mfaverifiersconfigured"] = owner.GetMfaVerifiersConfigured()
+		item["owner_mfaverification_excluded"] = owner.GetMfaVerificationExcluded()
+		item["owner_mfaverifiers_configured"] = owner.GetMfaVerifiersConfigured()
 		item["owner_type"] = owner.GetType()
 
-		item["sessiontimeout"] = bg.GetSessionTimeout()
+		item["session_timeout"] = bg.GetSessionTimeout()
 
 		return item
 
@@ -707,12 +708,12 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 
 func getBGCoreAttributes() []string {
 	attributes := [...]string{
-		"name", "createdat", "updatedat", "ownerid", "clientid", "idprovider_id",
-		"isfederated", "parentorganizationids", "suborganizationids", "tenantorganizationids",
-		"mfarequired", "isautomaticadminpromotionexempt", "domain", "ismaster", "subscription_category",
+		"name", "created_at", "updated_at", "owner_id", "client_id", "idprovider_id",
+		"is_federated", "parent_organization_ids", "sub_organization_ids", "tenant_organization_ids",
+		"mfa_required", "is_automatic_admin_promotion_exempt", "domain", "is_master", "subscription_category",
 		"subscription_type", "subscription_expiration", "properties", "environments",
 		"entitlements_createenvironments", "entitlements_globaldeployment", "entitlements_createsuborgs",
-		"entitlements_hybrid_enabled", "entitlements_hybridinsight", "entitlements_hybridautodiscoverproperties",
+		"entitlements_hybridenabled", "entitlements_hybridinsight", "entitlements_hybridautodiscoverproperties",
 		"entitlements_vcoresproduction_assigned", "entitlements_vcoresproduction_reassigned",
 		"entitlements_vcoressandbox_assigned", "entitlements_vcoressandbox_reassigned",
 		"entitlements_vcoresdesign_assigned", "entitlements_vcoresdesign_reassigned",
@@ -734,17 +735,17 @@ func getBGCoreAttributes() []string {
 		"entitlements_appviz", "entitlements_runtimefabric", "entitlements_anypointsecuritytokenization_enabled",
 		"entitlements_anypointsecurityedgepolicies_enabled", "entitlements_runtimefabriccloud_enabled",
 		"entitlements_servicemesh_enabled", "entitlements_messaging_assigned", "entitlements_workerclouds_assigned",
-		"entitlements_workerclouds_reassigned", "owner_id", "owner_createdat", "owner_updatedat", "owner_organizationid",
+		"entitlements_workerclouds_reassigned", "owner_identifier", "owner_created_at", "owner_updated_at", "owner_organization_id",
 		"owner_firstname", "owner_lastname", "owner_email", "owner_phonenumber", "owner_username", "owner_idprovider_id",
-		"owner_enabled", "owner_deleted", "owner_lastlogin", "owner_mfaverificationexcluded", "owner_mfaverifiersconfigured",
-		"owner_type", "sessiontimeout",
+		"owner_enabled", "owner_deleted", "owner_lastlogin", "owner_mfaverification_excluded", "owner_mfaverifiers_configured",
+		"owner_type", "session_timeout",
 	}
 	return attributes[:]
 }
 
 func getBGUpdatableAttributes() []string {
 	attributes := [...]string{
-		"name", "ownerid", "entitlements_createenvironments", "entitlements_createsuborgs",
+		"name", "owner_id", "entitlements_createenvironments", "entitlements_createsuborgs",
 		"entitlements_globaldeployment", "entitlements_vcoresproduction_assigned", "entitlements_vcoressandbox_assigned",
 		"entitlements_vcoresdesign_assigned", "entitlements_vpcs_assigned", "entitlements_loadbalancer_assigned", "entitlements_vpns_assigned",
 	}
