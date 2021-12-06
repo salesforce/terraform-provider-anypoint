@@ -203,7 +203,6 @@ func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{
 		} else {
 			details = err.Error()
 		}
-		details = err.Error()
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get DLB " + dlbid,
@@ -215,7 +214,7 @@ func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//process data
 	dlbinstance := flattenDLBData(&res)
 	//save in data source schema
-	if err := setDLBCoreAttributesToResourceData(d, dlbinstance); err != nil {
+	if err := setDLBAttributesToResourceData(d, dlbinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set DLB " + dlbid,
@@ -232,7 +231,7 @@ func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{
 /*
  * Copies the given dlb instance into the given resource data
  */
-func setDLBCoreAttributesToResourceData(d *schema.ResourceData, dlbitem map[string]interface{}) error {
+func setDLBAttributesToResourceData(d *schema.ResourceData, dlbitem map[string]interface{}) error {
 	attributes := getDLBAttributes()
 	if dlbitem != nil {
 		for _, attr := range attributes {

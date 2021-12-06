@@ -100,6 +100,7 @@ func Provider() *schema.Provider {
 			"anypoint_team_members":        dataSourceTeamMembers(),
 			"anypoint_team_group_mappings": dataSourceTeamGroupMappings(),
 			"anypoint_dlb":                 dataSourceDLB(),
+			"anypoint_dlbs":                dataSourceDLBs(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
