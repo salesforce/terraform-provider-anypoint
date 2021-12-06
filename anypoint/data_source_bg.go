@@ -23,6 +23,10 @@ func dataSourceBG() *schema.Resource {
 				Required:    true,
 				Description: "The business group id",
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
