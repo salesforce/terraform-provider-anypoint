@@ -36,6 +36,7 @@ resource "anypoint_bg" "bg" {
 ### Required
 
 - **name** (String)
+- **owner_id** (String)
 - **parent_organization_id** (String)
 
 ### Optional

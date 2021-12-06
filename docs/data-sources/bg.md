@@ -107,6 +107,7 @@ data "anypoint_bg" "bg" {
 - **owner_email** (String)
 - **owner_enabled** (Boolean)
 - **owner_firstname** (String)
+- **owner_id** (String)
 - **owner_idprovider_id** (String)
 - **owner_lastlogin** (String)
 - **owner_lastname** (String)
