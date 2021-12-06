@@ -72,9 +72,10 @@ func resourceVPC() *schema.Resource {
 				},
 			},
 			"owner_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The Business Group Owner Id",
 			},
 			"shared_with": {
 				Type:     schema.TypeList,
