@@ -467,15 +467,6 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("id").(string)
-	if orgid == "" {
-		diags := append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "missing required input: id",
-			Detail:   "the input id is required to fetch a Business Group",
-		})
-		return diags
-	}
-
 	authctx := getBGAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()

@@ -57,16 +57,6 @@ func dataSourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	envid := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
-
-	if envid == "" || orgid == "" {
-		diags := append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "ENV id (id) and Organization ID (organization_id) are required",
-			Detail:   "ENV id (id) and Organization ID (organization_id) must be provided",
-		})
-		return diags
-	}
-
 	authctx := getENVAuthCtx(ctx, &pco)
 
 	//request env
