@@ -209,6 +209,8 @@ github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKe
 github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 h1:xixZ2bWeofWV68J+x6AzmKuVM/JWCQwkWm6GW/MUR6I=
 github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87/go.mod h1:CtWFDAQgb7dxtzFs4tWbplKIe2jSi3+5vKbgIO0SLnQ=
 github.com/huandu/xstrings v1.3.2/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=
+github.com/iancoleman/strcase v0.2.0 h1:05I4QRnGpI0m37iZQRuskXh+w77mr6Z41lwQzuHLwW0=
+github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/imdario/mergo v0.3.11/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
 github.com/imdario/mergo v0.3.12/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
@@ -273,6 +275,8 @@ github.com/mulesoft-consulting/anypoint-client-go/authorization v0.2.0 h1:cUTd2m
 github.com/mulesoft-consulting/anypoint-client-go/authorization v0.2.0/go.mod h1:GyBcff4ALCgcHr85uzs+R0jzScwD2QIs8I7jZcM+o1M=
 github.com/mulesoft-consulting/anypoint-client-go/dlb v0.1.2 h1:J37RbzTHvBa2XIIafrJDljCVnY7Gi1EBxwco1NHbC1w=
 github.com/mulesoft-consulting/anypoint-client-go/dlb v0.1.2/go.mod h1:ftj9Trt79sh7B5bcOiSGlFC/AtDXUabSj0pC7ktUtck=
+github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0 h1:hQhOicfFiuutku1o/4X0tbRs47FczDecSWSW5Udlb78=
+github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0/go.mod h1:ftj9Trt79sh7B5bcOiSGlFC/AtDXUabSj0pC7ktUtck=
 github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0 h1:W3PbikRBYoDE9GM1gAZdHn/W0ImGyaUWZOIZ4ehhhJ0=
 github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0/go.mod h1:IOpP0enauRkNvlZlACRPrqjmjUMB+mpUMXunUr58wzo=
 github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0 h1:uIVwClYi77y2qEFCkK053OCnpkp7XUq9auS1SJfXLjE=
