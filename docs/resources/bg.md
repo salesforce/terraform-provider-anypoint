@@ -135,7 +135,6 @@ resource "anypoint_bg" "bg" {
 - **is_automatic_admin_promotion_exempt** (Boolean)
 - **is_master** (Boolean)
 - **mfa_required** (String)
-- **owner_id** (String)
 - **parent_organization_ids** (List of String)
 - **properties** (String)
 - **sub_organization_ids** (List of String)

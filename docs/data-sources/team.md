@@ -24,6 +24,7 @@ resource "anypoint_team" "team" {
 
 ### Required
 
+- **id** (String) The ID of this resource.
 - **org_id** (String)
 
 ### Optional
@@ -33,7 +34,6 @@ resource "anypoint_team" "team" {
 ### Read-Only
 
 - **created_at** (String)
-- **id** (String) The ID of this resource.
 - **team_id** (String)
 - **team_name** (String)
 - **team_type** (String)

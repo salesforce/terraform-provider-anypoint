@@ -3,12 +3,16 @@
 page_title: "anypoint_team_group_mappings Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  TBD
+  Maps identity providers' groups to a team.
+      You can map users in a federated organization’s group to a team or role. Your Anypoint Platform organization must use an external identity provider, such as PingFederate.
+      After you have mapped them, users in an organization can log in to Anypoint Platform using the same organizational credentials and access permissions that an organization maintains using SAML, OpenID Connect (OIDC), or LDAP.
 ---
 
 # anypoint_team_group_mappings (Resource)
 
-TBD
+Maps identity providers' groups to a team.
+		You can map users in a federated organization’s group to a team or role. Your Anypoint Platform organization must use an external identity provider, such as PingFederate.
+		After you have mapped them, users in an organization can log in to Anypoint Platform using the same organizational credentials and access permissions that an organization maintains using SAML, OpenID Connect (OIDC), or LDAP.
 
 ## Example Usage
 
