@@ -66,7 +66,7 @@ resource "anypoint_vpc" "avpc" {
 - **internal_dns_special_domains** (List of String)
 - **is_default** (Boolean)
 - **last_updated** (String)
-- **owner_id** (String)
+- **owner_id** (String) The Business Group Owner Id
 - **shared_with** (List of String)
 - **vpc_routes** (Block List) (see [below for nested schema](#nestedblock--vpc_routes))
 
