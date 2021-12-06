@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	team_group_mappings "github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings"
+	team_group_mappings "github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings"
 )
 
 func resourceTeamGroupMappings() *schema.Resource {
@@ -17,7 +17,10 @@ func resourceTeamGroupMappings() *schema.Resource {
 		DeleteContext: resourceTeamGroupMappingsDelete,
 		UpdateContext: resourceTeamGroupMappingsUpdate,
 		Description: `
-		TBD `,
+		Maps identity providers' groups to a team.
+		You can map users in a federated organization’s group to a team or role. Your Anypoint Platform organization must use an external identity provider, such as PingFederate.
+		After you have mapped them, users in an organization can log in to Anypoint Platform using the same organizational credentials and access permissions that an organization maintains using SAML, OpenID Connect (OIDC), or LDAP.
+		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,

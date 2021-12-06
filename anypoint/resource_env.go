@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	env "github.com/mulesoft-consulting/cloudhub-client-go/env"
+	env "github.com/mulesoft-consulting/anypoint-client-go/env"
 )
 
 func resourceENV() *schema.Resource {

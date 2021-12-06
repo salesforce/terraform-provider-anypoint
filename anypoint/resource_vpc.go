@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
+	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
 )
 
 func resourceVPC() *schema.Resource {
@@ -72,9 +72,10 @@ func resourceVPC() *schema.Resource {
 				},
 			},
 			"owner_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The Business Group Owner Id",
 			},
 			"shared_with": {
 				Type:     schema.TypeList,

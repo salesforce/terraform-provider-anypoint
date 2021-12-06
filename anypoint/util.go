@@ -25,3 +25,11 @@ func IsFloat64(v interface{}) bool {
 func IsBool(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf(true)
 }
+
+func ListInterface2ListStrings(array []interface{}) []string {
+	list := make([]string, len(array))
+	for i, v := range array {
+		list[i] = v.(string)
+	}
+	return list
+}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	env "github.com/mulesoft-consulting/cloudhub-client-go/env"
+	env "github.com/mulesoft-consulting/anypoint-client-go/env"
 )
 
 func dataSourceENV() *schema.Resource {
@@ -18,12 +18,14 @@ func dataSourceENV() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The environment id",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The business group id",
 			},
 			"organization_id": {
 				Type:     schema.TypeString,
@@ -55,16 +57,6 @@ func dataSourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	envid := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
-
-	if envid == "" || orgid == "" {
-		diags := append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "ENV id (id) and Organization ID (organization_id) are required",
-			Detail:   "ENV id (id) and Organization ID (organization_id) must be provided",
-		})
-		return diags
-	}
-
 	authctx := getENVAuthCtx(ctx, &pco)
 
 	//request env

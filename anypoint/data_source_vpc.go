@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
+	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
 )
 
 func dataSourceVPC() *schema.Resource {
@@ -19,12 +19,14 @@ func dataSourceVPC() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC id",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The business group id",
 			},
 			"name": {
 				Type:     schema.TypeString,
