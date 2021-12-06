@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mulesoft-consulting/cloudhub-client-go/team_group_mappings"
+	"github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings"
 )
 
 func dataSourceTeamGroupMappings() *schema.Resource {
@@ -32,14 +32,16 @@ func dataSourceTeamGroupMappings() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"offset": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "The number of records to omit from the response",
 						},
 						"limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  200,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     200,
+							Description: "Maximum records to retrieve per request.",
 						},
 					},
 				},

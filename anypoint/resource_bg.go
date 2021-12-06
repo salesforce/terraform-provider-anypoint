@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	org "github.com/mulesoft-consulting/cloudhub-client-go/org"
+	org "github.com/mulesoft-consulting/anypoint-client-go/org"
 )
 
 func resourceBG() *schema.Resource {
@@ -34,19 +34,19 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"createdat": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updatedat": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ownerid": {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"clientid": {
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"client_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,41 +54,41 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"isfederated": {
+			"is_federated": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"parentorganizationid": {
+			"parent_organization_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"parentorganizationids": {
+			"parent_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"suborganizationids": {
+			"sub_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"tenantorganizationids": {
+			"tenant_organization_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"mfarequired": {
+			"mfa_required": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"isautomaticadminpromotionexempt": {
+			"is_automatic_admin_promotion_exempt": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ismaster": {
+			"is_master": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -129,11 +129,11 @@ func resourceBG() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"organizationid": {
+						"organization_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"isproduction": {
+						"is_production": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -141,7 +141,7 @@ func resourceBG() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"clientid": {
+						"client_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -163,7 +163,7 @@ func resourceBG() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"entitlements_hybrid_enabled": {
+			"entitlements_hybridenabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -418,19 +418,15 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"owner_id": {
+			"owner_created_at": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"owner_createdat": {
+			"owner_updated_at": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"owner_updatedat": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"owner_organizationid": {
+			"owner_organization_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -470,11 +466,11 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"owner_mfaverificationexcluded": {
+			"owner_mfaverification_excluded": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"owner_mfaverifiersconfigured": {
+			"owner_mfaverifiers_configured": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -482,7 +478,7 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"sessiontimeout": {
+			"session_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
@@ -634,8 +630,8 @@ func newBGPostBody(d *schema.ResourceData) *org.BGPostReqBody {
 	body := org.NewBGPostReqBodyWithDefaults()
 
 	body.SetName(d.Get("name").(string))
-	body.SetOwnerId(d.Get("ownerid").(string))
-	body.SetParentOrganizationId((d.Get("parentorganizationid").(string)))
+	body.SetOwnerId(d.Get("owner_id").(string))
+	body.SetParentOrganizationId((d.Get("parent_organization_id").(string)))
 	body.SetEntitlements(*newEntitlementsFromD(d))
 
 	return body
@@ -647,9 +643,9 @@ func newBGPostBody(d *schema.ResourceData) *org.BGPostReqBody {
 func newBGPutBody(d *schema.ResourceData) *org.BGPutReqBody {
 	body := org.NewBGPutReqBodyWithDefaults()
 	body.SetName(d.Get("name").(string))
-	body.SetOwnerId(d.Get("ownerid").(string))
+	body.SetOwnerId(d.Get("owner_id").(string))
 	body.SetEntitlements(*newEntitlementsFromD(d))
-	body.SetSessionTimeout(int32(d.Get("sessiontimeout").(int)))
+	body.SetSessionTimeout(int32(d.Get("session_timeout").(int)))
 
 	return body
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	vpc "github.com/mulesoft-consulting/cloudhub-client-go/vpc"
+	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
 )
 
 func resourceVPC() *schema.Resource {
