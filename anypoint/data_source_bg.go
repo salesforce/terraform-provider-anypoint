@@ -392,10 +392,6 @@ func dataSourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"owner_created_at": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -414,10 +414,6 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"owner_created_at": {
 				Type:     schema.TypeString,
 				Optional: true,
