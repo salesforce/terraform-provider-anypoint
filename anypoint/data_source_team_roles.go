@@ -33,22 +33,26 @@ func dataSourceTeamRoles() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "return only role assignments containing one of the supplied role_ids",
 						},
 						"search": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A search string to use for case-insensitive partial matches on role name",
 						},
 						"offset": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "The number of records to omit from the response.",
 						},
 						"limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  200,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     200,
+							Description: "Maximum records to retrieve per request.",
 						},
 					},
 				},

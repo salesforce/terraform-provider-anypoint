@@ -34,10 +34,6 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -417,10 +413,6 @@ func resourceBG() *schema.Resource {
 			"entitlements_workerclouds_reassigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
-			},
-			"owner_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"owner_created_at": {
 				Type:     schema.TypeString,

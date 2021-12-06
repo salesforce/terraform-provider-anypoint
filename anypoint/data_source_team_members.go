@@ -32,12 +32,14 @@ func dataSourceTeamMembers() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"membership_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Include the group access mappings that grant the provided membership type By default, all group access mappings are returned",
 						},
 						"identity_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A search string to use for case-insensitive partial matches on external group name",
 						},
 						"member_ids": {
 							Type:     schema.TypeList,
@@ -45,28 +47,34 @@ func dataSourceTeamMembers() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+							Description: "Include the members of the team that have ids in this list",
 						},
 						"search": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Maximum records to retrieve per request.",
 						},
 						"offset": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "The number of records to omit from the response.",
 						},
 						"limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  200,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     200,
+							Description: "Maximum records to retrieve per request.",
 						},
 						"sort": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The field to sort on",
 						},
 						"ascending": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether to sort ascending or descending",
 						},
 					},
 				},
