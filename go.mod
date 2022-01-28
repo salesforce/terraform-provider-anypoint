@@ -21,6 +21,7 @@ require (
 	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0
+	github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.2 // indirect
 	github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0
 	github.com/mulesoft-consulting/anypoint-client-go/role v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/rolegroup v0.1.0

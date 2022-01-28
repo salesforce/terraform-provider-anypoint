@@ -279,6 +279,14 @@ github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0 h1:hQhOicfFiuutku1o
 github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0/go.mod h1:ftj9Trt79sh7B5bcOiSGlFC/AtDXUabSj0pC7ktUtck=
 github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0 h1:W3PbikRBYoDE9GM1gAZdHn/W0ImGyaUWZOIZ4ehhhJ0=
 github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0/go.mod h1:IOpP0enauRkNvlZlACRPrqjmjUMB+mpUMXunUr58wzo=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.0.1 h1:OonJpzvcKj39rM+GFLkxPSqmfCfI26qke0mJNH8AqH4=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.0.1/go.mod h1:J5AmL4bkfDFgYN1h4UWSKTlKPMZo8YDSDaZgXPBoGy0=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.0 h1:U7xgR2JEmcs9Ou5O8Zg3ELOLkwZY1uxS7goJ2opEVZA=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.0/go.mod h1:J5AmL4bkfDFgYN1h4UWSKTlKPMZo8YDSDaZgXPBoGy0=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.1 h1:zY/j6Ysb7d82TgY4ahEZhWrPTV8tk4TlmsZ9w8wTWE8=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.1/go.mod h1:J5AmL4bkfDFgYN1h4UWSKTlKPMZo8YDSDaZgXPBoGy0=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.2 h1:UHTw39+JWekWc+0mO6BSupfECOdddQ9mlT72hY/lH2o=
+github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.2/go.mod h1:J5AmL4bkfDFgYN1h4UWSKTlKPMZo8YDSDaZgXPBoGy0=
 github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0 h1:uIVwClYi77y2qEFCkK053OCnpkp7XUq9auS1SJfXLjE=
 github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0/go.mod h1:j5FY31MM+wC2EgKQWXXoQQHduo42O4r2ObbntquyBdk=
 github.com/mulesoft-consulting/anypoint-client-go/role v0.1.0 h1:caGOx/XqO1Mtf2ZSA8gJv10eTkMGEUrq2H24//mUUJo=
