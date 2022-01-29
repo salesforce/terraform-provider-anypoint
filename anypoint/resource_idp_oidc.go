@@ -287,7 +287,8 @@ func newOIDCPostBody(d *schema.ResourceData) (*idp.IdpPostBody, diag.Diagnostics
 	oidc_provider := idp.NewOidcProvider1()
 
 	if oidc_provider_input != nil {
-		list := oidc_provider_input.([]interface{})
+		set := oidc_provider_input.(*schema.Set)
+		list := set.List()
 		if len(list) > 0 {
 			item := list[0]
 			data := item.(map[string]interface{})
@@ -356,8 +357,9 @@ func newOIDCPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 	oidc_provider := idp.NewOidcProvider1()
 
 	if oidc_provider_input != nil {
-		list := oidc_provider_input.([]interface{})
-		if len(list) > 0 {
+		set := oidc_provider_input.(*schema.Set)
+		list := set.List()
+		if set.Len() > 0 {
 			item := list[0]
 			data := item.(map[string]interface{})
 			// reads client registration or credentials depending on which one is added

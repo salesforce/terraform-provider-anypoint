@@ -295,8 +295,9 @@ func newSAMLPostBody(d *schema.ResourceData) (*idp.IdpPostBody, diag.Diagnostics
 	saml := idp.NewSaml1()
 
 	if saml_input != nil {
-		list := saml_input.([]interface{})
-		if len(list) > 0 {
+		set := saml_input.(*schema.Set)
+		list := set.List()
+		if set.Len() > 0 {
 			item := list[0]
 			data := item.(map[string]interface{})
 			if issuer, ok := data["issuer"]; ok {
@@ -357,66 +358,71 @@ func newSAMLPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 	var diags diag.Diagnostics
 
 	name := d.Get("name").(string)
-	oidc_provider_input := d.Get("oidc_provider")
+	saml_input := d.Get("saml")
+	sp_sign_on_url := d.Get("sp_sign_on_url").(string)
+	sp_sign_out_url := d.Get("sp_sign_out_url").(string)
 
 	body := idp.NewIdpPatchBody()
 
-	oidc_type := idp.NewIdpPostBodyType()
-	oidc_type.SetName("saml")
-	oidc_type.SetDescription("SAML 2.0")
+	saml_type := idp.NewIdpPatchBodyType()
+	saml_type.SetDescription("SAML 2.0")
 
-	oidc_provider := idp.NewOidcProvider1()
+	saml := idp.NewSaml1()
 
-	body.SetName(name)
-	if oidc_provider_input != nil {
-		list := oidc_provider_input.([]interface{})
-		for _, item := range list {
-			if item != nil {
-				data := item.(map[string]interface{})
-				// reads client registration or credentials depending on which one is added
-				client := idp.NewClient1()
-				client_urls := idp.NewUrls1()
-				if client_registration_url, ok := data["client_registration_url"]; ok {
-					client_urls.SetRegister(client_registration_url.(string))
-					client.SetUrls(*client_urls)
-				} else {
-					credentials := idp.NewCredentials1()
-					if client_credentials_id, ok := data["client_credentials_id"]; ok {
-						credentials.SetId(client_credentials_id.(string))
-					}
-					if client_credentials_secret, ok := data["client_credentials_secret"]; ok {
-						credentials.SetSecret(client_credentials_secret.(string))
-					}
-					client.SetCredentials(*credentials)
-				}
-				oidc_provider.SetClient(*client)
+	if saml_input != nil {
+		set := saml_input.(*schema.Set)
+		list := set.List()
+		if set.Len() > 0 {
+			item := list[0]
+			data := item.(map[string]interface{})
+			if issuer, ok := data["issuer"]; ok {
+				saml.SetIssuer(issuer.(string))
+			}
+			if audience, ok := data["audience"]; ok {
+				saml.SetAudience(audience.(string))
+			}
+			if public_key, ok := data["public_key"]; ok {
+				saml.SetPublicKey(public_key.([]string))
+			}
+			//parsing claims
+			claims := idp.NewClaimsMapping2()
+			if claims_mapping_email_attribute, ok := data["claims_mapping_email_attribute"]; ok {
+				claims.SetEmailAttribute(claims_mapping_email_attribute.(string))
+			}
+			if claims_mapping_group_attribute, ok := data["claims_mapping_group_attribute"]; ok {
+				claims.SetGroupAttribute(claims_mapping_group_attribute.(string))
+			}
+			if claims_mapping_lastname_attribute, ok := data["claims_mapping_lastname_attribute"]; ok {
+				claims.SetLastnameAttribute(claims_mapping_lastname_attribute.(string))
+			}
+			if claims_mapping_username_attribute, ok := data["claims_mapping_username_attribute"]; ok {
+				claims.SetUsernameAttribute(claims_mapping_username_attribute.(string))
+			}
+			if claims_mapping_firstname_attribute, ok := data["claims_mapping_firstname_attribute"]; ok {
+				claims.SetFirstnameAttribute(claims_mapping_firstname_attribute.(string))
+			}
+			saml.SetClaimsMapping(*claims)
 
-				//Parsing URLs
-				urls := idp.NewUrls3()
-				if token_url, ok := data["token_url"]; ok {
-					urls.SetToken(token_url.(string))
-				}
-				if userinfo_url, ok := data["userinfo_url"]; ok {
-					urls.SetUserinfo(userinfo_url.(string))
-				}
-				if authorize_url, ok := data["authorize_url"]; ok {
-					urls.SetAuthorize(authorize_url.(string))
-				}
-				oidc_provider.SetUrls(*urls)
-
-				if issuer, ok := data["issuer"]; ok {
-					oidc_provider.SetIssuer(issuer.(string))
-				}
-				if group_scope, ok := data["group_scope"]; ok {
-					oidc_provider.SetGroupScope(group_scope.(string))
-				}
-				if allow_untrusted_certificates, ok := data["allow_untrusted_certificates"]; ok {
-					body.SetAllowUntrustedCertificates(allow_untrusted_certificates.(bool))
-				}
+			if sp_initiated_sso_enabled, ok := data["sp_initiated_sso_enabled"]; ok {
+				saml.SetSpInitiatedSsoEnabled(sp_initiated_sso_enabled.(bool))
+			}
+			if idp_initiated_sso_enabled, ok := data["idp_initiated_sso_enabled"]; ok {
+				saml.SetIdpInitiatedSsoEnabled(idp_initiated_sso_enabled.(bool))
+			}
+			if require_encrypted_saml_assertions, ok := data["require_encrypted_saml_assertions"]; ok {
+				saml.SetRequireEncryptedSamlAssertions(require_encrypted_saml_assertions.(bool))
 			}
 		}
 	}
-	body.SetOidcProvider(*oidc_provider)
+	sp := idp.NewServiceProvider1()
+	sp_urls := idp.NewUrls4()
+	sp_urls.SetSignOn(sp_sign_on_url)
+	sp_urls.SetSignOut(sp_sign_out_url)
+	sp.SetUrls(*sp_urls)
+	body.SetServiceProvider(*sp)
+	body.SetSaml(*saml)
+	body.SetName(name)
+	body.SetType(*saml_type)
 
 	return body, diags
 }
