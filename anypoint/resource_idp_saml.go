@@ -307,7 +307,12 @@ func newSAMLPostBody(d *schema.ResourceData) (*idp.IdpPostBody, diag.Diagnostics
 				saml.SetAudience(audience.(string))
 			}
 			if public_key, ok := data["public_key"]; ok {
-				saml.SetPublicKey(public_key.([]string))
+				l := public_key.([]interface{})
+				keys := make([]string, len(l))
+				for i, k := range l {
+					keys[i] = k.(string)
+				}
+				saml.SetPublicKey(keys)
 			}
 			//parsing claims
 			claims := idp.NewClaimsMapping2()
@@ -382,7 +387,12 @@ func newSAMLPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 				saml.SetAudience(audience.(string))
 			}
 			if public_key, ok := data["public_key"]; ok {
-				saml.SetPublicKey(public_key.([]string))
+				l := public_key.([]interface{})
+				keys := make([]string, len(l))
+				for i, k := range l {
+					keys[i] = k.(string)
+				}
+				saml.SetPublicKey(keys)
 			}
 			//parsing claims
 			claims := idp.NewClaimsMapping2()
