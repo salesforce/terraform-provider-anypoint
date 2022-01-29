@@ -11,6 +11,7 @@ import (
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
 	dlb "github.com/mulesoft-consulting/anypoint-client-go/dlb"
 	env "github.com/mulesoft-consulting/anypoint-client-go/env"
+	idp "github.com/mulesoft-consulting/anypoint-client-go/idp"
 	org "github.com/mulesoft-consulting/anypoint-client-go/org"
 	role "github.com/mulesoft-consulting/anypoint-client-go/role"
 	rolegroup "github.com/mulesoft-consulting/anypoint-client-go/rolegroup"
@@ -82,6 +83,8 @@ func Provider() *schema.Provider {
 			"anypoint_team_member":         resourceTeamMember(),
 			"anypoint_team_group_mappings": resourceTeamGroupMappings(),
 			"anypoint_dlb":                 resourceDLB(),
+			"anypoint_idp_oidc":            resourceOIDC(),
+			"anypoint_idp_saml":            resourceSAML(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
@@ -102,6 +105,8 @@ func Provider() *schema.Provider {
 			"anypoint_team_group_mappings": dataSourceTeamGroupMappings(),
 			"anypoint_dlb":                 dataSourceDLB(),
 			"anypoint_dlbs":                dataSourceDLBs(),
+			"anypoint_idp":                 dataSourceIDP(),
+			"anypoint_idps":                dataSourceIDPs(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -231,6 +236,7 @@ type ProviderConfOutput struct {
 	teamrolesclient         *team_roles.APIClient
 	teamgroupmappingsclient *team_group_mappings.APIClient
 	dlbclient               *dlb.APIClient
+	idpclient               *idp.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -248,6 +254,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamrolescfg := team_roles.NewConfiguration()
 	teamgroupmappingscfg := team_group_mappings.NewConfiguration()
 	dlbcfg := dlb.NewConfiguration()
+	idpcfg := idp.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	orgclient := org.NewAPIClient(orgcfg)
@@ -261,6 +268,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamrolesclient := team_roles.NewAPIClient(teamrolescfg)
 	teamgroupmappingsclient := team_group_mappings.NewAPIClient(teamgroupmappingscfg)
 	dlbclient := dlb.NewAPIClient(dlbcfg)
+	idpclient := idp.NewAPIClient(idpcfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -277,5 +285,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		teamrolesclient:         teamrolesclient,
 		teamgroupmappingsclient: teamgroupmappingsclient,
 		dlbclient:               dlbclient,
+		idpclient:               idpclient,
 	}
 }
