@@ -171,12 +171,12 @@ func dataSourceIDP() *schema.Resource {
 					},
 				},
 			},
-			"service_provider_sign_on_url": {
+			"sp_sign_on_url": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The provider's sign on url",
 			},
-			"service_provider_sign_out_url": {
+			"sp_sign_out_url": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The provider's sign out url, only available for SAML",
@@ -190,9 +190,9 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	idpid := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
-	authctx := getENVAuthCtx(ctx, &pco)
+	authctx := getIDPAuthCtx(ctx, &pco)
 
-	//request env
+	//request idp
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
 	defer httpr.Body.Close()
 	if err != nil {
@@ -251,22 +251,22 @@ func flattenIDPData(idpitem *idp.Idp) map[string]interface{} {
 		if sp, ok := idpitem.GetServiceProviderOk(); ok {
 			if urls, ok := sp.GetUrlsOk(); ok {
 				if signon, ok := urls.GetSignOnOk(); ok {
-					item["service_provider_sign_on_url"] = *signon
+					item["sp_sign_on_url"] = *signon
 				} else {
-					item["service_provider_sign_on_url"] = ""
+					item["sp_sign_on_url"] = ""
 				}
 				if signout, ok := urls.GetSignOutOk(); ok {
-					item["service_provider_sign_out_url"] = *signout
+					item["sp_sign_out_url"] = *signout
 				} else {
-					item["service_provider_sign_out_url"] = ""
+					item["sp_sign_out_url"] = ""
 				}
 			} else {
-				item["service_provider_sign_on_url"] = ""
-				item["service_provider_sign_out_url"] = ""
+				item["sp_sign_on_url"] = ""
+				item["sp_sign_out_url"] = ""
 			}
 		} else {
-			item["service_provider_sign_on_url"] = ""
-			item["service_provider_sign_out_url"] = ""
+			item["sp_sign_on_url"] = ""
+			item["sp_sign_out_url"] = ""
 		}
 
 		return item
@@ -354,7 +354,9 @@ func setIDPAttributesToResourceData(d *schema.ResourceData, idpitem map[string]i
 	if idpitem != nil {
 		for _, attr := range attributes {
 			if err := d.Set(attr, idpitem[attr]); err != nil {
-				return fmt.Errorf("unable to set IDP attribute %s\n details: %s", attr, err)
+				if attr != "saml" && attr != "oidc_provider" {
+					return fmt.Errorf("unable to set IDP attribute %s\n details: %s", attr, err)
+				}
 			}
 		}
 	}
@@ -363,7 +365,7 @@ func setIDPAttributesToResourceData(d *schema.ResourceData, idpitem map[string]i
 
 func getIDPAttributes() []string {
 	attributes := [...]string{
-		"provider_id", "name", "type", "oidc_provider", "saml", "service_provider_sign_on_url", "service_provider_sign_out_url",
+		"provider_id", "name", "type", "oidc_provider", "saml", "sp_sign_on_url", "sp_sign_out_url",
 	}
 	return attributes[:]
 }

@@ -33,8 +33,8 @@ data "anypoint_idp" "idp" {
 - **oidc_provider** (Set of Object) The description of provider specific for OIDC types (see [below for nested schema](#nestedatt--oidc_provider))
 - **provider_id** (String) The provider id
 - **saml** (Set of Object) The description of provider specific for SAML types (see [below for nested schema](#nestedatt--saml))
-- **service_provider_sign_on_url** (String) The provider's sign on url
-- **service_provider_sign_out_url** (String) The provider's sign out url, only available for SAML
+- **sp_sign_on_url** (String) The provider's sign on url
+- **sp_sign_out_url** (String) The provider's sign out url, only available for SAML
 - **type** (Map of String) The type of the provider, contains description and the name of the type of the provider (saml or oidc)
 
 <a id="nestedatt--oidc_provider"></a>
