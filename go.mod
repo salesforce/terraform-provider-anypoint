@@ -12,7 +12,7 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.2.0
-	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.3.0
 	github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.2
 	github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0
@@ -31,5 +31,3 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211203200212-54befc351ae9 // indirect
 )
-
-replace github.com/mulesoft-consulting/anypoint-client-go/dlb v0.2.0 => /Users/sboulealf/Workspaces/CAT/cloudhub-automation-client-generator/dist/dlb
