@@ -184,7 +184,7 @@ func resourceDLB() *schema.Resource {
 			},
 			"keep_url_encoding": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Optional: true,
 			},
 			"tlsv1": {
 				Type:     schema.TypeBool,
@@ -192,7 +192,7 @@ func resourceDLB() *schema.Resource {
 			},
 			"upstream_tlsv12": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Optional: true,
 			},
 			"proxy_read_timeout": {
 				Type:     schema.TypeInt,
