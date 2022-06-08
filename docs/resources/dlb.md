@@ -21,6 +21,11 @@ resource "anypoint_dlb" "dlb" {
   ip_whitelist = []
   http_mode = "redirect"
   tlsv1 = false
+  upstream_tlsv12 = false
+  keep_url_encoding = true
+  double_static_ips = false
+  enable_streaming = false
+  forward_client_certificate = false
   ssl_endpoints {
     public_key_label = "tf-public-key-name"
     public_key = "-----BEGIN CERTIFICATE-----\nMIICpDCCAYwCCQCOpE/9k0ve8zANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls\nb2NhbGhvc3QwHhcNMjEwMzA1MTUyMTM1WhcNMjEwMzA2MTUyMTM1WjAUMRIwEAYD\nVQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDK\n93gvOvMrcyVUvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAx\npaBw8/GTX5qNshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVAC\njJw67Y88St9h8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpB\nuTPbXHRnHJCyr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5j\nl8466kfniqydGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9Hf\nDJQffO+I5y+w6y5cU1l3AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAGS1mTWes3za\nWGlubGf76TiSn8GjIO7jIeVxBeB6rYq6iUFLUfEPCNHSlA0g7JJ40KW/osPc6EEm\nQzptRdhAoRDM5ilRTVMvuoGflw04OqrSUqR26+7aVJ8JcBJWBeP/5kGaMjPhy7oX\ntYPwzK2wXDYLDUCLXefF59NQoHUtytritckT5tP0UYDcRf2upBxn/v9lbF7AVfLZ\nO/vGplnD8Kq4QaFGL26ioh7e/n9TldbDJnspHh389aG6nqOKIgnL785Ggr6914vH\n4AMJa3r9cYpoe9ZdXL6b3aW+9MQo2Th2hDc7Z4CfVzJTZ9mg3ouKxIYGj+B4bj61\nN+MUQ5Q7aCo=\n-----END CERTIFICATE-----"
