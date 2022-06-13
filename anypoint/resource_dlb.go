@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -175,7 +174,7 @@ func resourceDLB() *schema.Resource {
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"off", "on"}, true)),
 						},
 						"mappings": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -483,7 +482,9 @@ func newDLBPostBody(d *schema.ResourceData) *dlb.DlbPostBody {
 				endpoint_item.SetVerifyClientMode(val.(string))
 			}
 			if val, ok := endpoint_converted["mappings"]; ok {
-				mappings := val.([]interface{})
+				//mappings := val.([]interface{})
+				mappings_set := val.(*schema.Set)
+				mappings := mappings_set.List()
 				mappings_body := make([]dlb.DlbPostBodyMappings, len(mappings))
 				for j, mapping := range mappings {
 					mapping_converted := mapping.(map[string]interface{})
@@ -533,7 +534,9 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 				e[strcase.ToLowerCamel(private_key_field)] = endpoint[private_key_field].(string)
 				e[strcase.ToLowerCamel(private_key_label_field)] = endpoint[private_key_label_field].(string)
 				e[strcase.ToLowerCamel(verify_client_mode_field)] = endpoint[verify_client_mode_field].(string)
-				mappings := endpoint[mappings_field].([]interface{})
+				//mappings := endpoint[mappings_field].([]interface{})
+				mappings_set := endpoint[mappings_field].(*schema.Set)
+				mappings := mappings_set.List()
 				mappings_extract := make([]map[string]interface{}, len(mappings))
 				for k, mappings_val := range mappings {
 					mapping := mappings_val.(map[string]interface{})
@@ -636,29 +639,27 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 	sortMapListAl(new_list, sortAttr)
 	sortMapListAl(old_list, sortAttr)
 
-	if len(new_list) == len(old_list) {
-		for i, val := range old_list {
-			o := val.(map[string]interface{})
-			n := new_list[i].(map[string]interface{})
-			public_key := n["public_key"].(string)
-			private_key := n["private_key"].(string)
-			public_key_digest := o["public_key_digest"].(string)
-			private_key_digest := o["private_key_digest"].(string)
-			old_str := fmt.Sprintf("%v", o)
-			new_str := fmt.Sprintf("%v", n)
-			fmt.Println("-------------------------------")
-			fmt.Println(old_str)
-			fmt.Println()
-			fmt.Println(new_str)
-			fmt.Println("-------------------------------")
-			//compare certificates digest
-			if !verifyDLBDigest(public_key, public_key_digest) || !verifyDLBDigest(private_key, private_key_digest) {
-				return false
-			}
-			//compare mappings
-			if !equalDLBSSLEndpointsMappings(o["mappings"].([]interface{}), n["mappings"].([]interface{})) {
-				return false
-			}
+	if len(new_list) != len(old_list) {
+		return false
+	}
+
+	for i, val := range old_list {
+		o := val.(map[string]interface{})
+		n := new_list[i].(map[string]interface{})
+		public_key := n["public_key"].(string)
+		private_key := n["private_key"].(string)
+		public_key_digest := o["public_key_digest"].(string)
+		private_key_digest := o["private_key_digest"].(string)
+
+		//compare certificates digest
+		if !verifyDLBDigest(public_key, public_key_digest) || !verifyDLBDigest(private_key, private_key_digest) {
+			return false
+		}
+		o_mapping_set := o["mappings"].(*schema.Set)
+		n_mapping_set := n["mappings"].(*schema.Set)
+		//compare mappings
+		if !equalDLBSSLEndpointsMappings(o_mapping_set.List(), n_mapping_set.List()) {
+			return false
 		}
 	}
 
@@ -674,6 +675,10 @@ func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
 
 	attributes := [...]string{
 		"input_uri", "app_name", "app_uri",
+	}
+
+	if len(old) != len(new) {
+		return false
 	}
 
 	for i, item := range old {
@@ -710,12 +715,10 @@ func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bo
 
 	for _, attr := range watchAttrs {
 		if attr == "ssl_endpoints" && !equalDLBSSLEndpoints(d.GetChange(attr)) {
-			println("\n\nSSL_ENDPOINT HAS CHANGED !!!!\n\n")
 			return true
 		} else if attr == "ip_allowlist" {
 			ip_allowlist := d.Get("ip_allowlist").([]interface{})
 			if len(ip_allowlist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
-				println("\n\nALLOW LIST HAS TO BE CHANGE\n\n")
 				return true
 			}
 		} else if attr == "ip_whitelist" {
