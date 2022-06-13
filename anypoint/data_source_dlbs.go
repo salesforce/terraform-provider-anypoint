@@ -25,12 +25,12 @@ func dataSourceDLBs() *schema.Resource {
 			},
 			"vpc_id": {
 				Type:        schema.TypeString,
-				Description: "Vitual Private Network Id",
+				Description: "Virtual Private Network Id",
 				Required:    true,
 			},
 			"dlbs": {
 				Type:        schema.TypeList,
-				Description: "List of DLBs for the given vpc",
+				Description: "List of DLBs for the given VPC",
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -63,26 +63,38 @@ func dataSourceDLBs() *schema.Resource {
 							Computed: true,
 						},
 						"ip_addresses": {
-							Type:     schema.TypeList,
-							Computed: true,
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of static IP addresses for the Load Balancer",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"ip_whitelist": {
-							Type:     schema.TypeList,
-							Computed: true,
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "CIDR blocks to allow connections from",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"ip_allowlist": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "CIDR blocks to allow connections from",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"http_mode": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Specifies whether the Load Balancer listens for HTTP requests on port 80. If set to redirect, all HTTP requests will be redirected to HTTPS. possible values: 'on', 'off' or 'redirect'",
 						},
 						"default_ssl_endpoint": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The default certificate that will be served for requests not using SNI, or requesting a non-existing certificate",
 						},
 						"ssl_endpoints": {
 							Type:     schema.TypeSet,
@@ -169,8 +181,9 @@ func dataSourceDLBs() *schema.Resource {
 							Computed: true,
 						},
 						"ip_addresses_info": {
-							Type:     schema.TypeList,
-							Computed: true,
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of IP addresses information for the Load Balancer",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ip": {
@@ -189,8 +202,19 @@ func dataSourceDLBs() *schema.Resource {
 							},
 						},
 						"double_static_ips": {
-							Type:     schema.TypeBool,
-							Computed: true,
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "True if DLB will use double static IPs when restarting",
+						},
+						"enable_streaming": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Setting this to true will disable request buffering at the DLB, thereby enabling streaming",
+						},
+						"forward_client_certificate": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Setting this to true will forward any incoming client certificates to upstream application",
 						},
 					},
 				},
