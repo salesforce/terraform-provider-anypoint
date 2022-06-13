@@ -2,13 +2,13 @@ package anypoint
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/iancoleman/strcase"
 	"github.com/mulesoft-consulting/anypoint-client-go/dlb"
 )
@@ -48,28 +48,29 @@ func resourceDLB() *schema.Resource {
 				Description: "The name of the DLB.",
 			},
 			"domain": {
-				Type:        schema.TypeString,
-				ForceNew:    true,
-				Optional:    true,
-				Description: "The DNS domain for the Load Balancer",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "" {
-						return true
-					} else {
-						return old == new
-					}
-				},
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "stopped",
 				Description: "The desired state, possible values: 'started', 'stopped' or 'restarted'",
-				// Suppress the diff shown if the state name are equal when both compared in lower case.
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return compareDLBStates(old, new)
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					values := []string{"started", "stopped", "restarted"}
+					v := val.(string)
+					found := false
+					for _, val := range values {
+						if val == v {
+							found = true
+							break
+						}
+					}
+					if !found {
+						errs = append(errs, fmt.Errorf("%q must be one of the values: %s, but got: %s", key, strings.Join(values[:], " or "), v))
+					}
+					return
 				},
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"started", "stopped", "restarted"}, true)),
 			},
 			"deployment_id": {
 				Type:     schema.TypeString,
@@ -80,60 +81,31 @@ func resourceDLB() *schema.Resource {
 				Computed: true,
 			},
 			"ip_addresses": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of static IP addresses for the Load Balancer",
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"ip_whitelist": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "CIDR blocks to allow connections from",
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-				},
-				ConflictsWith: []string{"ip_allowlist"},
-				//checks wether the whitelist has changed
-				//uses custom function in case ip_allowlist is used instead, then this field is ignored
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return equalDLBAllowList(d.GetChange("ip_whitelist"))
-				},
-			},
-			"ip_allowlist": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "CIDR blocks to allow connections from",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				ConflictsWith: []string{"ip_whitelist"},
-				//checks wether the allowlist has changed
-				//uses custom function in case ip_whitelist is used instead, then this field is ignored
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return equalDLBAllowList(d.GetChange("ip_allowlist"))
 				},
 			},
 			"http_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "redirect",
-				Description:      "Specifies whether the Load Balancer listens for HTTP requests on port 80. If set to redirect, all HTTP requests will be redirected to HTTPS. possible values: 'on', 'off' or 'redirect'",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"on", "off", "redirect"}, true)),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "redirect",
 			},
 			"default_ssl_endpoint": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The default certificate that will be served for requests not using SNI, or requesting a non-existing certificate",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"ssl_endpoints": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return equalDLBSSLEndpoints(d.GetChange("ssl_endpoints"))
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"public_key": {
@@ -167,14 +139,12 @@ func resourceDLB() *schema.Resource {
 							Optional: true,
 						},
 						"verify_client_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "off",
-							Description:      "Whether to enable client verification or not, possible values: 'off' or 'on'",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"off", "on"}, true)),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "off",
 						},
 						"mappings": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -214,7 +184,7 @@ func resourceDLB() *schema.Resource {
 			},
 			"keep_url_encoding": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"tlsv1": {
 				Type:     schema.TypeBool,
@@ -222,16 +192,15 @@ func resourceDLB() *schema.Resource {
 			},
 			"upstream_tlsv12": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"proxy_read_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"ip_addresses_info": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of IP addresses information for the Load Balancer",
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip": {
@@ -250,22 +219,8 @@ func resourceDLB() *schema.Resource {
 				},
 			},
 			"double_static_ips": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "True if DLB will use double static IPs when restarting",
-			},
-			"enable_streaming": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Setting this to true will disable request buffering at the DLB, thereby enabling streaming",
-			},
-			"forward_client_certificate": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Setting this to true will forward any incoming client certificates to upstream application",
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 		},
 	}
@@ -357,8 +312,7 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
 
-	//if d.HasChanges(getDLBPatchWatchAttributes()...) {
-	if isDLBChanged(ctx, d, m) {
+	if d.HasChanges(getDLBPatchWatchAttributes()...) {
 		body := newDLBPatchBody(d)
 		//request user creation
 		_, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdPatch(authctx, orgid, vpcid, dlbid).RequestBody(body).Execute()
@@ -426,38 +380,11 @@ func newDLBPostBody(d *schema.ResourceData) *dlb.DlbPostBody {
 	if state := d.Get("state"); state != nil {
 		body.SetState(state.(string))
 	}
-	if domain := d.Get("domain"); domain != nil {
-		body.SetDomain(domain.(string))
-	}
 	if ip_whitelist := d.Get("ip_whitelist"); ip_whitelist != nil {
 		body.SetIpWhitelist(ListInterface2ListStrings(ip_whitelist.([]interface{})))
 	}
-	if ip_allowlist := d.Get("ip_allowlist"); ip_allowlist != nil {
-		body.SetIpAllowlist(ListInterface2ListStrings(ip_allowlist.([]interface{})))
-	}
 	if http_mode := d.Get("http_mode"); http_mode != nil {
 		body.SetHttpMode(http_mode.(string))
-	}
-	if keep_url_encoding := d.Get("keep_url_encoding"); keep_url_encoding != nil {
-		body.SetKeepUrlEncoding(keep_url_encoding.(bool))
-	}
-	if upstream_tlsv12 := d.Get("upstream_tlsv12"); upstream_tlsv12 != nil {
-		body.SetUpstreamTlsv12(upstream_tlsv12.(bool))
-	}
-	if tlsv1 := d.Get("tlsv1"); tlsv1 != nil {
-		body.SetTlsv1(tlsv1.(bool))
-	}
-	if double_static_ips := d.Get("double_static_ips"); double_static_ips != nil {
-		body.SetDoubleStaticIps(double_static_ips.(bool))
-	}
-	if enable_streaming := d.Get("enable_streaming"); enable_streaming != nil {
-		body.SetEnableStreaming(enable_streaming.(bool))
-	}
-	if forward_client_certificate := d.Get("forward_client_certificate"); forward_client_certificate != nil {
-		body.SetForwardClientCertificate(forward_client_certificate.(bool))
-	}
-	if default_ssl_endpoint := d.Get("default_ssl_endpoint"); default_ssl_endpoint != nil {
-		body.SetDefaultSslEndpoint(int32(default_ssl_endpoint.(int)))
 	}
 	if ssl_endpoints := d.Get("ssl_endpoints"); ssl_endpoints != nil {
 		ssl_endpoints_set := ssl_endpoints.(*schema.Set)
@@ -482,9 +409,7 @@ func newDLBPostBody(d *schema.ResourceData) *dlb.DlbPostBody {
 				endpoint_item.SetVerifyClientMode(val.(string))
 			}
 			if val, ok := endpoint_converted["mappings"]; ok {
-				//mappings := val.([]interface{})
-				mappings_set := val.(*schema.Set)
-				mappings := mappings_set.List()
+				mappings := val.([]interface{})
 				mappings_body := make([]dlb.DlbPostBodyMappings, len(mappings))
 				for j, mapping := range mappings {
 					mapping_converted := mapping.(map[string]interface{})
@@ -505,6 +430,9 @@ func newDLBPostBody(d *schema.ResourceData) *dlb.DlbPostBody {
 			ssl_endpoints_body[i] = *endpoint_item
 		}
 		body.SetSslEndpoints(ssl_endpoints_body)
+	}
+	if tlsv1 := d.Get("tlsv1"); tlsv1 != nil {
+		body.SetTlsv1(tlsv1.(bool))
 	}
 	return body
 }
@@ -534,9 +462,7 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 				e[strcase.ToLowerCamel(private_key_field)] = endpoint[private_key_field].(string)
 				e[strcase.ToLowerCamel(private_key_label_field)] = endpoint[private_key_label_field].(string)
 				e[strcase.ToLowerCamel(verify_client_mode_field)] = endpoint[verify_client_mode_field].(string)
-				//mappings := endpoint[mappings_field].([]interface{})
-				mappings_set := endpoint[mappings_field].(*schema.Set)
-				mappings := mappings_set.List()
+				mappings := endpoint[mappings_field].([]interface{})
 				mappings_extract := make([]map[string]interface{}, len(mappings))
 				for k, mappings_val := range mappings {
 					mapping := mappings_val.(map[string]interface{})
@@ -555,21 +481,14 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 			item["op"] = op_replace
 			item["path"] = "/" + camlAttr
 			item["value"] = ssl_endpoints_extract
-		} else if StringInSlice([]string{"ip_whitelist", "ip_allowlist"}, attr, false) { // update of
+		} else if attr == "ip_whitelist" { // update of
 			item["op"] = op_replace
 			item["path"] = "/" + camlAttr
 			item["value"] = ListInterface2ListStrings(d.Get(attr).([]interface{}))
-		} else if StringInSlice([]string{
-			"tlsv1", "upstream_tlsv12", "keep_url_encoding",
-			"double_static_ips", "enable_streaming", "forward_client_certificate",
-		}, attr, false) {
+		} else if attr == "tlsv1" {
 			item["op"] = op_replace
 			item["path"] = "/" + camlAttr
 			item["value"] = d.Get(attr).(bool)
-		} else if StringInSlice([]string{"default_ssl_endpoint"}, attr, false) {
-			item["op"] = op_replace
-			item["path"] = "/" + camlAttr
-			item["value"] = d.Get(attr).(int)
 		} else {
 			item["op"] = op_replace
 			item["path"] = "/" + camlAttr
@@ -582,153 +501,16 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 
 func getDLBPatchWatchAttributes() []string {
 	attributes := [...]string{
-		"state", "ip_whitelist", "ip_allowlist", "http_mode",
-		"default_ssl_endpoint", "ssl_endpoints", "tlsv1", "upstream_tlsv12",
-		"keep_url_encoding", "double_static_ips", "enable_streaming",
-		"forward_client_certificate",
+		"state", "ip_whitelist", "http_mode",
+		"ssl_endpoints", "tlsv1",
 	}
 	return attributes[:]
 }
 
-// Compares DLB states
-func compareDLBStates(old, new string) bool {
-	old_lowercase := strings.ToLower(old)
-	new_lowercase := strings.ToLower(new)
-	if strings.EqualFold(old, new) {
-		return true
-	} else if new_lowercase == "started" {
-		if old_lowercase == "starting" {
-			return true
-		}
-	} else if new_lowercase == "stopped" {
-		if old_lowercase == "stopping" {
-			return true
-		}
-	} else if new_lowercase == "restarted" {
-		if old_lowercase == "restarting" {
-			return true
-		}
-		if old_lowercase == "updating" {
-			return true
-		}
-	}
-	return false
-}
-
-//Returns authentication context (includes authorization header)
+/*
+ * Returns authentication context (includes authorization header)
+ */
 func getDLBAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, dlb.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, dlb.ContextServerIndex, pco.server_index)
-}
-
-// Verifies if the source and its digest are valid
-// uses CalcSha1Digest to calculate the digest against which it verifies validity
-func verifyDLBDigest(source string, digest string) bool {
-	return digest == CalcSha1Digest(source)
-}
-
-// Compares 2 states of DLB ssl_endpoints
-// returns true if they are the same, false otherwise
-func equalDLBSSLEndpoints(old, new interface{}) bool {
-	old_set := old.(*schema.Set)
-	old_list := old_set.List()
-	new_set := new.(*schema.Set)
-	new_list := new_set.List()
-
-	sortAttr := "private_key_label"
-	sortMapListAl(new_list, sortAttr)
-	sortMapListAl(old_list, sortAttr)
-
-	if len(new_list) != len(old_list) {
-		return false
-	}
-
-	for i, val := range old_list {
-		o := val.(map[string]interface{})
-		n := new_list[i].(map[string]interface{})
-		public_key := n["public_key"].(string)
-		private_key := n["private_key"].(string)
-		public_key_digest := o["public_key_digest"].(string)
-		private_key_digest := o["private_key_digest"].(string)
-
-		//compare certificates digest
-		if !verifyDLBDigest(public_key, public_key_digest) || !verifyDLBDigest(private_key, private_key_digest) {
-			return false
-		}
-		o_mapping_set := o["mappings"].(*schema.Set)
-		n_mapping_set := n["mappings"].(*schema.Set)
-		//compare mappings
-		if !equalDLBSSLEndpointsMappings(o_mapping_set.List(), n_mapping_set.List()) {
-			return false
-		}
-	}
-
-	return true
-}
-
-// compares two SSL Endpoint Mappings
-// returns true if they are equal, false otherwise
-func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
-	sortAttr := "app_uri"
-	sortMapListAl(old, sortAttr)
-	sortMapListAl(new, sortAttr)
-
-	attributes := [...]string{
-		"input_uri", "app_name", "app_uri",
-	}
-
-	if len(old) != len(new) {
-		return false
-	}
-
-	for i, item := range old {
-		old_mapping := item.(map[string]interface{})
-		new_mapping := new[i].(map[string]interface{})
-		//compare mapping attributes
-		for _, attr := range attributes {
-			if new_mapping[attr].(string) != old_mapping[attr].(string) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-//Compares old and new values of allow list attribute
-//returns true if they are the same, false otherwise
-func equalDLBAllowList(old, new interface{}) bool {
-	old_list := old.([]interface{})
-	new_list := new.([]interface{})
-	SortStrListAl(old_list)
-	SortStrListAl(new_list)
-	for i, item := range old_list {
-		if new_list[i].(string) != item.(string) {
-			return false
-		}
-	}
-	return true
-}
-
-//returns true if the DLB key elements have been changed
-func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bool {
-	watchAttrs := getDLBPatchWatchAttributes()
-
-	for _, attr := range watchAttrs {
-		if attr == "ssl_endpoints" && !equalDLBSSLEndpoints(d.GetChange(attr)) {
-			return true
-		} else if attr == "ip_allowlist" {
-			ip_allowlist := d.Get("ip_allowlist").([]interface{})
-			if len(ip_allowlist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
-				return true
-			}
-		} else if attr == "ip_whitelist" {
-			ip_whitelist := d.Get("ip_whitelist").([]interface{})
-			if len(ip_whitelist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
-				return true
-			}
-		} else if d.HasChange(attr) {
-			return true
-		}
-	}
-	return false
 }

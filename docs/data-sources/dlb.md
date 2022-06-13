@@ -32,18 +32,15 @@ data "anypoint_dlb" "dlb" {
 ### Read-Only
 
 - **default_cipher_suite** (String)
-- **default_ssl_endpoint** (Number) The default certificate that will be served for requests not using SNI, or requesting a non-existing certificate
+- **default_ssl_endpoint** (Number)
 - **deployment_id** (String)
 - **domain** (String)
-- **double_static_ips** (Boolean) True if DLB will use double static IPs when restarting
-- **enable_streaming** (Boolean) Setting this to true will disable request buffering at the DLB, thereby enabling streaming
-- **forward_client_certificate** (Boolean) Setting this to true will forward any incoming client certificates to upstream application
-- **http_mode** (String) Specifies whether the Load Balancer listens for HTTP requests on port 80. If set to redirect, all HTTP requests will be redirected to HTTPS. possible values: 'on', 'off' or 'redirect'
+- **double_static_ips** (Boolean)
+- **http_mode** (String)
 - **instance_config** (Map of String)
-- **ip_addresses** (List of String) List of static IP addresses for the Load Balancer
-- **ip_addresses_info** (List of Object) List of IP addresses information for the Load Balancer (see [below for nested schema](#nestedatt--ip_addresses_info))
-- **ip_allowlist** (List of String) CIDR blocks to allow connections from
-- **ip_whitelist** (List of String) CIDR blocks to allow connections from
+- **ip_addresses** (List of String)
+- **ip_addresses_info** (List of Object) (see [below for nested schema](#nestedatt--ip_addresses_info))
+- **ip_whitelist** (List of String)
 - **keep_url_encoding** (Boolean)
 - **name** (String)
 - **proxy_read_timeout** (Number)
