@@ -2,6 +2,7 @@ package anypoint
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -94,6 +95,12 @@ func resourceDLB() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				ConflictsWith: []string{"ip_allowlist"},
+				//checks wether the whitelist has changed
+				//uses custom function in case ip_allowlist is used instead, then this field is ignored
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalDLBAllowList(d.GetChange("ip_whitelist"))
+				},
 			},
 			"ip_allowlist": {
 				Type:        schema.TypeList,
@@ -101,6 +108,12 @@ func resourceDLB() *schema.Resource {
 				Description: "CIDR blocks to allow connections from",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+				ConflictsWith: []string{"ip_whitelist"},
+				//checks wether the allowlist has changed
+				//uses custom function in case ip_whitelist is used instead, then this field is ignored
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalDLBAllowList(d.GetChange("ip_allowlist"))
 				},
 			},
 			"http_mode": {
@@ -119,6 +132,9 @@ func resourceDLB() *schema.Resource {
 			"ssl_endpoints": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalDLBSSLEndpoints(d.GetChange("ssl_endpoints"))
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"public_key": {
@@ -342,7 +358,8 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
 
-	if d.HasChanges(getDLBPatchWatchAttributes()...) {
+	//if d.HasChanges(getDLBPatchWatchAttributes()...) {
+	if isDLBChanged(ctx, d, m) {
 		body := newDLBPatchBody(d)
 		//request user creation
 		_, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdPatch(authctx, orgid, vpcid, dlbid).RequestBody(body).Execute()
@@ -595,10 +612,120 @@ func compareDLBStates(old, new string) bool {
 	return false
 }
 
-/*
- * Returns authentication context (includes authorization header)
- */
+//Returns authentication context (includes authorization header)
 func getDLBAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, dlb.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, dlb.ContextServerIndex, pco.server_index)
+}
+
+// Verifies if the source and its digest are valid
+// uses CalcSha1Digest to calculate the digest against which it verifies validity
+func verifyDLBDigest(source string, digest string) bool {
+	return digest == CalcSha1Digest(source)
+}
+
+// Compares 2 states of DLB ssl_endpoints
+// returns true if they are the same, false otherwise
+func equalDLBSSLEndpoints(old, new interface{}) bool {
+	old_set := old.(*schema.Set)
+	old_list := old_set.List()
+	new_set := new.(*schema.Set)
+	new_list := new_set.List()
+
+	sortAttr := "private_key_label"
+	sortMapListAl(new_list, sortAttr)
+	sortMapListAl(old_list, sortAttr)
+
+	if len(new_list) == len(old_list) {
+		for i, val := range old_list {
+			o := val.(map[string]interface{})
+			n := new_list[i].(map[string]interface{})
+			public_key := n["public_key"].(string)
+			private_key := n["private_key"].(string)
+			public_key_digest := o["public_key_digest"].(string)
+			private_key_digest := o["private_key_digest"].(string)
+			old_str := fmt.Sprintf("%v", o)
+			new_str := fmt.Sprintf("%v", n)
+			fmt.Println("-------------------------------")
+			fmt.Println(old_str)
+			fmt.Println()
+			fmt.Println(new_str)
+			fmt.Println("-------------------------------")
+			//compare certificates digest
+			if !verifyDLBDigest(public_key, public_key_digest) || !verifyDLBDigest(private_key, private_key_digest) {
+				return false
+			}
+			//compare mappings
+			if !equalDLBSSLEndpointsMappings(o["mappings"].([]interface{}), n["mappings"].([]interface{})) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// compares two SSL Endpoint Mappings
+// returns true if they are equal, false otherwise
+func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
+	sortAttr := "app_uri"
+	sortMapListAl(old, sortAttr)
+	sortMapListAl(new, sortAttr)
+
+	attributes := [...]string{
+		"input_uri", "app_name", "app_uri",
+	}
+
+	for i, item := range old {
+		old_mapping := item.(map[string]interface{})
+		new_mapping := new[i].(map[string]interface{})
+		//compare mapping attributes
+		for _, attr := range attributes {
+			if new_mapping[attr].(string) != old_mapping[attr].(string) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+//Compares old and new values of allow list attribute
+//returns true if they are the same, false otherwise
+func equalDLBAllowList(old, new interface{}) bool {
+	old_list := old.([]interface{})
+	new_list := new.([]interface{})
+	SortStrListAl(old_list)
+	SortStrListAl(new_list)
+	for i, item := range old_list {
+		if new_list[i].(string) != item.(string) {
+			return false
+		}
+	}
+	return true
+}
+
+//returns true if the DLB key elements have been changed
+func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bool {
+	watchAttrs := getDLBPatchWatchAttributes()
+
+	for _, attr := range watchAttrs {
+		if attr == "ssl_endpoints" && !equalDLBSSLEndpoints(d.GetChange(attr)) {
+			println("\n\nSSL_ENDPOINT HAS CHANGED !!!!\n\n")
+			return true
+		} else if attr == "ip_allowlist" {
+			ip_allowlist := d.Get("ip_allowlist").([]interface{})
+			if len(ip_allowlist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
+				println("\n\nALLOW LIST HAS TO BE CHANGE\n\n")
+				return true
+			}
+		} else if attr == "ip_whitelist" {
+			ip_whitelist := d.Get("ip_whitelist").([]interface{})
+			if len(ip_whitelist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
+				return true
+			}
+		} else if d.HasChange(attr) {
+			return true
+		}
+	}
+	return false
 }
