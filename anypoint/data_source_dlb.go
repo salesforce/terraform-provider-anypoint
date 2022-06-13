@@ -50,38 +50,26 @@ func dataSourceDLB() *schema.Resource {
 				Computed: true,
 			},
 			"ip_addresses": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of static IP addresses for the Load Balancer",
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"ip_whitelist": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "CIDR blocks to allow connections from",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"ip_allowlist": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "CIDR blocks to allow connections from",
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"http_mode": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Specifies whether the Load Balancer listens for HTTP requests on port 80. If set to redirect, all HTTP requests will be redirected to HTTPS. possible values: 'on', 'off' or 'redirect'",
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"default_ssl_endpoint": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The default certificate that will be served for requests not using SNI, or requesting a non-existing certificate",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"ssl_endpoints": {
 				Type:     schema.TypeSet,
@@ -168,9 +156,8 @@ func dataSourceDLB() *schema.Resource {
 				Computed: true,
 			},
 			"ip_addresses_info": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of IP addresses information for the Load Balancer",
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip": {
@@ -189,19 +176,8 @@ func dataSourceDLB() *schema.Resource {
 				},
 			},
 			"double_static_ips": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "True if DLB will use double static IPs when restarting",
-			},
-			"enable_streaming": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Setting this to true will disable request buffering at the DLB, thereby enabling streaming",
-			},
-			"forward_client_certificate": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Setting this to true will forward any incoming client certificates to upstream application",
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 		},
 	}
@@ -285,7 +261,6 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 		}
 		item["ip_addresses"] = dlbitem.GetIpAddresses()
 		item["ip_whitelist"] = dlbitem.GetIpWhitelist()
-		item["ip_allowlist"] = dlbitem.GetIpAllowlist()
 		item["http_mode"] = dlbitem.GetHttpMode()
 		item["default_ssl_endpoint"] = dlbitem.GetDefaultSslEndpoint()
 		ssl_endpoints := make([]interface{}, len(dlbitem.GetSslEndpoints()))
@@ -327,8 +302,6 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 		}
 		item["ip_addresses_info"] = ip_addresses_info
 		item["double_static_ips"] = dlbitem.GetDoubleStaticIps()
-		item["enable_streaming"] = dlbitem.GetEnableStreaming()
-		item["forward_client_certificate"] = dlbitem.GetForwardClientCertificate()
 		return item
 	}
 
@@ -337,9 +310,8 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 
 func getDLBCoreAttributes() []string {
 	attributes := [...]string{
-		"name", "state", "ip_whitelist", "ip_allowlist", "http_mode", "default_ssl_endpoint",
-		"tlsv1", "ssl_endpoints", "upstream_tlsv12", "keep_url_encoding", "double_static_ips", "enable_streaming",
-		"forward_client_certificate",
+		"name", "state", "ip_whitelist", "http_mode", "default_ssl_endpoint",
+		"tlsv1", "ssl_endpoints",
 	}
 	return attributes[:]
 }
@@ -350,8 +322,7 @@ func getDLBAttributes() []string {
 		"ip_addresses", "ip_whitelist", "http_mode", "default_ssl_endpoint",
 		"ssl_endpoints", "static_ips_disabled", "workers", "default_cipher_suite",
 		"keep_url_encoding", "tlsv1", "upstream_tlsv12", "proxy_read_timeout",
-		"ip_addresses_info", "double_static_ips", "ip_allowlist", "enable_streaming",
-		"forward_client_certificate",
+		"ip_addresses_info", "double_static_ips",
 	}
 	return attributes[:]
 }

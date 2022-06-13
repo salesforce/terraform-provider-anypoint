@@ -69,6 +69,3 @@ terraform
 **/params.tfvars.json
 
 release.sh
-
-#binary file
-terraform-provider-anypoint
