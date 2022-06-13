@@ -21,6 +21,11 @@ resource "anypoint_dlb" "dlb" {
   ip_whitelist = []
   http_mode = "redirect"
   tlsv1 = false
+  upstream_tlsv12 = false
+  keep_url_encoding = true
+  double_static_ips = false
+  enable_streaming = false
+  forward_client_certificate = false
   ssl_endpoints {
     public_key_label = "tf-public-key-name"
     public_key = "-----BEGIN CERTIFICATE-----\nMIICpDCCAYwCCQCOpE/9k0ve8zANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls\nb2NhbGhvc3QwHhcNMjEwMzA1MTUyMTM1WhcNMjEwMzA2MTUyMTM1WjAUMRIwEAYD\nVQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDK\n93gvOvMrcyVUvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAx\npaBw8/GTX5qNshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVAC\njJw67Y88St9h8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpB\nuTPbXHRnHJCyr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5j\nl8466kfniqydGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9Hf\nDJQffO+I5y+w6y5cU1l3AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAGS1mTWes3za\nWGlubGf76TiSn8GjIO7jIeVxBeB6rYq6iUFLUfEPCNHSlA0g7JJ40KW/osPc6EEm\nQzptRdhAoRDM5ilRTVMvuoGflw04OqrSUqR26+7aVJ8JcBJWBeP/5kGaMjPhy7oX\ntYPwzK2wXDYLDUCLXefF59NQoHUtytritckT5tP0UYDcRf2upBxn/v9lbF7AVfLZ\nO/vGplnD8Kq4QaFGL26ioh7e/n9TldbDJnspHh389aG6nqOKIgnL785Ggr6914vH\n4AMJa3r9cYpoe9ZdXL6b3aW+9MQo2Th2hDc7Z4CfVzJTZ9mg3ouKxIYGj+B4bj61\nN+MUQ5Q7aCo=\n-----END CERTIFICATE-----"
@@ -47,28 +52,31 @@ resource "anypoint_dlb" "dlb" {
 
 ### Optional
 
-- **http_mode** (String)
-- **ip_whitelist** (List of String)
+- **default_ssl_endpoint** (Number) The default certificate that will be served for requests not using SNI, or requesting a non-existing certificate
+- **domain** (String) The DNS domain for the Load Balancer
+- **double_static_ips** (Boolean) True if DLB will use double static IPs when restarting
+- **enable_streaming** (Boolean) Setting this to true will disable request buffering at the DLB, thereby enabling streaming
+- **forward_client_certificate** (Boolean) Setting this to true will forward any incoming client certificates to upstream application
+- **http_mode** (String) Specifies whether the Load Balancer listens for HTTP requests on port 80. If set to redirect, all HTTP requests will be redirected to HTTPS. possible values: 'on', 'off' or 'redirect'
+- **ip_allowlist** (List of String) CIDR blocks to allow connections from
+- **ip_whitelist** (List of String) CIDR blocks to allow connections from
+- **keep_url_encoding** (Boolean)
 - **ssl_endpoints** (Block Set) (see [below for nested schema](#nestedblock--ssl_endpoints))
 - **state** (String) The desired state, possible values: 'started', 'stopped' or 'restarted'
 - **tlsv1** (Boolean)
+- **upstream_tlsv12** (Boolean)
 
 ### Read-Only
 
 - **default_cipher_suite** (String)
-- **default_ssl_endpoint** (Number)
 - **deployment_id** (String)
-- **domain** (String)
-- **double_static_ips** (Boolean)
 - **id** (String) The ID of this resource.
 - **instance_config** (Map of String)
-- **ip_addresses** (List of String)
-- **ip_addresses_info** (List of Object) (see [below for nested schema](#nestedatt--ip_addresses_info))
-- **keep_url_encoding** (Boolean)
+- **ip_addresses** (List of String) List of static IP addresses for the Load Balancer
+- **ip_addresses_info** (List of Object) List of IP addresses information for the Load Balancer (see [below for nested schema](#nestedatt--ip_addresses_info))
 - **last_updated** (String)
 - **proxy_read_timeout** (Number)
 - **static_ips_disabled** (Boolean)
-- **upstream_tlsv12** (Boolean)
 - **workers** (Number)
 
 <a id="nestedblock--ssl_endpoints"></a>
@@ -84,7 +92,7 @@ Optional:
 - **mappings** (Block List) (see [below for nested schema](#nestedblock--ssl_endpoints--mappings))
 - **private_key_label** (String)
 - **public_key_label** (String)
-- **verify_client_mode** (String)
+- **verify_client_mode** (String) Whether to enable client verification or not, possible values: 'off' or 'on'
 
 Read-Only:
 
