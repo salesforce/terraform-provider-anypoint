@@ -1,9 +1,6 @@
 package anypoint
 
-import (
-	"reflect"
-	"strings"
-)
+import "reflect"
 
 func IsString(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf("")
@@ -35,20 +32,4 @@ func ListInterface2ListStrings(array []interface{}) []string {
 		list[i] = v.(string)
 	}
 	return list
-}
-
-// tests if the provided value matches the value of an element in the valid slice. Will test with strings.EqualFold if ignoreCase is true
-func StringInSlice(expected []string, v string, ignoreCase bool) bool {
-	for _, e := range expected {
-		if ignoreCase {
-			if strings.EqualFold(e, v) {
-				return true
-			}
-		} else {
-			if e == v {
-				return true
-			}
-		}
-	}
-	return false
 }
