@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func IsString(v interface{}) bool {
@@ -82,4 +84,14 @@ func sortMapListAl(list []interface{}, sortAttr string) {
 
 		return i_elem[sortAttr].(string) < j_elem[sortAttr].(string)
 	})
+}
+
+//compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
+//returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
+func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
+	if new == initial {
+		return true
+	} else {
+		return old == new
+	}
 }
