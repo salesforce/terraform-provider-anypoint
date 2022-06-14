@@ -57,6 +57,9 @@ func resourceBG() *schema.Resource {
 			"is_federated": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false")
+				},
 			},
 			"parent_organization_id": {
 				Type:     schema.TypeString,
@@ -152,16 +155,25 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false")
+				},
 			},
 			"entitlements_globaldeployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false")
+				},
 			},
 			"entitlements_createsuborgs": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true")
+				},
 			},
 			"entitlements_hybridenabled": {
 				Type:     schema.TypeBool,
@@ -179,6 +191,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_vcoresproduction_reassigned": {
 				Type:     schema.TypeFloat,
@@ -188,6 +203,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_vcoressandbox_reassigned": {
 				Type:     schema.TypeFloat,
@@ -197,6 +215,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_vcoresdesign_reassigned": {
 				Type:     schema.TypeFloat,
@@ -206,6 +227,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_staticips_reassigned": {
 				Type:     schema.TypeInt,
@@ -215,6 +239,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_vpcs_reassigned": {
 				Type:     schema.TypeInt,
@@ -224,6 +251,9 @@ func resourceBG() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0")
+				},
 			},
 			"entitlements_vpns_reassigned": {
 				Type:     schema.TypeInt,
@@ -232,256 +262,445 @@ func resourceBG() *schema.Resource {
 			"entitlements_workerloggingoverride_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_mqmessages_base": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_mqmessages_addon": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_mqrequests_base": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_mqrequests_addon": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_objectstorerequestunits_base": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_objectstorerequestunits_addon": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_objectstorekeys_base": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_objectstorekeys_addon": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_mqadvancedfeatures_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_gateways_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_designcenter_api": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_designcenter_mozart": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_partnersproduction_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_partnerssandbox_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_tradingpartnersproduction_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_tradingpartnerssandbox_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_loadbalancer_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_loadbalancer_reassigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_externalidentity": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_autoscaling": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_armalerts": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_apis_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_apimonitoring_schedules": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_apicommunitymanager_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_monitoringcenter_productsku": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_apiquery_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_apiquery_productsku": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_apiqueryc360_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_anggovernance_level": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_crowd_hideapimanagerdesigner": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_crowd_hideformerapiplatform": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_crowd_environments": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_cam_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_exchange2_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_crowdselfservicemigration_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_kpidashboard_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_pcf": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_appviz": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "flase") // default value of bool if not set is false
+				},
 			},
 			"entitlements_runtimefabric": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true")
+				},
 			},
 			"entitlements_anypointsecuritytokenization_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_anypointsecurityedgepolicies_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_runtimefabriccloud_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_servicemesh_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"entitlements_messaging_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_workerclouds_assigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"entitlements_workerclouds_reassigned": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+				},
 			},
 			"owner_created_at": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_updated_at": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_organization_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_firstname": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_lastname": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_email": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_phonenumber": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_username": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_idprovider_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"owner_deleted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"owner_lastlogin": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_mfaverification_excluded": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+				},
 			},
 			"owner_mfaverifiers_configured": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"owner_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
+				},
 			},
 			"session_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  60,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integeres if not set is 0
+				},
 			},
 		},
 	}
