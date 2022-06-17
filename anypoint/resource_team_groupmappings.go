@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	team_group_mappings "github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings"
 )
 
@@ -23,44 +24,57 @@ func resourceTeamGroupMappings() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The last time this resource has been updated locally.",
+			},
+			"id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The unique id of this group mappings composed by `org_id`_`team_id`_groupmappings",
 			},
 			"team_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The id of the team. team_id is globally unique",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The master organization id where the team is defined.",
 			},
 			"groupmappings": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeList,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The list of external identity provider groups that should be mapped to the given team.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_group_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The group name in the external identity provider that should be mapped to this team.",
 						},
 						"provider_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The id of the identity provider in anypoint platform.",
 						},
 						"membership_type": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Whether the mapped member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"member", "maintainer"}, true)),
 						},
 					},
 				},
 			},
 			"total": {
 				Type:        schema.TypeInt,
-				Description: "The total number of available results",
+				Description: "The total number of group-mappings",
 				Computed:    true,
 			},
 		},

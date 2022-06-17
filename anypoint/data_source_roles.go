@@ -74,24 +74,29 @@ func dataSourceRoles() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The unique id of the role in the platform.",
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of this role.",
 						},
 						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The description of the role.",
 						},
 						"internal": {
-							Type:     schema.TypeBool,
-							Computed: true,
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Whether this role is intended for internal use only.",
 						},
 						"org_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The business group id",
 						},
 						"namespaces": {
 							Type:     schema.TypeList,
@@ -99,17 +104,19 @@ func dataSourceRoles() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+							Description: "The list of namespaces related to this role.",
 						},
 						"shareable": {
-							Type:     schema.TypeBool,
-							Computed: true,
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Whether this role is shareable.",
 						},
 					},
 				},
 			},
 			"len": {
 				Type:        schema.TypeInt,
-				Description: "The number of loaded results",
+				Description: "The number of loaded results (pagination purpose).",
 				Computed:    true,
 			},
 			"total": {

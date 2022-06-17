@@ -19,16 +19,19 @@ func dataSourceTeamGroupMappings() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"team_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The id of the team. team_id is globally unique",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The master organization id where the team is defined.",
 			},
 			"params": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Selection parameters. Should only provide one occurrence.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"offset": {
@@ -47,21 +50,25 @@ func dataSourceTeamGroupMappings() *schema.Resource {
 				},
 			},
 			"teamgroupmappings": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of resulting groupmappings.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_group_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The group name in the external identity provider that should be mapped to this team.",
 						},
 						"provider_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The id of the identity provider in anypoint platform.",
 						},
 						"membership_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Whether the mapped member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer",
 						},
 					},
 				},

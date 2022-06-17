@@ -21,7 +21,7 @@ func dataSourceIDPs() *schema.Resource {
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The business group id",
+				Description: "The master organization id where the idps are defined.",
 			},
 			"idps": {
 				Type:        schema.TypeList,
