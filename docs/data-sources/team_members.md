@@ -35,17 +35,17 @@ resource "anypoint_team_members" "team_members" {
 
 ### Required
 
-- **org_id** (String)
-- **team_id** (String)
+- **org_id** (String) The master organization id where the team is defined.
+- **team_id** (String) The id of the team. team_id is globally unique.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **params** (Block Set) (see [below for nested schema](#nestedblock--params))
+- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **teammembers** (List of Object) (see [below for nested schema](#nestedatt--teammembers))
+- **teammembers** (List of Object) The list of resulting team-members. (see [below for nested schema](#nestedatt--teammembers))
 - **total** (Number) The total number of available results
 
 <a id="nestedblock--params"></a>

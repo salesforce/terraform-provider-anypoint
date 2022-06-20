@@ -24,8 +24,8 @@ data "anypoint_dlbs" "dlbs" {
 
 ### Required
 
-- **org_id** (String) Business Group Id
-- **vpc_id** (String) Virtual Private Network Id
+- **org_id** (String) The organization id where the dlbs are defined.
+- **vpc_id** (String) the vpc id
 
 ### Optional
 
@@ -33,7 +33,7 @@ data "anypoint_dlbs" "dlbs" {
 
 ### Read-Only
 
-- **dlbs** (List of Object) List of DLBs for the given VPC (see [below for nested schema](#nestedatt--dlbs))
+- **dlbs** (List of Object) List of dlbs defined in the given organization and vpc (see [below for nested schema](#nestedatt--dlbs))
 - **total** (Number) The total number of available results
 
 <a id="nestedatt--dlbs"></a>
