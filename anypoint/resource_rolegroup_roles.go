@@ -22,25 +22,34 @@ func resourceRoleGroupRoles() *schema.Resource {
 		Assignes ` + "`" + `roles` + "`" + ` to a ` + "`" + `rolegroup` + "`" + ` for your ` + "`" + `org` + "`" + `.
 		`,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The unique id of this rolegroup-roles resource composed by `org_id`_`role_group_id`",
+			},
 			"role_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The role-group id",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The business group id",
 			},
 			"total": {
-				Type:     schema.TypeInt,
-				ForceNew: true,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Total number of roles attributed to the role group",
 			},
 			"roles": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Required: true,
+				Type:        schema.TypeList,
+				ForceNew:    true,
+				Required:    true,
+				Description: "List of roles in the role group",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"context_params": {

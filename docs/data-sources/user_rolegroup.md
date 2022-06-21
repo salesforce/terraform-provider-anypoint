@@ -17,9 +17,9 @@ Reads the `user` related `rolegroup` in the business group.
 
 ### Required
 
-- **org_id** (String)
-- **rolegroup_id** (String)
-- **user_id** (String)
+- **org_id** (String) The master organization id where the role-group is defined.
+- **rolegroup_id** (String) The role-group id.
+- **user_id** (String) The user id.
 
 ### Optional
 
@@ -27,14 +27,14 @@ Reads the `user` related `rolegroup` in the business group.
 
 ### Read-Only
 
-- **context_params** (Map of String)
-- **created_at** (String)
-- **description** (String)
-- **editable** (Boolean)
-- **external_names** (List of String)
-- **name** (String)
-- **role_group_id** (String)
-- **updated_at** (String)
-- **user_role_group_id** (String)
+- **context_params** (Map of String) The role-group scope.
+- **created_at** (String) The time when the user was assigned to the role-group.
+- **description** (String) The description of the role-group
+- **editable** (Boolean) Whether the role-group is editable
+- **external_names** (List of String) List of external names of the role-group
+- **name** (String) The name of the role-group.
+- **role_group_id** (String) The role-group id.
+- **updated_at** (String) The time when the user assignment to the role-group was updated.
+- **user_role_group_id** (String) The unique if of the user assignment to the role-group
 
 

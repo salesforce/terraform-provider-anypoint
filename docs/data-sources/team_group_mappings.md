@@ -28,17 +28,17 @@ output "team_gmap" {
 
 ### Required
 
-- **org_id** (String)
-- **team_id** (String)
+- **org_id** (String) The master organization id where the team is defined.
+- **team_id** (String) The id of the team. team_id is globally unique
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **params** (Block Set) (see [below for nested schema](#nestedblock--params))
+- **params** (Block Set) Selection parameters. Should only provide one occurrence. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **teamgroupmappings** (List of Object) (see [below for nested schema](#nestedatt--teamgroupmappings))
+- **teamgroupmappings** (List of Object) List of resulting groupmappings. (see [below for nested schema](#nestedatt--teamgroupmappings))
 - **total** (Number) The total number of available results
 
 <a id="nestedblock--params"></a>

@@ -20,16 +20,19 @@ func dataSourceTeamRoles() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"team_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The id of the team. team_id is globally unique.",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The master organization id where the team is defined.",
 			},
 			"params": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "The search parameters. Should only provide one occurrence of the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_id": {
@@ -58,33 +61,37 @@ func dataSourceTeamRoles() *schema.Resource {
 				},
 			},
 			"roles": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The resulted list of roles.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The role name.",
 						},
 						"role_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The role id.",
 						},
 						"context_params": {
-							Type:     schema.TypeMap,
-							Computed: true,
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The role's scope. Contains the organisation id to which the role is applied and optionally if the role spans environments, the environment within the organization id.",
 						},
 					},
 				},
 			},
 			"len": {
 				Type:        schema.TypeInt,
-				Description: "The number of loaded results",
+				Description: "The number of loaded results (pagination purpose).",
 				Computed:    true,
 			},
 			"total": {
 				Type:        schema.TypeInt,
-				Description: "The total number of available results",
+				Description: "The total number of available results.",
 				Computed:    true,
 			},
 		},

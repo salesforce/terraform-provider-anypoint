@@ -25,25 +25,25 @@ resource "anypoint_user_rolegroup" "user_rolegroup" {
 
 ### Required
 
-- **org_id** (String)
-- **rolegroup_id** (String)
-- **user_id** (String)
+- **org_id** (String) The master organization id where the role-group is defined.
+- **rolegroup_id** (String) The role-group id.
+- **user_id** (String) The user id.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **last_updated** (String)
+- **last_updated** (String) The last time this resource has been updated locally.
 
 ### Read-Only
 
-- **context_params** (Map of String)
-- **created_at** (String)
-- **description** (String)
-- **editable** (Boolean)
-- **external_names** (List of String)
-- **name** (String)
-- **role_group_id** (String)
-- **updated_at** (String)
-- **user_role_group_id** (String)
+- **context_params** (Map of String) The role-group scope.
+- **created_at** (String) The time when the user was assigned to the role-group.
+- **description** (String) The description of the role-group
+- **editable** (Boolean) Whether the role-group is editable
+- **external_names** (List of String) List of external names of the role-group
+- **id** (String) The unique id of this user-rolegroup resource composed by `org_id`_`user_id`_`rolegroup_id`
+- **name** (String) The name of the role-group.
+- **role_group_id** (String) The role-group id.
+- **updated_at** (String) The time when the user assignment to the role-group was updated.
+- **user_role_group_id** (String) The unique if of the user assignment to the role-group
 
 

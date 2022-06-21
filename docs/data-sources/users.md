@@ -32,18 +32,18 @@ data "anypoint_users" "users" {
 
 ### Required
 
-- **org_id** (String)
+- **org_id** (String) The master organization id where the user is defined.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **params** (Block Set) (see [below for nested schema](#nestedblock--params))
+- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results
+- **len** (Number) The number of loaded results (for pagination purposes).
 - **total** (Number) The total number of available results
-- **users** (List of Object) (see [below for nested schema](#nestedatt--users))
+- **users** (List of Object) The list of resulted users. (see [below for nested schema](#nestedatt--users))
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`

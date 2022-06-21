@@ -27,7 +27,7 @@ data "anypoint_vpcs" "all" {
 
 ### Required
 
-- **org_id** (String) The business group id
+- **org_id** (String) The organization id where the vpc is defined.
 
 ### Optional
 
@@ -35,7 +35,7 @@ data "anypoint_vpcs" "all" {
 
 ### Read-Only
 
-- **vpcs** (List of Object) (see [below for nested schema](#nestedatt--vpcs))
+- **vpcs** (List of Object) List of vpcs defined in the given organization (see [below for nested schema](#nestedatt--vpcs))
 
 <a id="nestedatt--vpcs"></a>
 ### Nested Schema for `vpcs`

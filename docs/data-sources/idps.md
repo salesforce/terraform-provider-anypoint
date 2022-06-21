@@ -23,7 +23,7 @@ data "anypoint_idps" "idp" {
 
 ### Required
 
-- **org_id** (String) The business group id
+- **org_id** (String) The master organization id where the idps are defined.
 
 ### Optional
 
