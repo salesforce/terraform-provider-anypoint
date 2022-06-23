@@ -32,6 +32,7 @@ require (
 	github.com/mulesoft-consulting/anypoint-client-go/user v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/vpc v0.5.0
+	github.com/mulesoft-consulting/anypoint-client-go/vpn v0.0.1
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	golang.org/x/net v0.0.0-20211205041911-012df41ee64c // indirect
