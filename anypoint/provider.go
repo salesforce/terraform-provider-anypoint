@@ -22,6 +22,7 @@ import (
 	user "github.com/mulesoft-consulting/anypoint-client-go/user"
 	user_rolegroups "github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups"
 	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
+	vpn "github.com/mulesoft-consulting/anypoint-client-go/vpn"
 )
 
 // Provider -
@@ -72,6 +73,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"anypoint_vpc":                 resourceVPC(),
+			"anypoint_vpn":                 resourceVPN(),
 			"anypoint_bg":                  resourceBG(),
 			"anypoint_rolegroup_roles":     resourceRoleGroupRoles(),
 			"anypoint_rolegroup":           resourceRoleGroup(),
@@ -89,6 +91,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
 			"anypoint_vpc":                 dataSourceVPC(),
+			"anypoint_vpn":                 dataSourceVPN(),
 			"anypoint_bg":                  dataSourceBG(),
 			"anypoint_roles":               dataSourceRoles(),
 			"anypoint_rolegroup":           dataSourceRoleGroup(),
@@ -225,6 +228,7 @@ type ProviderConfOutput struct {
 	access_token            string
 	server_index            int
 	vpcclient               *vpc.APIClient
+	vpnclient               *vpn.APIClient
 	orgclient               *org.APIClient
 	roleclient              *role.APIClient
 	rolegroupclient         *rolegroup.APIClient
@@ -241,8 +245,8 @@ type ProviderConfOutput struct {
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
 	//preparing clients
-	vpc.NewConfiguration()
 	vpccfg := vpc.NewConfiguration()
+	vpncfg := vpn.NewConfiguration()
 	orgcfg := org.NewConfiguration()
 	rolecfg := role.NewConfiguration()
 	rolegroupcfg := rolegroup.NewConfiguration()
@@ -257,6 +261,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	idpcfg := idp.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
+	vpnclient := vpn.NewAPIClient(vpncfg)
 	orgclient := org.NewAPIClient(orgcfg)
 	roleclient := role.NewAPIClient(rolecfg)
 	rolegroupclient := rolegroup.NewAPIClient(rolegroupcfg)
@@ -274,6 +279,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		access_token:            access_token,
 		server_index:            server_index,
 		vpcclient:               vpcclient,
+		vpnclient:               vpnclient,
 		orgclient:               orgclient,
 		roleclient:              roleclient,
 		rolegroupclient:         rolegroupclient,

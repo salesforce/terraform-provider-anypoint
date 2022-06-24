@@ -25,6 +25,7 @@ require (
 	github.com/mulesoft-consulting/anypoint-client-go/user v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/vpc v0.5.0
+	github.com/mulesoft-consulting/anypoint-client-go/vpn v0.0.1
 	github.com/oklog/run v1.1.0 // indirect
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401 // indirect
