@@ -454,9 +454,6 @@ func resourceBG() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "The number of dedicated load balancers (DLB) reassigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
 			},
 			"entitlements_externalidentity": {
 				Type:        schema.TypeBool,
