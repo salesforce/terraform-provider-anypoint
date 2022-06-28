@@ -20,6 +20,11 @@ func resourceVPN() *schema.Resource {
 		Creates a ` + "`" + `vpn` + "`" + `component.
 		`,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "VPN id",
+			},
 			"org_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -179,9 +184,7 @@ func resourceVPNCreate(ctx context.Context, d *schema.ResourceData, m interface{
 
 	d.SetId(res.GetId())
 
-	resourceVPNRead(ctx, d, m)
-
-	return diags
+	return resourceVPNRead(ctx, d, m)
 }
 
 func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -194,7 +197,9 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 
 	authctx := getVPNAuthCtx(ctx, &pco)
 
-	res, httpr, err := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdGet(authctx, orgid, vpcid, vpnid).Execute()
+	req := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdGet(authctx, orgid, vpcid, vpnid)
+	res, httpr, err := req.Execute()
+
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -205,28 +210,34 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get VPN",
+			Summary:  "Unable to get VPN",
 			Detail:   details,
 		})
 		return diags
 	}
 	//process data
-	//FLATTENVPNDATA DOESNT WORK CORRECTLY YET, throws error: Runtime error: invalid memory address or nil pointer dereference
-	vpcinstance := flattenVPNData(&res)
-	//save in data source schema
-	//setVPNCoreAttributesToResourceData hasn't been tested yet
-	if err := setVPNCoreAttributesToResourceData(d, vpcinstance); err != nil {
+	vpcinstance, err := flattenVPNData(&res)
+	if err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set VPC",
+			Summary:  "Unable to parse VPN data",
 			Detail:   err.Error(),
 		})
 		return diags
 	}
+	//save in data source schema
+	if err := setVPNCoreAttributesToResourceData(d, vpcinstance); err != nil {
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to set VPN",
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+
 	return diags
 }
 
-//Method hasn't been tested yet.
 func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
@@ -248,7 +259,7 @@ func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Delete VPN",
+			Summary:  "Unable to delete VPN",
 			Detail:   details,
 		})
 		return diags
@@ -264,7 +275,6 @@ func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{
 /*
  * Creates a new VPN Requestbody struct from the resource data schema
  */
-//Method works
 func newVPNBody(d *schema.ResourceData) *vpn.VpnPostReqBody {
 	body := vpn.NewVpnPostReqBodyWithDefaults()
 	body.SetName(d.Get("name").(string))

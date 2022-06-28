@@ -2,6 +2,7 @@ package anypoint
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -138,13 +139,12 @@ func dataSourceVPN() *schema.Resource {
 }
 
 func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	fmt.Println("hero1")
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("vpc_id").(string)
 	orgid := d.Get("org_id").(string)
-	vpnid := d.Get("id").(string)
+	vpnid := d.Id()
 	authctx := getVPNAuthCtx(ctx, &pco)
 
 	//request specific VPN
@@ -166,7 +166,15 @@ func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 	//process data
-	vpninstance := flattenVPNData(&res)
+	vpninstance, err := flattenVPNData(&res)
+	if err != nil {
+		diags := append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to parse VPN data",
+			Detail:   err.Error(),
+		})
+		return diags
+	}
 	//save in data source schema
 	if err := setVPNCoreAttributesToResourceData(d, vpninstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
@@ -182,50 +190,39 @@ func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-/*
-* Transforms a vpn.VpnGet object to the dataSourceVPC schema
-* Easily said: Transforms library API response object to a schema object
-* @param vpcitem *vpc.Vpc the vpc struct
-* @return the vpc mapped struct
- */
-//Runtime error: invalid memory address or nil pointer dereference is created here
-func flattenVPNData(vpnItem *vpn.VpnGet) map[string]interface{} {
-	// Tried to get the json from the vpnItem this way with vpnitemValueReference as the method parameter
-	// var jsonFromVpnGet []byte
-	// var diags diag.Diagnostics
-	// vpnItem := *vpnitemValueReference
-	// jsonFromVpnGet, error := vpnItem.MarshalJSON()
-	// if vpnitemValueReference != nil {
-	// 	if error != nil {
-	// 		var details string
-	// 		details = error.Error()
-	// 		diags := append(diags, diag.Diagnostic{
-	// 			Severity: diag.Error,
-	// 			Summary:  "Unable to marshall the vpnItem",
-	// 			Detail:   details,
-	// 		})
-	// 		fmt.Println("These are the diags: ")
-	// 		fmt.Println(diags)
-	// 	} else {
-	// 		fmt.Println("This is the jsonFromVpnGet: ")
-	// 		fmt.Println(jsonFromVpnGet)
-	// 	}
-	// }
+/**
+Transforms a vpn.VpnGet object to the dataSourceVPC schema
+Easily said: Transforms library API response object to a schema object
+@param vpcitem *vpc.Vpc the vpc struct
+@return the vpc mapped struct
+*/
+func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]interface{}, error) {
 	item := make(map[string]interface{})
-	item["id"] = vpnItem.GetId()
-	item["update_available"] = vpnItem.GetUpdateAvailable()
-	item["name"] = vpnItem.GetName()
-	item["remote_asn"] = vpnItem.GetSpec().RemoteAsn
-	item["remote_ip_address"] = vpnItem.GetSpec().RemoteIpAddress
-	item["remote_networks"] = vpnItem.GetSpec().RemoteNetworks
-	item["vpn_connection_status"] = vpnItem.GetState().VpnConnectionStatus
-	item["created_at"] = vpnItem.GetState().CreatedAt
-	item["local_asn"] = vpnItem.GetState().LocalAsn
-	item["failed_reason"] = vpnItem.GetState().FailedReason
+	var vpnState vpn.State
+	if val, ok := vpnItem.GetStateOk(); ok {
+		vpnState = *val
+	} else {
+		return nil, errors.New("couldn't parse vpn state field")
+	}
+	var vpnSpec vpn.Spec
+	if val, ok := vpnItem.GetSpecOk(); ok {
+		vpnSpec = *val
+	} else {
+		return nil, errors.New("couldn't parse vpn spec field")
+	}
 
+	item["id"] = vpnItem.GetId()
+	item["name"] = vpnItem.GetName()
+	item["update_available"] = vpnItem.GetUpdateAvailable()
+	item["remote_asn"] = *vpnSpec.RemoteAsn
+	item["remote_ip_address"] = vpnSpec.RemoteIpAddress
+	item["remote_networks"] = vpnSpec.RemoteNetworks
+	item["vpn_connection_status"] = vpnState.VpnConnectionStatus
+
+	vpnTunnelConfig := *vpnSpec.TunnelConfigs
 	//Create the TunnelConfigs - this works
-	tcs := make([]interface{}, len(*vpnItem.GetSpec().TunnelConfigs))
-	for i, tc := range *vpnItem.GetSpec().TunnelConfigs {
+	tcs := make([]map[string]interface{}, len(vpnTunnelConfig))
+	for i, tc := range vpnTunnelConfig {
 		jsonTc := make(map[string]interface{})
 		jsonTc["psk"] = tc.GetPsk()
 		jsonTc["ptp_cidr"] = tc.GetPtpCidr()
@@ -235,24 +232,35 @@ func flattenVPNData(vpnItem *vpn.VpnGet) map[string]interface{} {
 	}
 	item["tunnel_configs"] = tcs
 
-	//Create the VpnTunnels
-	//GetState doesn't work. .RemoteAsn in state also doesn't work.
-	//Next line creates: Runtime error: invalid memory address or nil pointer dereference
-	vpnts := make([]interface{}, len(*vpnItem.GetState().VpnTunnels))
-	for i, vpnt := range *vpnItem.GetState().VpnTunnels {
-		jsonVpnt := make(map[string]interface{})
-		jsonVpnt["accepted_route_count"] = vpnt.GetAcceptedRouteCount()
-		jsonVpnt["last_status_change"] = vpnt.GetLastStatusChange()
-		jsonVpnt["local_external_ip_address"] = vpnt.GetLocalExternalIpAddress()
-		jsonVpnt["local_ptp_ip_address"] = vpnt.GetLocalPtpIpAddress()
-		jsonVpnt["remote_ptp_ip_address"] = vpnt.GetRemotePtpIpAddress()
-		jsonVpnt["psk"] = vpnt.GetPsk()
-		jsonVpnt["status"] = vpnt.GetStatus()
-		jsonVpnt["status_message"] = vpnt.GetStatusMessage()
-		vpnts[i] = jsonVpnt
+	// The list of tunnels may not exist when the vpn is on error
+	if val, ok := vpnState.GetVpnTunnelsOk(); ok {
+		vpnTunnels := *val
+		vpnts := make([]map[string]interface{}, len(vpnTunnels))
+		for i, vpnt := range vpnTunnels {
+			jsonVpnt := make(map[string]interface{})
+			jsonVpnt["accepted_route_count"] = vpnt.GetAcceptedRouteCount()
+			jsonVpnt["last_status_change"] = vpnt.GetLastStatusChange()
+			jsonVpnt["local_external_ip_address"] = vpnt.GetLocalExternalIpAddress()
+			jsonVpnt["local_ptp_ip_address"] = vpnt.GetLocalPtpIpAddress()
+			jsonVpnt["remote_ptp_ip_address"] = vpnt.GetRemotePtpIpAddress()
+			jsonVpnt["psk"] = vpnt.GetPsk()
+			jsonVpnt["status"] = vpnt.GetStatus()
+			jsonVpnt["status_message"] = vpnt.GetStatusMessage()
+			vpnts[i] = jsonVpnt
+		}
+		item["vpn_tunnels"] = vpnts
 	}
-	item["vpn_tunnels"] = vpnts
-	return item
+	if val, ok := vpnState.GetFailedReasonOk(); ok { //may not exist if vpn is on error
+		item["failed_reason"] = *val
+	}
+	if val, ok := vpnState.GetCreatedAtOk(); ok { //may not exist if vpn is on error
+		item["created_at"] = *val
+	}
+	if val, ok := vpnState.GetLocalAsnOk(); ok { //may not exist if vpn is on error
+		item["local_asn"] = *val
+	}
+
+	return item, nil
 }
 
 /*
@@ -274,9 +282,9 @@ func setVPNCoreAttributesToResourceData(d *schema.ResourceData, vpnitem map[stri
 
 func getVPNCoreAttributes() []string {
 	attributes := [...]string{
-		"org_id", "vpc_id", "name", "remote_asn", "remote_ip_address",
+		"name", "remote_asn", "remote_ip_address",
 		"tunnel_configs", "remote_networks", "vpn_connection_status",
-		"created_at", "local_asn", "vpn_tunnels", "failedReason", "updateAvailable",
+		"created_at", "local_asn", "vpn_tunnels", "failed_reason", "update_available",
 	}
 	return attributes[:]
 }
