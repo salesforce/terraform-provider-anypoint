@@ -13,9 +13,11 @@ The Anypoint provider provides resources to interact with a Mulesoft's Anypoint 
 It is not recommended to use your own account for management of your actions. A user specific to
 Terraform is recommended. You can use a Connected App also. Two-factor authentication is not supported in the provider.
 
-This project is maintained by a group of architects 👨‍⚕️ and consultants 🧑‍🔧 at Mulesoft. It implements the Anypoint Platform's terraform provider.
+This project is not an official Mulesoft product, it is an open-source initiative that is maintained by a group of architects 👨‍⚕️ and consultants 🧑‍🔧 at Mulesoft. It implements the Anypoint Platform's terraform provider.
 
-Any contribution is welcome. If you're interested in this project, please get in touch 📧
+Any contribution is welcome. If you're interested in this project, please get in touch 📧.
+
+Join our Discord [server](https://discord.gg/ApZBgfeY) !!
 
 ## Example Usage
 

@@ -20,12 +20,14 @@ func dataSourceTeams() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The master organization id where the team is defined.",
 			},
 			"params": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "The search parameters. Should only provide one occurrence of the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ancestor_team_id": {
@@ -86,25 +88,36 @@ func dataSourceTeams() *schema.Resource {
 				},
 			},
 			"teams": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of resulting teams.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"org_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The master organization id where the team is defined.",
 						},
 						"team_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The id of the team. team_id is globally unique",
 						},
 						"team_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the team. Name is unique among teams within the organization.",
 						},
 						"team_type": {
 							Type:     schema.TypeString,
 							Computed: true,
+							Description: `
+							The type of the team. Internal teams are visible to all members of the organziation. 
+							All internal teams of an organization are under the root internal team. 
+							Private teams are internal teams but are only visible by maintainers/members of the team. 
+							Shared teams are internal teams that can be mapped to external teams in other organizations where a trust relationship has been formed.
+							Enum values are: internal, private and shared.
+							`,
 						},
 						"ancestor_team_ids": {
 							Type:     schema.TypeList,
@@ -112,21 +125,24 @@ func dataSourceTeams() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+							Description: "Array of ancestor teams ids starting from either the internal or external root team down to this team's parent.",
 						},
 						"created_at": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The time the team was created.",
 						},
 						"updated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The time the team was last modified.",
 						},
 					},
 				},
 			},
 			"len": {
 				Type:        schema.TypeInt,
-				Description: "The number of loaded results",
+				Description: "The number of loaded results (for pagination purposes).",
 				Computed:    true,
 			},
 			"total": {

@@ -24,8 +24,8 @@ data "anypoint_dlbs" "dlbs" {
 
 ### Required
 
-- **org_id** (String) Business Group Id
-- **vpc_id** (String) Vitual Private Network Id
+- **org_id** (String) The organization id where the dlbs are defined.
+- **vpc_id** (String) the vpc id
 
 ### Optional
 
@@ -33,7 +33,7 @@ data "anypoint_dlbs" "dlbs" {
 
 ### Read-Only
 
-- **dlbs** (List of Object) List of DLBs for the given vpc (see [below for nested schema](#nestedatt--dlbs))
+- **dlbs** (List of Object) List of dlbs defined in the given organization and vpc (see [below for nested schema](#nestedatt--dlbs))
 - **total** (Number) The total number of available results
 
 <a id="nestedatt--dlbs"></a>
@@ -46,11 +46,14 @@ Read-Only:
 - **deployment_id** (String)
 - **domain** (String)
 - **double_static_ips** (Boolean)
+- **enable_streaming** (Boolean)
+- **forward_client_certificate** (Boolean)
 - **http_mode** (String)
 - **id** (String)
 - **instance_config** (Map of String)
 - **ip_addresses** (List of String)
 - **ip_addresses_info** (List of Object) (see [below for nested schema](#nestedobjatt--dlbs--ip_addresses_info))
+- **ip_allowlist** (List of String)
 - **ip_whitelist** (List of String)
 - **keep_url_encoding** (Boolean)
 - **name** (String)

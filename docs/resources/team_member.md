@@ -25,22 +25,22 @@ resource "anypoint_team_member" "team_member" {
 
 ### Required
 
-- **org_id** (String)
-- **team_id** (String)
-- **user_id** (String)
+- **org_id** (String) The master organization id where the team is defined.
+- **team_id** (String) The id of the team. team_id is globally unique.
+- **user_id** (String) The owner id
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **last_updated** (String)
-- **membership_type** (String)
+- **last_updated** (String) The last time this resource has been updated locally.
+- **membership_type** (String) Whether the member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer
 
 ### Read-Only
 
-- **created_at** (String)
-- **identity_type** (String)
-- **is_assigned_via_external_groups** (Boolean)
-- **name** (String)
-- **updated_at** (String)
+- **created_at** (String) The member team assignment creation date
+- **id** (String) The unique id of this team membership composed by `org_id`_`team_id`_`user_id`_members
+- **identity_type** (String) The member's identity type.
+- **is_assigned_via_external_groups** (Boolean) Whether the member was assigned to the team via a external group mapping
+- **name** (String) The name of the team
+- **updated_at** (String) The member team assignment update date
 
 

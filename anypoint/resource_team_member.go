@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	team_members "github.com/mulesoft-consulting/anypoint-client-go/team_members"
 )
 
@@ -22,50 +23,66 @@ func resourceTeamMember() *schema.Resource {
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The last time this resource has been updated locally.",
+			},
+			"id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The unique id of this team membership composed by `org_id`_`team_id`_`user_id`_members",
 			},
 			"team_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The id of the team. team_id is globally unique.",
 			},
 			"org_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The master organization id where the team is defined.",
 			},
 			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The owner id",
 			},
 			"membership_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "member",
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "member",
+				ForceNew:         true,
+				Description:      "Whether the member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"member", "maintainer"}, true)),
 			},
 			"identity_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The member's identity type.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the team",
 			},
 			"is_assigned_via_external_groups": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether the member was assigned to the team via a external group mapping",
 			},
 			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The member team assignment creation date",
 			},
 			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The member team assignment update date",
 			},
 		},
 	}

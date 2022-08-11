@@ -35,19 +35,19 @@ output "team_roles" {
 
 ### Required
 
-- **org_id** (String)
-- **team_id** (String)
+- **org_id** (String) The master organization id where the team is defined.
+- **team_id** (String) The id of the team. team_id is globally unique.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **params** (Block Set) (see [below for nested schema](#nestedblock--params))
+- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results
-- **roles** (List of Object) (see [below for nested schema](#nestedatt--roles))
-- **total** (Number) The total number of available results
+- **len** (Number) The number of loaded results (pagination purpose).
+- **roles** (List of Object) The resulted list of roles. (see [below for nested schema](#nestedatt--roles))
+- **total** (Number) The total number of available results.
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`

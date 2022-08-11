@@ -40,7 +40,7 @@ output "roles" {
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results
+- **len** (Number) The number of loaded results (pagination purpose).
 - **roles** (List of Object) (see [below for nested schema](#nestedatt--roles))
 - **total** (Number) The total number of available results
 
