@@ -63,7 +63,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CPLANE", "us"),
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "us" && v != "eu" {
+					if v != "us" && v != "eu" && v != "gov" {
 						errs = append(errs, fmt.Errorf("%q must be 'eu‘ or 'us', got: %s", key, v))
 					}
 					return
@@ -220,6 +220,8 @@ func cplane2serverindex(cplane string) int {
 		return 1
 	} else if cplane == "us" {
 		return 0
+	} else if cplane == "gov" {
+		return 2
 	}
 	return -1
 }
