@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -26,7 +25,6 @@ Depending on the ` + "`" + `role` + "`" + `, some roles are environment scoped o
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 				Description: "The last time this resource has been updated locally.",
 			},
@@ -257,10 +255,20 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 func equalTeamRoles(old, new interface{}) bool {
 	old_list := old.([]interface{})
 	new_list := new.([]interface{})
-	sortMapListAl(old_list, "role_id")
-	sortMapListAl(new_list, "role_id")
-	for i, item := range old_list {
-		if !equalTeamRole(item, new_list[i]) {
+	ridkey := "role_id"
+
+	old_list = FilterMapList(old_list, rolesSkipFilter)
+	new_list = FilterMapList(new_list, rolesSkipFilter)
+
+	SortMapListAl(old_list, ridkey)
+	SortMapListAl(old_list, ridkey)
+
+	if len(old_list) != len(new_list) {
+		return false
+	}
+
+	for i, _ := range old_list {
+		if !equalTeamRole(old_list[i], new_list[i]) {
 			return false
 		}
 	}
@@ -270,25 +278,15 @@ func equalTeamRoles(old, new interface{}) bool {
 func equalTeamRole(old, new interface{}) bool {
 	old_role := old.(map[string]interface{})
 	new_role := new.(map[string]interface{})
-	for k, val := range old_role {
-		log.Print("K: ")
-		log.Println(k)
-		log.Print("VAL OLD: ")
-		log.Println(val)
-		switch k {
-		case "name":
-			if val.(string) != new_role[k].(string) {
-				return false
-			}
-		case "role_id":
-			if val.(string) != new_role[k].(string) {
-				return false
-			}
-		case "context_params":
-			if !equalTeamRoleContextParams(val, new_role[k]) {
-				return false
-			}
-		}
+
+	ridkey := "role_id"
+	cparamskey := "context_params"
+
+	if old_role[ridkey].(string) != new_role[ridkey].(string) {
+		return false
+	}
+	if !equalTeamRoleContextParams(old_role[cparamskey], new_role[cparamskey]) {
+		return false
 	}
 	return true
 }
@@ -302,6 +300,14 @@ func equalTeamRoleContextParams(old, new interface{}) bool {
 		}
 	}
 	return true
+}
+
+// filter for roles to skip when attempting to calculate the diffin
+// the role ids in this function are automatically added when a team is created. Therefore should be skipped
+func rolesSkipFilter(item map[string]interface{}) bool {
+	skip := []string{"833ab9ca-0c72-45ba-9764-1df83240db57"}
+	ridkey := "role_id"
+	return !StringInSlice(skip, item[ridkey].(string), false)
 }
 
 /*

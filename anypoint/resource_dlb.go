@@ -635,7 +635,7 @@ func compareDLBStates(old, new string) bool {
 	return false
 }
 
-//Returns authentication context (includes authorization header)
+// Returns authentication context (includes authorization header)
 func getDLBAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, dlb.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, dlb.ContextServerIndex, pco.server_index)
@@ -656,8 +656,8 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 	new_list := new_set.List()
 
 	sortAttr := "private_key_label"
-	sortMapListAl(new_list, sortAttr)
-	sortMapListAl(old_list, sortAttr)
+	SortMapListAl(new_list, sortAttr)
+	SortMapListAl(old_list, sortAttr)
 
 	if len(new_list) != len(old_list) {
 		return false
@@ -690,8 +690,8 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 // returns true if they are equal, false otherwise
 func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
 	sortAttr := "app_uri"
-	sortMapListAl(old, sortAttr)
-	sortMapListAl(new, sortAttr)
+	SortMapListAl(old, sortAttr)
+	SortMapListAl(new, sortAttr)
 
 	attributes := [...]string{
 		"input_uri", "app_name", "app_uri",
@@ -714,8 +714,8 @@ func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
 	return true
 }
 
-//Compares old and new values of allow list attribute
-//returns true if they are the same, false otherwise
+// Compares old and new values of allow list attribute
+// returns true if they are the same, false otherwise
 func equalDLBAllowList(old, new interface{}) bool {
 	old_list := old.([]interface{})
 	new_list := new.([]interface{})
@@ -729,7 +729,7 @@ func equalDLBAllowList(old, new interface{}) bool {
 	return true
 }
 
-//returns true if the DLB key elements have been changed
+// returns true if the DLB key elements have been changed
 func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bool {
 	watchAttrs := getDLBPatchWatchAttributes()
 
