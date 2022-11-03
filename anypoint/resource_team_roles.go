@@ -3,12 +3,15 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	team_roles "github.com/mulesoft-consulting/anypoint-client-go/team_roles"
 )
+
+const BG_VIEWER_ROLE = "833ab9ca-0c72-45ba-9764-1df83240db57"
 
 func resourceTeamRoles() *schema.Resource {
 	return &schema.Resource{
@@ -238,7 +241,7 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 
 	for _, role := range roles {
 		content := role.(map[string]interface{})
-		if content["role_id"] == "833ab9ca-0c72-45ba-9764-1df83240db57" { // It is forbidden to remove the Business Group Viewer role
+		if content["role_id"] == BG_VIEWER_ROLE { // It is forbidden to remove the Business Group Viewer role
 			continue
 		}
 		item := make(map[string]interface{})
@@ -255,19 +258,14 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 func equalTeamRoles(old, new interface{}) bool {
 	old_list := old.([]interface{})
 	new_list := new.([]interface{})
-	ridkey := "role_id"
-
 	old_list = FilterMapList(old_list, rolesSkipFilter)
 	new_list = FilterMapList(new_list, rolesSkipFilter)
-
-	SortMapListAl(old_list, ridkey)
-	SortMapListAl(old_list, ridkey)
-
+	sortMapListRoles(old_list)
+	sortMapListRoles(new_list)
 	if len(old_list) != len(new_list) {
 		return false
 	}
-
-	for i, _ := range old_list {
+	for i := range old_list {
 		if !equalTeamRole(old_list[i], new_list[i]) {
 			return false
 		}
@@ -275,6 +273,7 @@ func equalTeamRoles(old, new interface{}) bool {
 	return true
 }
 
+// compares 2 singles roles
 func equalTeamRole(old, new interface{}) bool {
 	old_role := old.(map[string]interface{})
 	new_role := new.(map[string]interface{})
@@ -291,11 +290,12 @@ func equalTeamRole(old, new interface{}) bool {
 	return true
 }
 
+// compares 2 role contexts
 func equalTeamRoleContextParams(old, new interface{}) bool {
 	old_cparams := old.(map[string]interface{})
 	new_cparams := new.(map[string]interface{})
-	for k, val := range old_cparams {
-		if val.(string) != new_cparams[k].(string) {
+	for k := range old_cparams {
+		if old_cparams[k].(string) != new_cparams[k].(string) {
 			return false
 		}
 	}
@@ -305,9 +305,36 @@ func equalTeamRoleContextParams(old, new interface{}) bool {
 // filter for roles to skip when attempting to calculate the diffin
 // the role ids in this function are automatically added when a team is created. Therefore should be skipped
 func rolesSkipFilter(item map[string]interface{}) bool {
-	skip := []string{"833ab9ca-0c72-45ba-9764-1df83240db57"}
+	skip := []string{BG_VIEWER_ROLE}
 	ridkey := "role_id"
 	return !StringInSlice(skip, item[ridkey].(string), false)
+}
+
+// sorts a list of roles by role_id, org, envId
+func sortMapListRoles(roles []interface{}) {
+	sort.SliceStable(roles, func(i, j int) bool {
+		i_elem := roles[i].(map[string]interface{})
+		j_elem := roles[j].(map[string]interface{})
+
+		sortAttrA := "role_id"
+		sortAttrB := "context_params"
+		if i_elem[sortAttrA].(string) != j_elem[sortAttrA].(string) {
+			return i_elem[sortAttrA].(string) < j_elem[sortAttrA].(string)
+		}
+
+		sortAttrC := "org"
+		sortAttrD := "envId"
+		i_context := i_elem[sortAttrB].(map[string]interface{})
+		j_context := j_elem[sortAttrB].(map[string]interface{})
+		if i_context[sortAttrC].(string) != j_context[sortAttrC].(string) {
+			return i_context[sortAttrC].(string) < j_context[sortAttrC].(string)
+		}
+		if i_context[sortAttrD] != nil && j_context[sortAttrD] != nil && i_context[sortAttrD].(string) != j_context[sortAttrD].(string) {
+			return i_context[sortAttrD].(string) < j_context[sortAttrD].(string)
+		}
+
+		return true
+	})
 }
 
 /*
