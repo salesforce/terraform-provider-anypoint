@@ -253,7 +253,7 @@ func newTeamRolesDeleteBody(d *schema.ResourceData) []map[string]interface{} {
 	return body
 }
 
-// Compares old and new values of allow list attribute
+// Compares old and new values of roles
 // returns true if they are the same, false otherwise
 func equalTeamRoles(old, new interface{}) bool {
 	old_list := old.([]interface{})

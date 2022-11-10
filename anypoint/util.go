@@ -74,15 +74,18 @@ func SortStrListAl(list []interface{}) {
 	})
 }
 
-// sorts list of maps alphabetically using the given sort attribute
-func SortMapListAl(list []interface{}, sortAttr string) {
+// sorts list of maps alphabetically using the given sort attributes (by order)
+func SortMapListAl(list []interface{}, sortAttrs []string) {
 	sort.SliceStable(list, func(i, j int) bool {
 		i_elem := list[i].(map[string]interface{})
 		j_elem := list[j].(map[string]interface{})
 
-		//sortAttr := "private_key_label"
-
-		return i_elem[sortAttr].(string) < j_elem[sortAttr].(string)
+		for _, k := range sortAttrs {
+			if i_elem[k] != nil && j_elem[k] != nil && i_elem[k].(string) != j_elem[k].(string) {
+				return i_elem[k].(string) < j_elem[k].(string)
+			}
+		}
+		return true
 	})
 }
 

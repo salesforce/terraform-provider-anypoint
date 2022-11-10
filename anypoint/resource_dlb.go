@@ -655,7 +655,7 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 	new_set := new.(*schema.Set)
 	new_list := new_set.List()
 
-	sortAttr := "private_key_label"
+	sortAttr := []string{"private_key_label"}
 	SortMapListAl(new_list, sortAttr)
 	SortMapListAl(old_list, sortAttr)
 
@@ -689,7 +689,7 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 // compares two SSL Endpoint Mappings
 // returns true if they are equal, false otherwise
 func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
-	sortAttr := "app_uri"
+	sortAttr := []string{"app_uri"}
 	SortMapListAl(old, sortAttr)
 	SortMapListAl(new, sortAttr)
 
