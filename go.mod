@@ -19,7 +19,7 @@ require (
 	github.com/mulesoft-consulting/anypoint-client-go/role v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/rolegroup v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/team v0.3.0
-	github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.1
 	github.com/mulesoft-consulting/anypoint-client-go/team_members v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/team_roles v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/user v0.3.0

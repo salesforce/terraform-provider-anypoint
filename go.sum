@@ -267,6 +267,8 @@ github.com/mulesoft-consulting/anypoint-client-go/team v0.3.0 h1:+2WETgWXN1HGaz5
 github.com/mulesoft-consulting/anypoint-client-go/team v0.3.0/go.mod h1:NsJA09zxrpvxbGQ0GHjDq9Vj1u+2Y+/GrLZcEtBgD6Y=
 github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.0 h1:Y7AZVi15WpzO3tjyrEzq696AVc6yGP4QWy0HKMD6nxA=
 github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.0/go.mod h1:QO+k/uqB+12rfX1nM6EPBKfKcpJpF5IR2Pe55J3MRXU=
+github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.1 h1:SrmwDAtGRpKHHwAPQJX5xrdQYSwDQsx7aURkyNLjL9s=
+github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.1/go.mod h1:QO+k/uqB+12rfX1nM6EPBKfKcpJpF5IR2Pe55J3MRXU=
 github.com/mulesoft-consulting/anypoint-client-go/team_members v0.2.0 h1:yjb+mv+UnwkkQdAsLE0XKaXticoE4b+YTITHrsslSdE=
 github.com/mulesoft-consulting/anypoint-client-go/team_members v0.2.0/go.mod h1:xnVvjfnNsQNM+B64kQ77JqTBrWXpwrAp0xZIRc/XJ3k=
 github.com/mulesoft-consulting/anypoint-client-go/team_roles v0.2.0 h1:TS/DxULuTuzklovS7H+hxqIImoLvqJENplyh2gP8md0=
