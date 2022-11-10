@@ -253,8 +253,8 @@ func newTeamGroupMappingsPutBody(d *schema.ResourceData) []map[string]interface{
 		item := make(map[string]interface{})
 		item["membership_type"] = content["membership_type"]
 		item["external_group_name"] = content["external_group_name"]
-		if val, ok := content["provider_id"]; ok {
-			item["provider_id"] = val
+		if _, ok := content["provider_id"]; ok {
+			item["provider_id"] = content["provider_id"]
 		}
 		body[i] = item
 	}
