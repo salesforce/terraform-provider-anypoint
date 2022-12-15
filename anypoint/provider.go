@@ -44,6 +44,13 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_SECRET", nil),
 				Description: "the connected app's secret",
 			},
+			"access_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_ACCESS_TOKEN", nil),
+				Description: "the connected app's access token",
+			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -64,7 +71,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CPLANE", "us"),
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "us" && v != "eu" {
+					if v != "us" && v != "eu" && v != "gov" {
 						errs = append(errs, fmt.Errorf("%q must be 'eu‘ or 'us', got: %s", key, v))
 					}
 					return
@@ -125,12 +132,17 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	client_id := d.Get("client_id").(string)
 	client_secret := d.Get("client_secret").(string)
+	access_token := d.Get("access_token").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	cplane := d.Get("cplane").(string)
 
 	server_index := cplane2serverindex(cplane)
 	auth_ctx := context.WithValue(ctx, auth.ContextServerIndex, server_index)
+
+	if (access_token != ""){
+		return newProviderConfOutput(access_token, server_index), diags
+	}
 
 	if (username != "") && (password != "") {
 		authres, d := userPwdAuth(auth_ctx, username, password)
@@ -223,6 +235,8 @@ func cplane2serverindex(cplane string) int {
 		return 1
 	} else if cplane == "us" {
 		return 0
+	} else if cplane == "gov" {
+		return 2
 	}
 	return -1
 }

@@ -68,7 +68,7 @@ func resourceTeam() *schema.Resource {
 			},
 			"ancestor_team_ids": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -303,7 +303,7 @@ func getTeamPatchWatchAttributes() []string {
 }
 
 /*
- List of attributes that requires to use put operation (to move team from one parent to another)
+List of attributes that requires to use put operation (to move team from one parent to another)
 */
 func getTeamPutWatchAttributes() []string {
 	attributes := [...]string{

@@ -51,8 +51,7 @@ func resourceENV() *schema.Resource {
 			},
 			"is_production": {
 				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
 				Description: "True if the environment is a production environment",
 			},
 			"type": {

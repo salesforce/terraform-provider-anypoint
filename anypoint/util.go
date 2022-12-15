@@ -74,16 +74,42 @@ func SortStrListAl(list []interface{}) {
 	})
 }
 
-// sorts list of maps alphabetically using the given sort attribute
-func sortMapListAl(list []interface{}, sortAttr string) {
+// sorts list of maps alphabetically using the given sort attributes (by order)
+func SortMapListAl(list []interface{}, sortAttrs []string) {
 	sort.SliceStable(list, func(i, j int) bool {
 		i_elem := list[i].(map[string]interface{})
 		j_elem := list[j].(map[string]interface{})
 
-		//sortAttr := "private_key_label"
-
-		return i_elem[sortAttr].(string) < j_elem[sortAttr].(string)
+		for _, k := range sortAttrs {
+			if i_elem[k] != nil && j_elem[k] != nil && i_elem[k].(string) != j_elem[k].(string) {
+				return i_elem[k].(string) < j_elem[k].(string)
+			}
+		}
+		return true
 	})
+}
+
+// func filters list of map depending on the given filter function
+// returns list of elements satisfying the filter
+func FilterMapList(list []interface{}, filter func(map[string]interface{}) bool) []interface{} {
+	result := make([]interface{}, 0)
+	for _, item := range list {
+		m := item.(map[string]interface{})
+		if filter(m) {
+			result = append(result, m)
+		}
+	}
+	return result
+}
+
+// compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
+// returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
+func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
+	if new == initial {
+		return true
+	} else {
+		return old == new
+	}
 }
 
 // Compares string lists
@@ -104,14 +130,4 @@ func equalStrList(old, new interface{}) bool {
 		}
 	}
 	return true
-}
-
-// compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
-// returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
-func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
-	if new == initial {
-		return true
-	} else {
-		return old == new
-	}
 }

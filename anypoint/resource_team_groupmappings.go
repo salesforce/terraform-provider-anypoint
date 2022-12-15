@@ -51,6 +51,9 @@ func resourceTeamGroupMappings() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "The list of external identity provider groups that should be mapped to the given team.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalTeamGroupMappings(d.GetChange("groupmappings"))
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_group_name": {
@@ -250,10 +253,48 @@ func newTeamGroupMappingsPutBody(d *schema.ResourceData) []map[string]interface{
 		item := make(map[string]interface{})
 		item["membership_type"] = content["membership_type"]
 		item["external_group_name"] = content["external_group_name"]
+		if val, ok := content["provider_id"]; ok {
+			item["provider_id"] = val
+		}
 		body[i] = item
 	}
 
 	return body
+}
+
+// Compares old and new values of group mappings
+// returns true if they are the same, false otherwise
+func equalTeamGroupMappings(old, new interface{}) bool {
+	old_list := old.([]interface{})
+	new_list := new.([]interface{})
+	sortAttrs := []string{"membership_type", "external_group_name", "provider_id"}
+	SortMapListAl(old_list, sortAttrs)
+	SortMapListAl(new_list, sortAttrs)
+	if len(old_list) != len(new_list) {
+		return false
+	}
+	for i := range old_list {
+		if !equalTeamGroupMapping(old_list[i], new_list[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// compares 2 single group mappings
+func equalTeamGroupMapping(old, new interface{}) bool {
+	old_role := old.(map[string]interface{})
+	new_role := new.(map[string]interface{})
+
+	keys := []string{"membership_type", "external_group_name", "provider_id"}
+
+	for _, k := range keys {
+		if old_role[k].(string) != new_role[k].(string) {
+			return false
+		}
+	}
+
+	return true
 }
 
 /*
