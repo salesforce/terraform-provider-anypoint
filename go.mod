@@ -6,19 +6,22 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
+	github.com/hashicorp/terraform-plugin-log v0.4.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect
 	github.com/iancoleman/strcase v0.2.0
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
-	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.2.0
-	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.3.0
-	github.com/mulesoft-consulting/anypoint-client-go/env v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/idp v0.1.2
-	github.com/mulesoft-consulting/anypoint-client-go/org v0.3.0
+	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.3.0
+	github.com/mulesoft-consulting/anypoint-client-go/connected_app v0.0.3
+	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.4.0
+	github.com/mulesoft-consulting/anypoint-client-go/env v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/idp v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-consulting/anypoint-client-go/role v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/rolegroup v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/team v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/team v0.3.0
 	github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/team_members v0.1.0
 	github.com/mulesoft-consulting/anypoint-client-go/team_roles v0.1.0

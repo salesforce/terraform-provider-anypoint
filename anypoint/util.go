@@ -65,7 +65,7 @@ func CalcSha1Digest(source string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-//sorts list of strings alphabetically
+// sorts list of strings alphabetically
 func SortStrListAl(list []interface{}) {
 	sort.SliceStable(list, func(i, j int) bool {
 		i_elem := list[i].(string)
@@ -74,7 +74,7 @@ func SortStrListAl(list []interface{}) {
 	})
 }
 
-//sorts list of maps alphabetically using the given sort attribute
+// sorts list of maps alphabetically using the given sort attribute
 func sortMapListAl(list []interface{}, sortAttr string) {
 	sort.SliceStable(list, func(i, j int) bool {
 		i_elem := list[i].(map[string]interface{})
@@ -86,8 +86,28 @@ func sortMapListAl(list []interface{}, sortAttr string) {
 	})
 }
 
-//compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
-//returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
+// Compares string lists
+// returns true if they are the same, false otherwise
+func equalStrList(old, new interface{}) bool {
+	old_list := old.([]interface{})
+	new_list := new.([]interface{})
+
+	if len(new_list) != len(old_list) {
+		return false
+	}
+
+	SortStrListAl(old_list)
+	SortStrListAl(new_list)
+	for i, item := range old_list {
+		if new_list[i].(string) != item.(string) {
+			return false
+		}
+	}
+	return true
+}
+
+// compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
+// returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
 func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
 	if new == initial {
 		return true
