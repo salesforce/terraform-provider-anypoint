@@ -6,8 +6,6 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
-	github.com/hashicorp/terraform-plugin-log v0.4.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect
 	github.com/iancoleman/strcase v0.2.0
@@ -19,16 +17,16 @@ require (
 	github.com/mulesoft-consulting/anypoint-client-go/env v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/idp v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/org v0.4.0
-	github.com/mulesoft-consulting/anypoint-client-go/role v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/rolegroup v0.1.0
+	github.com/mulesoft-consulting/anypoint-client-go/role v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/rolegroup v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/team v0.3.0
-	github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/team_members v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/team_roles v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/user v0.2.0
-	github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups v0.1.0
-	github.com/mulesoft-consulting/anypoint-client-go/vpc v0.5.0
-	github.com/mulesoft-consulting/anypoint-client-go/vpn v0.0.1
+	github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings v0.2.1
+	github.com/mulesoft-consulting/anypoint-client-go/team_members v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/team_roles v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/user v0.3.0
+	github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups v0.2.0
+	github.com/mulesoft-consulting/anypoint-client-go/vpc v0.6.0
+	github.com/mulesoft-consulting/anypoint-client-go/vpn v0.1.0
 	github.com/oklog/run v1.1.0 // indirect
 	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401 // indirect
