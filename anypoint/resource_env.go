@@ -58,7 +58,7 @@ func resourceENV() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				Description:      "The type of the environment: sandbox or production",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"sandbox", "production"}, true)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"sandbox", "design", "production"}, true)),
 			},
 			"client_id": {
 				Type:     schema.TypeString,
