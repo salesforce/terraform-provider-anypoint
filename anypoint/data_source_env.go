@@ -27,11 +27,6 @@ func dataSourceENV() *schema.Resource {
 				Required:    true,
 				Description: "The organization id where the environment is defined.",
 			},
-			"organization_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The organization id where the environment is defined.",
-			},
 			"name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -126,7 +121,7 @@ func flattenENVData(envitem *env.Env) map[string]interface{} {
 
 		item["id"] = envitem.GetId()
 		item["name"] = envitem.GetName()
-		item["organization_id"] = envitem.GetOrganizationId()
+		item["org_id"] = envitem.GetOrganizationId()
 		item["is_production"] = envitem.GetIsProduction()
 		item["type"] = envitem.GetType()
 		item["client_id"] = envitem.GetClientId()
@@ -139,7 +134,7 @@ func flattenENVData(envitem *env.Env) map[string]interface{} {
 
 func getENVCoreAttributes() []string {
 	attributes := [...]string{
-		"name", "organization_id", "is_production", "type", "client_id",
+		"name", "org_id", "is_production", "type", "client_id",
 	}
 	return attributes[:]
 }
