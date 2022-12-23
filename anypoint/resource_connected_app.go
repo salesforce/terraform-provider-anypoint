@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"log"
 	"sort"
 	"strings"
 
@@ -411,12 +410,10 @@ func newConnectedAppScopesPutBody(d *schema.ResourceData) *connApp.ConnectedAppS
 
 			if org_id, ok := scope_map["org_id"]; ok && org_id != "" {
 				context_params.SetOrg(org_id.(string))
-				log.Println(org_id)
 			}
 
 			if env_id, ok := scope_map["env_id"]; ok && env_id != "" {
 				context_params.SetEnvId(env_id.(string))
-				log.Println(env_id)
 			}
 
 			scope_core.SetContextParams(*context_params)
