@@ -17,7 +17,7 @@ This project is not an official Mulesoft product, it is an open-source initiativ
 
 Any contribution is welcome. If you're interested in this project, please get in touch 📧.
 
-Join our Discord [server](https://discord.gg/ApZBgfeY) !!
+Join our Discord [server](https://discord.gg/YrFr5CRW) !!
 
 ## Example Usage
 
@@ -31,6 +31,8 @@ provider "anypoint" {
   client_id = var.client_id             # optionally use ANYPOINT_CLIENT_ID env var
   client_secret = var.client_secret     # optionally use ANYPOINT_CLIENT_SECRET env var
 
+  access_token  = var.access_token      # optionally use ANYPOINT_ACCESS_TOKEN env var
+
   # You may need to change the anypoint control plane: use 'eu' or 'us'
   # by default the control plane is 'us'
   cplane= var.cplane                    # optionnaly use ANYPOINT_CPLANE env var
@@ -42,8 +44,9 @@ provider "anypoint" {
 
 ### Optional
 
-- **client_id** (String, Sensitive) the connected app's id
-- **client_secret** (String, Sensitive) the connected app's secret
-- **cplane** (String) the anypoint control plane
-- **password** (String, Sensitive) the user's password
-- **username** (String, Sensitive) the user's username
+- `access_token` (String, Sensitive) the connected app's access token
+- `client_id` (String, Sensitive) the connected app's id
+- `client_secret` (String, Sensitive) the connected app's secret
+- `cplane` (String) the anypoint control plane
+- `password` (String, Sensitive) the user's password
+- `username` (String, Sensitive) the user's username

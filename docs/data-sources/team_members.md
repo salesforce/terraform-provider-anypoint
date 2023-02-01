@@ -35,32 +35,32 @@ resource "anypoint_team_members" "team_members" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the team is defined.
-- **team_id** (String) The id of the team. team_id is globally unique.
+- `org_id` (String) The master organization id where the team is defined.
+- `team_id` (String) The id of the team. team_id is globally unique.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **teammembers** (List of Object) The list of resulting team-members. (see [below for nested schema](#nestedatt--teammembers))
-- **total** (Number) The total number of available results
+- `id` (String) The ID of this resource.
+- `teammembers` (List of Object) The list of resulting team-members. (see [below for nested schema](#nestedatt--teammembers))
+- `total` (Number) The total number of available results
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **ascending** (Boolean) Whether to sort ascending or descending
-- **identity_type** (String) A search string to use for case-insensitive partial matches on external group name
-- **limit** (Number) Maximum records to retrieve per request.
-- **member_ids** (List of String) Include the members of the team that have ids in this list
-- **membership_type** (String) Include the group access mappings that grant the provided membership type By default, all group access mappings are returned
-- **offset** (Number) The number of records to omit from the response.
-- **search** (String) Maximum records to retrieve per request.
-- **sort** (String) The field to sort on
+- `ascending` (Boolean) Whether to sort ascending or descending
+- `identity_type` (String) A search string to use for case-insensitive partial matches on external group name
+- `limit` (Number) Maximum records to retrieve per request.
+- `member_ids` (List of String) Include the members of the team that have ids in this list
+- `membership_type` (String) Include the group access mappings that grant the provided membership type By default, all group access mappings are returned
+- `offset` (Number) The number of records to omit from the response.
+- `search` (String) Maximum records to retrieve per request.
+- `sort` (String) The field to sort on
 
 
 <a id="nestedatt--teammembers"></a>
@@ -68,12 +68,12 @@ Optional:
 
 Read-Only:
 
-- **created_at** (String)
-- **id** (String)
-- **identity_type** (String)
-- **is_assigned_via_external_groups** (Boolean)
-- **membership_type** (String)
-- **name** (String)
-- **updated_at** (String)
+- `created_at` (String)
+- `id` (String)
+- `identity_type` (String)
+- `is_assigned_via_external_groups` (Boolean)
+- `membership_type` (String)
+- `name` (String)
+- `updated_at` (String)
 
 

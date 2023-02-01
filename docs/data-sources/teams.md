@@ -35,33 +35,33 @@ resource "anypoint_team" "team" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the team is defined.
+- `org_id` (String) The master organization id where the team is defined.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results (for pagination purposes).
-- **teams** (List of Object) The list of resulting teams. (see [below for nested schema](#nestedatt--teams))
-- **total** (Number) The total number of available results
+- `id` (String) The ID of this resource.
+- `len` (Number) The number of loaded results (for pagination purposes).
+- `teams` (List of Object) The list of resulting teams. (see [below for nested schema](#nestedatt--teams))
+- `total` (Number) The total number of available results
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **ancestor_team_id** (List of String) team_id that must appear in the team's ancestor_team_ids.
-- **ascending** (Boolean) Whether to sort ascending or descending.
-- **limit** (Number) Maximum records to retrieve per request.
-- **offset** (Number) The number of records to omit from the response.
-- **parent_team_id** (List of String) team_id of the immediate parent of the team to return.
-- **search** (String) A search string to use for case-insensitive partial matches on team name
-- **sort** (String) The field to sort on.
-- **team_id** (String) id of the team to return.
-- **team_type** (String) return only teams that are of this type
+- `ancestor_team_id` (List of String) team_id that must appear in the team's ancestor_team_ids.
+- `ascending` (Boolean) Whether to sort ascending or descending.
+- `limit` (Number) Maximum records to retrieve per request.
+- `offset` (Number) The number of records to omit from the response.
+- `parent_team_id` (List of String) team_id of the immediate parent of the team to return.
+- `search` (String) A search string to use for case-insensitive partial matches on team name
+- `sort` (String) The field to sort on.
+- `team_id` (String) id of the team to return.
+- `team_type` (String) return only teams that are of this type
 
 
 <a id="nestedatt--teams"></a>
@@ -69,12 +69,12 @@ Optional:
 
 Read-Only:
 
-- **ancestor_team_ids** (List of String)
-- **created_at** (String)
-- **org_id** (String)
-- **team_id** (String)
-- **team_name** (String)
-- **team_type** (String)
-- **updated_at** (String)
+- `ancestor_team_ids` (List of String)
+- `created_at` (String)
+- `org_id` (String)
+- `team_id` (String)
+- `team_name` (String)
+- `team_type` (String)
+- `updated_at` (String)
 
 

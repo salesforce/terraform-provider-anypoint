@@ -35,29 +35,29 @@ output "team_roles" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the team is defined.
-- **team_id** (String) The id of the team. team_id is globally unique.
+- `org_id` (String) The master organization id where the team is defined.
+- `team_id` (String) The id of the team. team_id is globally unique.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results (pagination purpose).
-- **roles** (List of Object) The resulted list of roles. (see [below for nested schema](#nestedatt--roles))
-- **total** (Number) The total number of available results.
+- `id` (String) The ID of this resource.
+- `len` (Number) The number of loaded results (pagination purpose).
+- `roles` (List of Object) The resulted list of roles. (see [below for nested schema](#nestedatt--roles))
+- `total` (Number) The total number of available results.
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **limit** (Number) Maximum records to retrieve per request.
-- **offset** (Number) The number of records to omit from the response.
-- **role_id** (String) return only role assignments containing one of the supplied role_ids
-- **search** (String) A search string to use for case-insensitive partial matches on role name
+- `limit` (Number) Maximum records to retrieve per request.
+- `offset` (Number) The number of records to omit from the response.
+- `role_id` (String) return only role assignments containing one of the supplied role_ids
+- `search` (String) A search string to use for case-insensitive partial matches on role name
 
 
 <a id="nestedatt--roles"></a>
@@ -65,8 +65,8 @@ Optional:
 
 Read-Only:
 
-- **context_params** (Map of String)
-- **name** (String)
-- **role_id** (String)
+- `context_params` (Map of String)
+- `name` (String)
+- `role_id` (String)
 
 

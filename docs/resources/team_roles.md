@@ -41,29 +41,26 @@ resource "anypoint_team_roles" "roles" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the team is defined.
-- **roles** (Block List, Min: 1) The roles (permissions) of the team. (see [below for nested schema](#nestedblock--roles))
-- **team_id** (String) The id of the team. team_id is globally unique.
-
-### Optional
-
-- **last_updated** (String) The last time this resource has been updated locally.
+- `org_id` (String) The master organization id where the team is defined.
+- `roles` (Block List, Min: 1) The roles (permissions) of the team. (see [below for nested schema](#nestedblock--roles))
+- `team_id` (String) The id of the team. team_id is globally unique.
 
 ### Read-Only
 
-- **id** (String) The unique id of this team roles composed by `org_id`_`team_id`_roles
-- **total** (Number) The total number of roles within the team
+- `id` (String) The unique id of this team roles composed by `org_id`_`team_id`_roles
+- `last_updated` (String) The last time this resource has been updated locally.
+- `total` (Number) The total number of roles within the team
 
 <a id="nestedblock--roles"></a>
 ### Nested Schema for `roles`
 
 Required:
 
-- **context_params** (Map of String) The role's scope. Contains the organisation id to which the role is applied and optionally if the role spans environments, the environment within the organization id.
-- **role_id** (String) The role id
+- `context_params` (Map of String) The role's scope. Contains the organisation id to which the role is applied and optionally if the role spans environments, the environment within the organization id.
+- `role_id` (String) The role id
 
 Read-Only:
 
-- **name** (String) The role name
+- `name` (String) The role name
 
 

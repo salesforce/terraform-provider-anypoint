@@ -32,27 +32,27 @@ data "anypoint_users" "users" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the user is defined.
+- `org_id` (String) The master organization id where the user is defined.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results (for pagination purposes).
-- **total** (Number) The total number of available results
-- **users** (List of Object) The list of resulted users. (see [below for nested schema](#nestedatt--users))
+- `id` (String) The ID of this resource.
+- `len` (Number) The number of loaded results (for pagination purposes).
+- `total` (Number) The total number of available results
+- `users` (List of Object) The list of resulted users. (see [below for nested schema](#nestedatt--users))
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **limit** (Number) Maximum records to retrieve per request. default 25, min 0, max 500
-- **offset** (Number) The number of records to omit from the response.
-- **type** (String) specify the type of the user you want to retrive [all, host, proxy]
+- `limit` (Number) Maximum records to retrieve per request. default 25, min 0, max 500
+- `offset` (Number) The number of records to omit from the response.
+- `type` (String) specify the type of the user you want to retrive [all, host, proxy]
 
 
 <a id="nestedatt--users"></a>
@@ -60,24 +60,24 @@ Optional:
 
 Read-Only:
 
-- **contributor_of_organizations** (Set of Map of String)
-- **created_at** (String)
-- **email** (String)
-- **enabled** (Boolean)
-- **first_name** (String)
-- **id** (String)
-- **idprovider_id** (String)
-- **is_federated** (Boolean)
-- **last_login** (String)
-- **last_name** (String)
-- **member_of_organizations** (Set of Map of String)
-- **mfa_verification_excluded** (Boolean)
-- **mfa_verifiers_configured** (String)
-- **organization** (Map of String)
-- **organization_id** (String)
-- **primary_organization** (Map of String)
-- **type** (String)
-- **updated_at** (String)
-- **username** (String)
+- `contributor_of_organizations` (Set of Map of String)
+- `created_at` (String)
+- `email` (String)
+- `enabled` (Boolean)
+- `first_name` (String)
+- `id` (String)
+- `idprovider_id` (String)
+- `is_federated` (Boolean)
+- `last_login` (String)
+- `last_name` (String)
+- `member_of_organizations` (Set of Map of String)
+- `mfa_verification_excluded` (Boolean)
+- `mfa_verifiers_configured` (String)
+- `organization` (Map of String)
+- `organization_id` (String)
+- `primary_organization` (Map of String)
+- `type` (String)
+- `updated_at` (String)
+- `username` (String)
 
 
