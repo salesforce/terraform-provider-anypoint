@@ -17,27 +17,27 @@ Reads all `user` related `rolegroups` in the business group.
 
 ### Required
 
-- **org_id** (String) The master organization id where the role-group is defined.
-- **user_id** (String) The user id.
+- `org_id` (String) The master organization id where the role-group is defined.
+- `user_id` (String) The user id.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) The search parameters. Should only provide one occurrence of the block. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results (pagination purposes).
-- **rolegroups** (List of Object) The list of resulted rolegroups. (see [below for nested schema](#nestedatt--rolegroups))
-- **total** (Number) The total number of available results.
+- `id` (String) The ID of this resource.
+- `len` (Number) The number of loaded results (pagination purposes).
+- `rolegroups` (List of Object) The list of resulted rolegroups. (see [below for nested schema](#nestedatt--rolegroups))
+- `total` (Number) The total number of available results.
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **limit** (Number) Maximum records to retrieve per request.
-- **offset** (Number) The number of records to omit from the response.
+- `limit` (Number) Maximum records to retrieve per request.
+- `offset` (Number) The number of records to omit from the response.
 
 
 <a id="nestedatt--rolegroups"></a>
@@ -45,15 +45,15 @@ Optional:
 
 Read-Only:
 
-- **context_params** (Map of String)
-- **created_at** (String)
-- **description** (String)
-- **editable** (Boolean)
-- **external_names** (List of String)
-- **name** (String)
-- **org_id** (String)
-- **role_group_id** (String)
-- **updated_at** (String)
-- **user_role_group_id** (String)
+- `context_params` (Map of String)
+- `created_at` (String)
+- `description` (String)
+- `editable` (Boolean)
+- `external_names` (List of String)
+- `name` (String)
+- `org_id` (String)
+- `role_group_id` (String)
+- `updated_at` (String)
+- `user_role_group_id` (String)
 
 

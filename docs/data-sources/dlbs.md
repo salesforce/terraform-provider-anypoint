@@ -24,56 +24,53 @@ data "anypoint_dlbs" "dlbs" {
 
 ### Required
 
-- **org_id** (String) The organization id where the dlbs are defined.
-- **vpc_id** (String) the vpc id
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `org_id` (String) The organization id where the dlbs are defined.
+- `vpc_id` (String) the vpc id
 
 ### Read-Only
 
-- **dlbs** (List of Object) List of dlbs defined in the given organization and vpc (see [below for nested schema](#nestedatt--dlbs))
-- **total** (Number) The total number of available results
+- `dlbs` (List of Object) List of dlbs defined in the given organization and vpc (see [below for nested schema](#nestedatt--dlbs))
+- `id` (String) The ID of this resource.
+- `total` (Number) The total number of available results
 
 <a id="nestedatt--dlbs"></a>
 ### Nested Schema for `dlbs`
 
 Read-Only:
 
-- **default_cipher_suite** (String)
-- **default_ssl_endpoint** (Number)
-- **deployment_id** (String)
-- **domain** (String)
-- **double_static_ips** (Boolean)
-- **enable_streaming** (Boolean)
-- **forward_client_certificate** (Boolean)
-- **http_mode** (String)
-- **id** (String)
-- **instance_config** (Map of String)
-- **ip_addresses** (List of String)
-- **ip_addresses_info** (List of Object) (see [below for nested schema](#nestedobjatt--dlbs--ip_addresses_info))
-- **ip_allowlist** (List of String)
-- **ip_whitelist** (List of String)
-- **keep_url_encoding** (Boolean)
-- **name** (String)
-- **proxy_read_timeout** (Number)
-- **ssl_endpoints** (Set of Object) (see [below for nested schema](#nestedobjatt--dlbs--ssl_endpoints))
-- **state** (String)
-- **static_ips_disabled** (Boolean)
-- **tlsv1** (Boolean)
-- **upstream_tlsv12** (Boolean)
-- **vpc_id** (String)
-- **workers** (Number)
+- `default_cipher_suite` (String)
+- `default_ssl_endpoint` (Number)
+- `deployment_id` (String)
+- `domain` (String)
+- `double_static_ips` (Boolean)
+- `enable_streaming` (Boolean)
+- `forward_client_certificate` (Boolean)
+- `http_mode` (String)
+- `id` (String)
+- `instance_config` (Map of String)
+- `ip_addresses` (List of String)
+- `ip_addresses_info` (List of Object) (see [below for nested schema](#nestedobjatt--dlbs--ip_addresses_info))
+- `ip_allowlist` (List of String)
+- `ip_whitelist` (List of String)
+- `keep_url_encoding` (Boolean)
+- `name` (String)
+- `proxy_read_timeout` (Number)
+- `ssl_endpoints` (Set of Object) (see [below for nested schema](#nestedobjatt--dlbs--ssl_endpoints))
+- `state` (String)
+- `static_ips_disabled` (Boolean)
+- `tlsv1` (Boolean)
+- `upstream_tlsv12` (Boolean)
+- `vpc_id` (String)
+- `workers` (Number)
 
 <a id="nestedobjatt--dlbs--ip_addresses_info"></a>
 ### Nested Schema for `dlbs.ip_addresses_info`
 
 Read-Only:
 
-- **ip** (String)
-- **static_ip** (Boolean)
-- **status** (String)
+- `ip` (String)
+- `static_ip` (Boolean)
+- `status` (String)
 
 
 <a id="nestedobjatt--dlbs--ssl_endpoints"></a>
@@ -81,22 +78,22 @@ Read-Only:
 
 Read-Only:
 
-- **mappings** (List of Object) (see [below for nested schema](#nestedobjatt--dlbs--ssl_endpoints--mappings))
-- **private_key_digest** (String)
-- **private_key_label** (String)
-- **public_key_cn** (String)
-- **public_key_digest** (String)
-- **public_key_label** (String)
-- **verify_client_mode** (String)
+- `mappings` (List of Object) (see [below for nested schema](#nestedobjatt--dlbs--ssl_endpoints--mappings))
+- `private_key_digest` (String)
+- `private_key_label` (String)
+- `public_key_cn` (String)
+- `public_key_digest` (String)
+- `public_key_label` (String)
+- `verify_client_mode` (String)
 
 <a id="nestedobjatt--dlbs--ssl_endpoints--mappings"></a>
 ### Nested Schema for `dlbs.ssl_endpoints.mappings`
 
 Read-Only:
 
-- **app_name** (String)
-- **app_uri** (String)
-- **input_uri** (String)
-- **upstream_protocol** (String)
+- `app_name` (String)
+- `app_uri` (String)
+- `input_uri` (String)
+- `upstream_protocol` (String)
 
 

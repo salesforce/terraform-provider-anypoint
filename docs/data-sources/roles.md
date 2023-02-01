@@ -35,27 +35,27 @@ output "roles" {
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **len** (Number) The number of loaded results (pagination purpose).
-- **roles** (List of Object) (see [below for nested schema](#nestedatt--roles))
-- **total** (Number) The total number of available results
+- `id` (String) The ID of this resource.
+- `len` (Number) The number of loaded results (pagination purpose).
+- `roles` (List of Object) (see [below for nested schema](#nestedatt--roles))
+- `total` (Number) The total number of available results
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **ascending** (Boolean) Sort order for filtering
-- **description** (String) The description of a role
-- **include_internal** (Boolean) Include internal roles
-- **limit** (Number) Pagination parameter for how many results to return
-- **name** (String) The name of a role
-- **offset** (Number) Pagination parameter to start returning results from this position of matches
-- **search** (String) A search string to use for partial matches of role names
+- `ascending` (Boolean) Sort order for filtering
+- `description` (String) The description of a role
+- `include_internal` (Boolean) Include internal roles
+- `limit` (Number) Pagination parameter for how many results to return
+- `name` (String) The name of a role
+- `offset` (Number) Pagination parameter to start returning results from this position of matches
+- `search` (String) A search string to use for partial matches of role names
 
 
 <a id="nestedatt--roles"></a>
@@ -63,12 +63,12 @@ Optional:
 
 Read-Only:
 
-- **description** (String)
-- **internal** (Boolean)
-- **name** (String)
-- **namespaces** (List of String)
-- **org_id** (String)
-- **role_id** (String)
-- **shareable** (Boolean)
+- `description` (String)
+- `internal` (Boolean)
+- `name` (String)
+- `namespaces` (List of String)
+- `org_id` (String)
+- `role_id` (String)
+- `shareable` (Boolean)
 
 
