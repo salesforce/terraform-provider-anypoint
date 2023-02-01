@@ -39,34 +39,34 @@ resource "anypoint_rolegroup_roles" "rg_roles" {
 
 ### Required
 
-- **org_id** (String) The business group id
-- **role_group_id** (String) The role-group id
-- **roles** (Block List, Min: 1) List of roles in the role group (see [below for nested schema](#nestedblock--roles))
+- `org_id` (String) The business group id
+- `role_group_id` (String) The role-group id
+- `roles` (Block List, Min: 1) List of roles in the role group (see [below for nested schema](#nestedblock--roles))
 
 ### Optional
 
-- **id** (String) The unique id of this rolegroup-roles resource composed by `org_id`_`role_group_id`
+- `id` (String) The unique id of this rolegroup-roles resource composed by `org_id`_`role_group_id`
 
 ### Read-Only
 
-- **total** (Number) Total number of roles attributed to the role group
+- `total` (Number) Total number of roles attributed to the role group
 
 <a id="nestedblock--roles"></a>
 ### Nested Schema for `roles`
 
 Required:
 
-- **role_id** (String)
+- `role_id` (String)
 
 Read-Only:
 
-- **context_params** (Map of String)
-- **created_at** (String)
-- **description** (String)
-- **internal** (Boolean)
-- **name** (String)
-- **org_id** (String)
-- **role_group_assignment_id** (String)
-- **role_group_id** (String)
+- `context_params` (Map of String)
+- `created_at` (String)
+- `description` (String)
+- `internal` (Boolean)
+- `name` (String)
+- `org_id` (String)
+- `role_group_assignment_id` (String)
+- `role_group_id` (String)
 
 

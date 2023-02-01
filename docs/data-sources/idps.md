@@ -23,25 +23,22 @@ data "anypoint_idps" "idp" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the idps are defined.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `org_id` (String) The master organization id where the idps are defined.
 
 ### Read-Only
 
-- **idps** (List of Object) List of providers for the given org (see [below for nested schema](#nestedatt--idps))
-- **total** (Number) The total number of available results
+- `id` (String) The ID of this resource.
+- `idps` (List of Object) List of providers for the given org (see [below for nested schema](#nestedatt--idps))
+- `total` (Number) The total number of available results
 
 <a id="nestedatt--idps"></a>
 ### Nested Schema for `idps`
 
 Read-Only:
 
-- **name** (String)
-- **org_id** (String)
-- **provider_id** (String)
-- **type** (Map of String)
+- `name` (String)
+- `org_id` (String)
+- `provider_id` (String)
+- `type` (Map of String)
 
 

@@ -40,29 +40,29 @@ resource "anypoint_team_group_mappings" "team_gmap" {
 
 ### Required
 
-- **groupmappings** (Block List, Min: 1) The list of external identity provider groups that should be mapped to the given team. (see [below for nested schema](#nestedblock--groupmappings))
-- **org_id** (String) The master organization id where the team is defined.
-- **team_id** (String) The id of the team. team_id is globally unique
+- `groupmappings` (Block List, Min: 1) The list of external identity provider groups that should be mapped to the given team. (see [below for nested schema](#nestedblock--groupmappings))
+- `org_id` (String) The master organization id where the team is defined.
+- `team_id` (String) The id of the team. team_id is globally unique
 
 ### Optional
 
-- **last_updated** (String) The last time this resource has been updated locally.
+- `last_updated` (String) The last time this resource has been updated locally.
 
 ### Read-Only
 
-- **id** (String) The unique id of this group mappings composed by `org_id`_`team_id`_groupmappings
-- **total** (Number) The total number of group-mappings
+- `id` (String) The unique id of this group mappings composed by `org_id`_`team_id`_groupmappings
+- `total` (Number) The total number of group-mappings
 
 <a id="nestedblock--groupmappings"></a>
 ### Nested Schema for `groupmappings`
 
 Required:
 
-- **external_group_name** (String) The group name in the external identity provider that should be mapped to this team.
-- **membership_type** (String) Whether the mapped member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer
+- `external_group_name` (String) The group name in the external identity provider that should be mapped to this team.
+- `membership_type` (String) Whether the mapped member is a regular member or a maintainer. Only users may be team maintainers. Enum values: member, maintainer
 
 Optional:
 
-- **provider_id** (String) The id of the identity provider in anypoint platform.
+- `provider_id` (String) The id of the identity provider in anypoint platform.
 
 

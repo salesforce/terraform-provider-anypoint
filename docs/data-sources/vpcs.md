@@ -27,43 +27,40 @@ data "anypoint_vpcs" "all" {
 
 ### Required
 
-- **org_id** (String) The organization id where the vpc is defined.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `org_id` (String) The organization id where the vpc is defined.
 
 ### Read-Only
 
-- **vpcs** (List of Object) List of vpcs defined in the given organization (see [below for nested schema](#nestedatt--vpcs))
+- `id` (String) The ID of this resource.
+- `vpcs` (List of Object) List of vpcs defined in the given organization (see [below for nested schema](#nestedatt--vpcs))
 
 <a id="nestedatt--vpcs"></a>
 ### Nested Schema for `vpcs`
 
 Read-Only:
 
-- **associated_environments** (List of String)
-- **cidr_block** (String)
-- **firewall_rules** (List of Object) (see [below for nested schema](#nestedobjatt--vpcs--firewall_rules))
-- **id** (String)
-- **internal_dns_servers** (List of String)
-- **internal_dns_special_domains** (List of String)
-- **is_default** (Boolean)
-- **name** (String)
-- **owner_id** (String)
-- **region** (String)
-- **shared_with** (List of String)
-- **vpc_routes** (List of Object) (see [below for nested schema](#nestedobjatt--vpcs--vpc_routes))
+- `associated_environments` (List of String)
+- `cidr_block` (String)
+- `firewall_rules` (List of Object) (see [below for nested schema](#nestedobjatt--vpcs--firewall_rules))
+- `id` (String)
+- `internal_dns_servers` (List of String)
+- `internal_dns_special_domains` (List of String)
+- `is_default` (Boolean)
+- `name` (String)
+- `owner_id` (String)
+- `region` (String)
+- `shared_with` (List of String)
+- `vpc_routes` (List of Object) (see [below for nested schema](#nestedobjatt--vpcs--vpc_routes))
 
 <a id="nestedobjatt--vpcs--firewall_rules"></a>
 ### Nested Schema for `vpcs.firewall_rules`
 
 Read-Only:
 
-- **cidr_block** (String)
-- **from_port** (Number)
-- **protocol** (String)
-- **to_port** (Number)
+- `cidr_block` (String)
+- `from_port` (Number)
+- `protocol` (String)
+- `to_port` (Number)
 
 
 <a id="nestedobjatt--vpcs--vpc_routes"></a>
@@ -71,7 +68,7 @@ Read-Only:
 
 Read-Only:
 
-- **cidr** (String)
-- **next_hop** (String)
+- `cidr` (String)
+- `next_hop` (String)
 
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
+	connected_app "github.com/mulesoft-consulting/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-consulting/anypoint-client-go/dlb"
 	env "github.com/mulesoft-consulting/anypoint-client-go/env"
 	idp "github.com/mulesoft-consulting/anypoint-client-go/idp"
@@ -43,6 +44,13 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CLIENT_SECRET", nil),
 				Description: "the connected app's secret",
 			},
+			"access_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_ACCESS_TOKEN", nil),
+				Description: "the connected app's access token",
+			},
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -63,7 +71,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ANYPOINT_CPLANE", "us"),
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "us" && v != "eu" {
+					if v != "us" && v != "eu" && v != "gov" {
 						errs = append(errs, fmt.Errorf("%q must be 'eu‘ or 'us', got: %s", key, v))
 					}
 					return
@@ -87,6 +95,7 @@ func Provider() *schema.Provider {
 			"anypoint_dlb":                 resourceDLB(),
 			"anypoint_idp_oidc":            resourceOIDC(),
 			"anypoint_idp_saml":            resourceSAML(),
+			"anypoint_connected_app":       resourceConnectedApp(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
@@ -110,6 +119,7 @@ func Provider() *schema.Provider {
 			"anypoint_dlbs":                dataSourceDLBs(),
 			"anypoint_idp":                 dataSourceIDP(),
 			"anypoint_idps":                dataSourceIDPs(),
+			"anypoint_connected_app":       dataSourceConnectedApp(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -122,12 +132,17 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	client_id := d.Get("client_id").(string)
 	client_secret := d.Get("client_secret").(string)
+	access_token := d.Get("access_token").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	cplane := d.Get("cplane").(string)
 
 	server_index := cplane2serverindex(cplane)
 	auth_ctx := context.WithValue(ctx, auth.ContextServerIndex, server_index)
+
+	if (access_token != ""){
+		return newProviderConfOutput(access_token, server_index), diags
+	}
 
 	if (username != "") && (password != "") {
 		authres, d := userPwdAuth(auth_ctx, username, password)
@@ -150,7 +165,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 }
 
 /*
- Authenticates a user using username and password
+Authenticates a user using username and password
 */
 func userPwdAuth(ctx context.Context, username string, password string) (*auth.InlineResponse2001, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -181,7 +196,7 @@ func userPwdAuth(ctx context.Context, username string, password string) (*auth.I
 }
 
 /*
- Authenticates a connected app
+Authenticates a connected app
 */
 func connectedAppAuth(ctx context.Context, client_id string, client_secret string) (*auth.InlineResponse200, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -212,14 +227,16 @@ func connectedAppAuth(ctx context.Context, client_id string, client_secret strin
 }
 
 /*
-	returns the server index depending on the control plane name
-	if the control plane is not recognized, returns -1
+returns the server index depending on the control plane name
+if the control plane is not recognized, returns -1
 */
 func cplane2serverindex(cplane string) int {
 	if cplane == "eu" {
 		return 1
 	} else if cplane == "us" {
 		return 0
+	} else if cplane == "gov" {
+		return 2
 	}
 	return -1
 }
@@ -241,6 +258,7 @@ type ProviderConfOutput struct {
 	teamgroupmappingsclient *team_group_mappings.APIClient
 	dlbclient               *dlb.APIClient
 	idpclient               *idp.APIClient
+	connectedappclient      *connected_app.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -259,6 +277,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamgroupmappingscfg := team_group_mappings.NewConfiguration()
 	dlbcfg := dlb.NewConfiguration()
 	idpcfg := idp.NewConfiguration()
+	connectedappcfg := connected_app.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -274,6 +293,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	teamgroupmappingsclient := team_group_mappings.NewAPIClient(teamgroupmappingscfg)
 	dlbclient := dlb.NewAPIClient(dlbcfg)
 	idpclient := idp.NewAPIClient(idpcfg)
+	connectedappclient := connected_app.NewAPIClient(connectedappcfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -292,5 +312,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		teamgroupmappingsclient: teamgroupmappingsclient,
 		dlbclient:               dlbclient,
 		idpclient:               idpclient,
+		connectedappclient:      connectedappclient,
 	}
 }

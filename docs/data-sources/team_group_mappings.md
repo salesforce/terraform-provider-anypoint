@@ -28,26 +28,26 @@ output "team_gmap" {
 
 ### Required
 
-- **org_id** (String) The master organization id where the team is defined.
-- **team_id** (String) The id of the team. team_id is globally unique
+- `org_id` (String) The master organization id where the team is defined.
+- `team_id` (String) The id of the team. team_id is globally unique
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **params** (Block Set) Selection parameters. Should only provide one occurrence. (see [below for nested schema](#nestedblock--params))
+- `params` (Block Set) Selection parameters. Should only provide one occurrence. (see [below for nested schema](#nestedblock--params))
 
 ### Read-Only
 
-- **teamgroupmappings** (List of Object) List of resulting groupmappings. (see [below for nested schema](#nestedatt--teamgroupmappings))
-- **total** (Number) The total number of available results
+- `id` (String) The ID of this resource.
+- `teamgroupmappings` (List of Object) List of resulting groupmappings. (see [below for nested schema](#nestedatt--teamgroupmappings))
+- `total` (Number) The total number of available results
 
 <a id="nestedblock--params"></a>
 ### Nested Schema for `params`
 
 Optional:
 
-- **limit** (Number) Maximum records to retrieve per request.
-- **offset** (Number) The number of records to omit from the response
+- `limit` (Number) Maximum records to retrieve per request.
+- `offset` (Number) The number of records to omit from the response
 
 
 <a id="nestedatt--teamgroupmappings"></a>
@@ -55,8 +55,8 @@ Optional:
 
 Read-Only:
 
-- **external_group_name** (String)
-- **membership_type** (String)
-- **provider_id** (String)
+- `external_group_name` (String)
+- `membership_type` (String)
+- `provider_id` (String)
 
 

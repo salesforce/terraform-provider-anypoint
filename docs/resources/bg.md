@@ -35,126 +35,126 @@ resource "anypoint_bg" "bg" {
 
 ### Required
 
-- **name** (String) The name of this organization.
-- **owner_id** (String) The user id of the owner of this organization.
-- **parent_organization_id** (String) The immediate parent organization id of this organization.
+- `name` (String) The name of this organization.
+- `owner_id` (String) The user id of the owner of this organization.
+- `parent_organization_id` (String) The immediate parent organization id of this organization.
 
 ### Optional
 
-- **entitlements_anggovernance_level** (Number)
-- **entitlements_anypointsecurityedgepolicies_enabled** (Boolean) Whether Anypoint security edge policies is enabled for this organization.
-- **entitlements_anypointsecuritytokenization_enabled** (Boolean) whether Anypoint securirty tokenization is enabled for this organization.
-- **entitlements_apicommunitymanager_enabled** (Boolean) Whether api community manager is enabled for this organization.
-- **entitlements_apimonitoring_schedules** (Number) The number of api monitoring schedules for this organization.
-- **entitlements_apiquery_enabled** (Boolean) Whether api queries are enabled for this organization.
-- **entitlements_apiquery_productsku** (Number) The number of api query product sku for this organization.
-- **entitlements_apiqueryc360_enabled** (Boolean) Whether api query C360 is enabled for this organization.
-- **entitlements_apis_enabled** (Boolean) whether APIs are enabled for this organization.
-- **entitlements_appviz** (Boolean) Whether the app vizualize if enabled for this organization.
-- **entitlements_armalerts** (Boolean) Whether arm alerts are enabled for this organization.
-- **entitlements_autoscaling** (Boolean) Whether autoscaling is enabled for this organization
-- **entitlements_cam_enabled** (Boolean) Whether cam is enabled for this organization.
-- **entitlements_createenvironments** (Boolean) Whether this organization can have additional environments.
-- **entitlements_createsuborgs** (Boolean) Whether this organization can create sub organizations (descendants).
-- **entitlements_crowd_environments** (Boolean)
-- **entitlements_crowd_hideapimanagerdesigner** (Boolean)
-- **entitlements_crowd_hideformerapiplatform** (Boolean)
-- **entitlements_crowdselfservicemigration_enabled** (Boolean) Whether crow self service migration is enabled for this organization.
-- **entitlements_designcenter_api** (Boolean) Whether te design center api is enabled for this organization.
-- **entitlements_designcenter_mozart** (Boolean) Whether the design center mozart is enabled for this organization.
-- **entitlements_exchange2_enabled** (Boolean) Whether exchange v2 is enabled for this organization.
-- **entitlements_externalidentity** (Boolean) Whether an external identity provider (IDP) was assigned to this organization.
-- **entitlements_gateways_assigned** (Number) The number of gateways assigned to this organization.
-- **entitlements_globaldeployment** (Boolean) Whether this organization can have global deployments.
-- **entitlements_kpidashboard_enabled** (Boolean) Whether KPI dashboard is enabled for this organization.
-- **entitlements_loadbalancer_assigned** (Number) The number of dedicated load balancers (DLB) assigned to this organization.
-- **entitlements_messaging_assigned** (Number) The number of messaging assigned to this organization.
-- **entitlements_monitoringcenter_productsku** (Number) The number of monitoring center products sku for this organization.
-- **entitlements_mqadvancedfeatures_enabled** (Boolean) Whether the Anypoint MQ advanced features are enabled for this organization.
-- **entitlements_mqmessages_addon** (Number) The number of MQ messages addons assigned to this organization.
-- **entitlements_mqmessages_base** (Number) The number of basic MQ messages assigned to this organization.
-- **entitlements_mqrequests_addon** (Number) The number of MQ requests addon assigned to this organization.
-- **entitlements_mqrequests_base** (Number) The number of MQ requests base assigned to this organization.
-- **entitlements_objectstorekeys_addon** (Number) The number of object store keys addon for this organization.
-- **entitlements_objectstorekeys_base** (Number) The number of object store keys base for this organization.
-- **entitlements_objectstorerequestunits_addon** (Number) The number of object store requests units addon for this organization.
-- **entitlements_objectstorerequestunits_base** (Number) The number of object store requests unists base for this organization.
-- **entitlements_partnersproduction_assigned** (Number) The number of partners production vcores assigned to this organization.
-- **entitlements_partnerssandbox_assigned** (Number) The number of partners sandbox vcores assigned to this organization.
-- **entitlements_pcf** (Boolean) Whether PCF is included for this organization.
-- **entitlements_runtimefabric** (Boolean) Whether Runtime Fabrics (RTF) is enabled for this organization.
-- **entitlements_runtimefabriccloud_enabled** (Boolean) Whether Runtime Fabrics (RTF) is enabled for this organization.
-- **entitlements_servicemesh_enabled** (Boolean) Whether Service Mesh is enabled for this organization.
-- **entitlements_staticips_assigned** (Number) The number of static IPs assigned to this organization.
-- **entitlements_tradingpartnersproduction_assigned** (Number) The number of traded partners production vcores assigned to this organization.
-- **entitlements_tradingpartnerssandbox_assigned** (Number) The number of traded partners sandbox vcores assigned to this organization.
-- **entitlements_vcoresdesign_assigned** (Number) The number of design vcores assigned to this organization.
-- **entitlements_vcoresproduction_assigned** (Number) The number of production vcores assigned to this organization.
-- **entitlements_vcoressandbox_assigned** (Number) The number of sandbox vcores assigned to this organization.
-- **entitlements_vpcs_assigned** (Number) The number of VPCs assigned to this organization.
-- **entitlements_vpns_assigned** (Number) The number of VPNs assigned to this organization.
-- **entitlements_workerclouds_assigned** (Number) The number of worker clouds assigned to this organization
-- **entitlements_workerloggingoverride_enabled** (Boolean) Whether the loggin override on workers is enabled for this organization.
-- **is_federated** (Boolean) Whether this organization is federated.
-- **last_updated** (String) The last time this resource has been updated locally.
-- **session_timeout** (Number) The organization's session timeout
+- `entitlements_anggovernance_level` (Number)
+- `entitlements_anypointsecurityedgepolicies_enabled` (Boolean) Whether Anypoint security edge policies is enabled for this organization.
+- `entitlements_anypointsecuritytokenization_enabled` (Boolean) whether Anypoint securirty tokenization is enabled for this organization.
+- `entitlements_apicommunitymanager_enabled` (Boolean) Whether api community manager is enabled for this organization.
+- `entitlements_apimonitoring_schedules` (Number) The number of api monitoring schedules for this organization.
+- `entitlements_apiquery_enabled` (Boolean) Whether api queries are enabled for this organization.
+- `entitlements_apiquery_productsku` (Number) The number of api query product sku for this organization.
+- `entitlements_apiqueryc360_enabled` (Boolean) Whether api query C360 is enabled for this organization.
+- `entitlements_apis_enabled` (Boolean) whether APIs are enabled for this organization.
+- `entitlements_appviz` (Boolean) Whether the app vizualize if enabled for this organization.
+- `entitlements_armalerts` (Boolean) Whether arm alerts are enabled for this organization.
+- `entitlements_autoscaling` (Boolean) Whether autoscaling is enabled for this organization
+- `entitlements_cam_enabled` (Boolean) Whether cam is enabled for this organization.
+- `entitlements_createenvironments` (Boolean) Whether this organization can have additional environments.
+- `entitlements_createsuborgs` (Boolean) Whether this organization can create sub organizations (descendants).
+- `entitlements_crowd_environments` (Boolean)
+- `entitlements_crowd_hideapimanagerdesigner` (Boolean)
+- `entitlements_crowd_hideformerapiplatform` (Boolean)
+- `entitlements_crowdselfservicemigration_enabled` (Boolean) Whether crow self service migration is enabled for this organization.
+- `entitlements_designcenter_api` (Boolean) Whether te design center api is enabled for this organization.
+- `entitlements_designcenter_mozart` (Boolean) Whether the design center mozart is enabled for this organization.
+- `entitlements_exchange2_enabled` (Boolean) Whether exchange v2 is enabled for this organization.
+- `entitlements_externalidentity` (Boolean) Whether an external identity provider (IDP) was assigned to this organization.
+- `entitlements_gateways_assigned` (Number) The number of gateways assigned to this organization.
+- `entitlements_globaldeployment` (Boolean) Whether this organization can have global deployments.
+- `entitlements_kpidashboard_enabled` (Boolean) Whether KPI dashboard is enabled for this organization.
+- `entitlements_loadbalancer_assigned` (Number) The number of dedicated load balancers (DLB) assigned to this organization.
+- `entitlements_messaging_assigned` (Number) The number of messaging assigned to this organization.
+- `entitlements_monitoringcenter_productsku` (Number) The number of monitoring center products sku for this organization.
+- `entitlements_mqadvancedfeatures_enabled` (Boolean) Whether the Anypoint MQ advanced features are enabled for this organization.
+- `entitlements_mqmessages_addon` (Number) The number of MQ messages addons assigned to this organization.
+- `entitlements_mqmessages_base` (Number) The number of basic MQ messages assigned to this organization.
+- `entitlements_mqrequests_addon` (Number) The number of MQ requests addon assigned to this organization.
+- `entitlements_mqrequests_base` (Number) The number of MQ requests base assigned to this organization.
+- `entitlements_objectstorekeys_addon` (Number) The number of object store keys addon for this organization.
+- `entitlements_objectstorekeys_base` (Number) The number of object store keys base for this organization.
+- `entitlements_objectstorerequestunits_addon` (Number) The number of object store requests units addon for this organization.
+- `entitlements_objectstorerequestunits_base` (Number) The number of object store requests unists base for this organization.
+- `entitlements_partnersproduction_assigned` (Number) The number of partners production vcores assigned to this organization.
+- `entitlements_partnerssandbox_assigned` (Number) The number of partners sandbox vcores assigned to this organization.
+- `entitlements_pcf` (Boolean) Whether PCF is included for this organization.
+- `entitlements_runtimefabric` (Boolean) Whether Runtime Fabrics (RTF) is enabled for this organization.
+- `entitlements_runtimefabriccloud_enabled` (Boolean) Whether Runtime Fabrics (RTF) is enabled for this organization.
+- `entitlements_servicemesh_enabled` (Boolean) Whether Service Mesh is enabled for this organization.
+- `entitlements_staticips_assigned` (Number) The number of static IPs assigned to this organization.
+- `entitlements_tradingpartnersproduction_assigned` (Number) The number of traded partners production vcores assigned to this organization.
+- `entitlements_tradingpartnerssandbox_assigned` (Number) The number of traded partners sandbox vcores assigned to this organization.
+- `entitlements_vcoresdesign_assigned` (Number) The number of design vcores assigned to this organization.
+- `entitlements_vcoresproduction_assigned` (Number) The number of production vcores assigned to this organization.
+- `entitlements_vcoressandbox_assigned` (Number) The number of sandbox vcores assigned to this organization.
+- `entitlements_vpcs_assigned` (Number) The number of VPCs assigned to this organization.
+- `entitlements_vpns_assigned` (Number) The number of VPNs assigned to this organization.
+- `entitlements_workerclouds_assigned` (Number) The number of worker clouds assigned to this organization
+- `entitlements_workerloggingoverride_enabled` (Boolean) Whether the loggin override on workers is enabled for this organization.
+- `is_federated` (Boolean) Whether this organization is federated.
+- `last_updated` (String) The last time this resource has been updated locally.
+- `session_timeout` (Number) The organization's session timeout
 
 ### Read-Only
 
-- **client_id** (String) The organization client id.
-- **created_at** (String) The time when this organization was created.
-- **domain** (String) The organization's domain
-- **entitlements_hybridautodiscoverproperties** (Boolean) Whether this organization has hybrid auto-discovery properties enabled
-- **entitlements_hybridenabled** (Boolean) Whether this organization has hybrid enabled.
-- **entitlements_hybridinsight** (Boolean) Whether this organization has hybrid insight.
-- **entitlements_loadbalancer_reassigned** (Number) The number of dedicated load balancers (DLB) reassigned to this organization.
-- **entitlements_staticips_reassigned** (Number) The number of static IPs reassigned to this organization.
-- **entitlements_vcoresdesign_reassigned** (Number) The number of design vcores reassigned to this organization.
-- **entitlements_vcoresproduction_reassigned** (Number) The number of production vcores reassigned to this organization.
-- **entitlements_vcoressandbox_reassigned** (Number) The number of sandbox vcores reassigned to this organization.
-- **entitlements_vpcs_reassigned** (Number) The number of VPCs reassigned to this organization.
-- **entitlements_vpns_reassigned** (Number) The number of VPNs reassigned to this organization.
-- **entitlements_workerclouds_reassigned** (Number) The number of worker clouds reassigned to this organization
-- **environments** (List of Object) The organization's list of environments (see [below for nested schema](#nestedatt--environments))
-- **id** (String) This organization's unique id generated by the anypoint plaform
-- **idprovider_id** (String) The identity provider if of this organization
-- **is_automatic_admin_promotion_exempt** (Boolean) Whether the admin promotion exemption is enabled on this organization
-- **is_master** (Boolean) Whether this organization is the master org.
-- **mfa_required** (String) Whether MFA is enforced in this organization
-- **owner_created_at** (String) the organization owner creation date
-- **owner_deleted** (Boolean) Whether the organization owner account is deleted.
-- **owner_email** (String, Sensitive) The organization owner's email.
-- **owner_enabled** (Boolean) Whether the organization owner account is enabled.
-- **owner_firstname** (String, Sensitive) The organization owner's firstname
-- **owner_idprovider_id** (String) The organization owner identity provider id.
-- **owner_lastlogin** (String) The last time the organization owner logged in.
-- **owner_lastname** (String, Sensitive) The organization owner's lastname.
-- **owner_mfaverification_excluded** (Boolean) Whether the organization owner MFA verification is excluded.
-- **owner_mfaverifiers_configured** (String) The organization owner MFA verification configuration
-- **owner_organization_id** (String) The organization owner's organization id.
-- **owner_phonenumber** (String, Sensitive) The organization owner's phone number.
-- **owner_type** (String) The organization owner account type.
-- **owner_updated_at** (String) The organization owner update date.
-- **owner_username** (String) The organization owner username.
-- **parent_organization_ids** (List of String) Array of ancestor organizations.
-- **properties** (String) The organiztion's general properties.
-- **sub_organization_ids** (List of String) Array of descendant organizations.
-- **subscription_category** (String) The anypoint platform subscription category
-- **subscription_expiration** (String) The anypoint platform subscription expiration date.
-- **subscription_type** (String) The anypoint platform subscription type.
-- **tenant_organization_ids** (List of String) Array of tenant organizations
-- **updated_at** (String) The time when this organization was updated.
+- `client_id` (String) The organization client id.
+- `created_at` (String) The time when this organization was created.
+- `domain` (String) The organization's domain
+- `entitlements_hybridautodiscoverproperties` (Boolean) Whether this organization has hybrid auto-discovery properties enabled
+- `entitlements_hybridenabled` (Boolean) Whether this organization has hybrid enabled.
+- `entitlements_hybridinsight` (Boolean) Whether this organization has hybrid insight.
+- `entitlements_loadbalancer_reassigned` (Number) The number of dedicated load balancers (DLB) reassigned to this organization.
+- `entitlements_staticips_reassigned` (Number) The number of static IPs reassigned to this organization.
+- `entitlements_vcoresdesign_reassigned` (Number) The number of design vcores reassigned to this organization.
+- `entitlements_vcoresproduction_reassigned` (Number) The number of production vcores reassigned to this organization.
+- `entitlements_vcoressandbox_reassigned` (Number) The number of sandbox vcores reassigned to this organization.
+- `entitlements_vpcs_reassigned` (Number) The number of VPCs reassigned to this organization.
+- `entitlements_vpns_reassigned` (Number) The number of VPNs reassigned to this organization.
+- `entitlements_workerclouds_reassigned` (Number) The number of worker clouds reassigned to this organization
+- `environments` (List of Object) The organization's list of environments (see [below for nested schema](#nestedatt--environments))
+- `id` (String) This organization's unique id generated by the anypoint plaform
+- `idprovider_id` (String) The identity provider if of this organization
+- `is_automatic_admin_promotion_exempt` (Boolean) Whether the admin promotion exemption is enabled on this organization
+- `is_master` (Boolean) Whether this organization is the master org.
+- `mfa_required` (String) Whether MFA is enforced in this organization
+- `owner_created_at` (String) the organization owner creation date
+- `owner_deleted` (Boolean) Whether the organization owner account is deleted.
+- `owner_email` (String, Sensitive) The organization owner's email.
+- `owner_enabled` (Boolean) Whether the organization owner account is enabled.
+- `owner_firstname` (String, Sensitive) The organization owner's firstname
+- `owner_idprovider_id` (String) The organization owner identity provider id.
+- `owner_lastlogin` (String) The last time the organization owner logged in.
+- `owner_lastname` (String, Sensitive) The organization owner's lastname.
+- `owner_mfaverification_excluded` (Boolean) Whether the organization owner MFA verification is excluded.
+- `owner_mfaverifiers_configured` (String) The organization owner MFA verification configuration
+- `owner_organization_id` (String) The organization owner's organization id.
+- `owner_phonenumber` (String, Sensitive) The organization owner's phone number.
+- `owner_type` (String) The organization owner account type.
+- `owner_updated_at` (String) The organization owner update date.
+- `owner_username` (String) The organization owner username.
+- `parent_organization_ids` (List of String) Array of ancestor organizations.
+- `properties` (String) The organiztion's general properties.
+- `sub_organization_ids` (List of String) Array of descendant organizations.
+- `subscription_category` (String) The anypoint platform subscription category
+- `subscription_expiration` (String) The anypoint platform subscription expiration date.
+- `subscription_type` (String) The anypoint platform subscription type.
+- `tenant_organization_ids` (List of String) Array of tenant organizations
+- `updated_at` (String) The time when this organization was updated.
 
 <a id="nestedatt--environments"></a>
 ### Nested Schema for `environments`
 
 Read-Only:
 
-- **client_id** (String)
-- **id** (String)
-- **is_production** (Boolean)
-- **name** (String)
-- **organization_id** (String)
-- **type** (String)
+- `client_id` (String)
+- `id` (String)
+- `is_production` (Boolean)
+- `name` (String)
+- `organization_id` (String)
+- `type` (String)
 
 
