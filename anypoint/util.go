@@ -111,3 +111,23 @@ func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceD
 		return old == new
 	}
 }
+
+// Compares string lists
+// returns true if they are the same, false otherwise
+func equalStrList(old, new interface{}) bool {
+	old_list := old.([]interface{})
+	new_list := new.([]interface{})
+
+	if len(new_list) != len(old_list) {
+		return false
+	}
+
+	SortStrListAl(old_list)
+	SortStrListAl(new_list)
+	for i, item := range old_list {
+		if new_list[i].(string) != item.(string) {
+			return false
+		}
+	}
+	return true
+}

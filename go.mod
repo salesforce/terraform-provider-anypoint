@@ -12,6 +12,7 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.3.0
+	github.com/mulesoft-consulting/anypoint-client-go/connected_app v0.0.3
 	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.4.0
 	github.com/mulesoft-consulting/anypoint-client-go/env v0.2.0
 	github.com/mulesoft-consulting/anypoint-client-go/idp v0.2.0

@@ -36,17 +36,12 @@ func resourceENV() *schema.Resource {
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The organization id where the environment is defined.",
-			},
-			"organization_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
+				ForceNew:    true,
 				Description: "The organization id where the environment is defined.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The name of the environment",
 			},
 			"is_production": {
@@ -57,15 +52,14 @@ func resourceENV() *schema.Resource {
 			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				Description:      "The type of the environment: sandbox or production",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"sandbox", "production"}, true)),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"sandbox", "design", "production"}, true)),
 			},
 			"client_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "")
-				},
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The environment client id",
 			},
 		},
 	}
@@ -234,6 +228,7 @@ func newENVPutBody(d *schema.ResourceData) *env.EnvCore {
 	body := env.NewEnvCoreWithDefaults()
 
 	body.SetName(d.Get("name").(string))
+
 	return body
 }
 

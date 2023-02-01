@@ -3,6 +3,7 @@ package anypoint
 import (
 	"context"
 	"io/ioutil"
+	"sort"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -111,6 +112,9 @@ func resourceVPC() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Inbound firewall rules for all CloudHub workers in this vpc. The list is allow only with an implicit deny all if no rules match",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalsVPCFirewallRules(d.GetChange("firewall_rules"))
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
@@ -138,7 +142,7 @@ func resourceVPC() *schema.Resource {
 			},
 			"vpc_routes": {
 				Type:        schema.TypeList,
-				Optional:    true,
+				Computed:    true,
 				Description: "The network routes of this vpc.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -352,14 +356,6 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 	}
 	body.SetFirewallRules(frules)
 
-	//preparing vpc routes
-	oroutes := d.Get("vpc_routes").([]interface{})
-	vpcroutes := make([]vpc.VpcRoute, len(orules))
-	for index, route := range oroutes {
-		vpcroutes[index] = *vpc.NewVpcRoute(route.(map[string]interface{})["cidr"].(string), route.(map[string]interface{})["next_hop"].(string))
-	}
-	body.SetVpcRoutes(vpcroutes)
-
 	return body
 }
 
@@ -369,4 +365,94 @@ func newVPCBody(d *schema.ResourceData) *vpc.VpcCore {
 func getVPCAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, vpc.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, vpc.ContextServerIndex, pco.server_index)
+}
+
+// Compares 2 firewall rules lists
+// returns true if they are the same, false otherwise
+func equalsVPCFirewallRules(old, new interface{}) bool {
+	old_list := old.([]interface{})
+	new_list := new.([]interface{})
+
+	if len(new_list) != len(old_list) {
+		return false
+	}
+
+	if len(new_list) == 0 {
+		return true
+	}
+
+	sortFirewallRules(old_list)
+	sortFirewallRules(new_list)
+
+	for i, val := range old_list {
+		o := val.(map[string]interface{})
+		n := new_list[i].(map[string]interface{})
+
+		old_cidr_block := o["cidr_block"].(string)
+		new_cidr_block := n["cidr_block"].(string)
+
+		if old_cidr_block != new_cidr_block {
+			return false
+		}
+
+		old_from_port := o["from_port"]
+		new_from_port := n["from_port"]
+
+		if old_from_port != new_from_port {
+			return false
+		}
+
+		old_protocol := o["protocol"]
+		new_protocol := n["protocol"]
+
+		if old_protocol != new_protocol {
+			return false
+		}
+
+		old_to_port := o["to_port"]
+		new_to_port := n["to_port"]
+
+		if old_to_port != new_to_port {
+			return false
+		}
+	}
+
+	return true
+}
+
+func sortFirewallRules(list []interface{}) {
+	sort.SliceStable(list, func(i, j int) bool {
+		i_elem := list[i].(map[string]interface{})
+		j_elem := list[j].(map[string]interface{})
+
+		i_cidr_block := i_elem["cidr_block"].(string)
+		j_cidr_block := j_elem["cidr_block"].(string)
+
+		if i_cidr_block != j_cidr_block {
+			return i_cidr_block < j_cidr_block
+		}
+
+		i_from_port := i_elem["from_port"].(int)
+		j_from_port := j_elem["from_port"].(int)
+
+		if i_from_port != j_from_port {
+			return i_from_port < j_from_port
+		}
+
+		i_protocol := i_elem["protocol"].(string)
+		j_protocol := j_elem["protocol"].(string)
+
+		if i_protocol != j_protocol {
+			return i_protocol < j_protocol
+		}
+
+		i_to_port := i_elem["to_port"].(int)
+		j_to_port := j_elem["to_port"].(int)
+
+		if i_to_port != j_to_port {
+			return i_to_port < j_to_port
+		}
+
+		return true
+	})
 }
