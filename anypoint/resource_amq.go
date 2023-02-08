@@ -92,15 +92,16 @@ func resourceAMQ() *schema.Resource {
 				Description: "To encrypt the queue.",
 			},
 			"dead_letter_queue_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The queue Id of the dead letter queue to bind to this queue. A FIFO DLQ only works with FIFO queues.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"max_deliveries"},
+				Description:  "The queue Id of the dead letter queue to bind to this queue. A FIFO DLQ only works with FIFO queues.",
 			},
 			"max_deliveries": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				//RequiredWith: []string{"dead_letter_queue_id"},
-				Description: "The maximum number of attempts after which the message will be routed to DLQ. This field can only be used when dead_letter_queue_id attribute is present.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"dead_letter_queue_id"},
+				Description:  "The maximum number of attempts after which the message will be routed to DLQ. This field can only be used when dead_letter_queue_id attribute is present.",
 			},
 			"fifo": {
 				Type:        schema.TypeBool,
