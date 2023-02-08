@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	amq "github.com/mulesoft-consulting/anypoint-client-go/amq"
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
 	connected_app "github.com/mulesoft-consulting/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-consulting/anypoint-client-go/dlb"
@@ -96,6 +97,7 @@ func Provider() *schema.Provider {
 			"anypoint_idp_oidc":            resourceOIDC(),
 			"anypoint_idp_saml":            resourceSAML(),
 			"anypoint_connected_app":       resourceConnectedApp(),
+			"anypoint_amq":                 resourceAMQ(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
@@ -120,6 +122,7 @@ func Provider() *schema.Provider {
 			"anypoint_idp":                 dataSourceIDP(),
 			"anypoint_idps":                dataSourceIDPs(),
 			"anypoint_connected_app":       dataSourceConnectedApp(),
+			"anypoint_amq":                 dataSourceAMQ(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -140,7 +143,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	server_index := cplane2serverindex(cplane)
 	auth_ctx := context.WithValue(ctx, auth.ContextServerIndex, server_index)
 
-	if (access_token != ""){
+	if access_token != "" {
 		return newProviderConfOutput(access_token, server_index), diags
 	}
 
@@ -259,6 +262,7 @@ type ProviderConfOutput struct {
 	dlbclient               *dlb.APIClient
 	idpclient               *idp.APIClient
 	connectedappclient      *connected_app.APIClient
+	amqclient               *amq.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -278,6 +282,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	dlbcfg := dlb.NewConfiguration()
 	idpcfg := idp.NewConfiguration()
 	connectedappcfg := connected_app.NewConfiguration()
+	amqcfg := amq.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -294,6 +299,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	dlbclient := dlb.NewAPIClient(dlbcfg)
 	idpclient := idp.NewAPIClient(idpcfg)
 	connectedappclient := connected_app.NewAPIClient(connectedappcfg)
+	amqclient := amq.NewAPIClient(amqcfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -313,5 +319,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		dlbclient:               dlbclient,
 		idpclient:               idpclient,
 		connectedappclient:      connectedappclient,
+		amqclient:               amqclient,
 	}
 }
