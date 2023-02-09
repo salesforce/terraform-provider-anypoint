@@ -233,12 +233,12 @@ func flattenAMQEData(queue *amq.Queue) map[string]interface{} {
 }
 
 // flattens and maps a given Anypoint MQ Exchange object
-func flattenAMEData(queue *ame.Exchange) map[string]interface{} {
-	if queue != nil {
+func flattenAMEData(exchange *ame.Exchange) map[string]interface{} {
+	if exchange != nil {
 		item := make(map[string]interface{})
-		item["exchange_id"] = queue.GetExchangeId()
-		item["type"] = queue.GetType()
-		item["encrypted"] = queue.GetEncrypted()
+		item["exchange_id"] = exchange.GetExchangeId()
+		item["type"] = exchange.GetType()
+		item["encrypted"] = exchange.GetEncrypted()
 		return item
 	}
 

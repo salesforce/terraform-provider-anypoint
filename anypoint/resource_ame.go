@@ -115,7 +115,7 @@ func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{
 
 	d.SetId(ComposeResourceId([]string{orgid, envid, regionid, exchangeid}))
 
-	return resourceAMQRead(ctx, d, m)
+	return resourceAMERead(ctx, d, m)
 }
 
 func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -194,7 +194,7 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
-	return resourceAMQRead(ctx, d, m)
+	return resourceAMERead(ctx, d, m)
 }
 
 func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
