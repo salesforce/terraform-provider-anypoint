@@ -18,7 +18,7 @@ func resourceAMQ() *schema.Resource {
 		UpdateContext: resourceAMQUpdate,
 		DeleteContext: resourceAMQDelete,
 		Description: `
-		Creates an ` + "`" + `Anypoint MQ` + "`" + ` for your ` + "`" + `environment` + "`" + `.
+		Creates an ` + "`" + `Anypoint MQ` + "`" + ` in your ` + "`" + `region` + "`" + `.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -140,7 +140,7 @@ func resourceAMQCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create amq ",
+			Summary:  "Unable to create AMQ ",
 			Detail:   details,
 		})
 		return diags
@@ -171,7 +171,7 @@ func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to get amq " + d.Id(),
+			Summary:  "Unable to get AMQ " + d.Id(),
 			Detail:   details,
 		})
 		return diags
@@ -184,11 +184,16 @@ func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if err := setAMQAttributesToResourceData(d, queue); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set amq " + d.Id(),
+			Summary:  "Unable to set AMQ " + d.Id(),
 			Detail:   err.Error(),
 		})
 		return diags
 	}
+	// setting resource id components for import purposes
+	d.Set("org_id", orgid)
+	d.Set("env_id", envid)
+	d.Set("region_id", regionid)
+	d.Set("queue_id", queueid)
 
 	return diags
 }
@@ -214,7 +219,7 @@ func resourceAMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to patch amq " + d.Id(),
+				Summary:  "Unable to patch AMQ " + d.Id(),
 				Detail:   details,
 			})
 			return diags
@@ -244,7 +249,7 @@ func resourceAMQDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete amq " + d.Id(),
+			Summary:  "Unable to delete AMQ " + d.Id(),
 			Detail:   details,
 		})
 		return diags

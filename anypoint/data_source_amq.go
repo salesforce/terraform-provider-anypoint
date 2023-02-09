@@ -50,20 +50,6 @@ func dataSourceAMQ() *schema.Resource {
 				Description: "The search parameters. Should only provide one occurrence of the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"inclusion": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "all",
-							Description:      "Defines what properties to fetch",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"all", "minimal"}, false)),
-						},
-						"destination_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "all",
-							Description:      "Defines what type to fetch",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"all", "queue", "exchange"}, false)),
-						},
 						"offset": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -204,6 +190,10 @@ func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{
 // Parses search parameters
 func parseAMQSearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.Set) (amq.DefaultApiApiGetAMQListRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	req = req.Inclusion("ALL")
+	req = req.DestinationType("queue")
+
 	if params.Len() == 0 {
 		return req, diags
 	}
@@ -211,15 +201,6 @@ func parseAMQSearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.S
 	opts := params.List()[0]
 
 	for k, v := range opts.(map[string]interface{}) {
-
-		if k == "inclusion" {
-			req = req.Inclusion(v.(string))
-			continue
-		}
-		if k == "destination_type" {
-			req = req.DestinationType(v.(string))
-			continue
-		}
 		if k == "offset" {
 			req = req.Offset(v.(int32))
 			continue
