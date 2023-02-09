@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	ame "github.com/mulesoft-consulting/anypoint-client-go/ame"
 	amq "github.com/mulesoft-consulting/anypoint-client-go/amq"
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
 	connected_app "github.com/mulesoft-consulting/anypoint-client-go/connected_app"
@@ -98,6 +99,7 @@ func Provider() *schema.Provider {
 			"anypoint_idp_saml":            resourceSAML(),
 			"anypoint_connected_app":       resourceConnectedApp(),
 			"anypoint_amq":                 resourceAMQ(),
+			"anypoint_ame":                 resourceAME(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
@@ -123,6 +125,7 @@ func Provider() *schema.Provider {
 			"anypoint_idps":                dataSourceIDPs(),
 			"anypoint_connected_app":       dataSourceConnectedApp(),
 			"anypoint_amq":                 dataSourceAMQ(),
+			"anypoint_ame":                 dataSourceAME(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
@@ -263,6 +266,7 @@ type ProviderConfOutput struct {
 	idpclient               *idp.APIClient
 	connectedappclient      *connected_app.APIClient
 	amqclient               *amq.APIClient
+	ameclient               *ame.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -283,6 +287,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	idpcfg := idp.NewConfiguration()
 	connectedappcfg := connected_app.NewConfiguration()
 	amqcfg := amq.NewConfiguration()
+	amecfg := ame.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -300,6 +305,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	idpclient := idp.NewAPIClient(idpcfg)
 	connectedappclient := connected_app.NewAPIClient(connectedappcfg)
 	amqclient := amq.NewAPIClient(amqcfg)
+	ameclient := ame.NewAPIClient(amecfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -320,5 +326,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		idpclient:               idpclient,
 		connectedappclient:      connectedappclient,
 		amqclient:               amqclient,
+		ameclient:               ameclient,
 	}
 }
