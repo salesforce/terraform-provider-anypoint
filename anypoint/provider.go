@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	ame "github.com/mulesoft-consulting/anypoint-client-go/ame"
+	"github.com/mulesoft-consulting/anypoint-client-go/ame_binding"
 	amq "github.com/mulesoft-consulting/anypoint-client-go/amq"
 	auth "github.com/mulesoft-consulting/anypoint-client-go/authorization"
 	connected_app "github.com/mulesoft-consulting/anypoint-client-go/connected_app"
@@ -100,6 +101,7 @@ func Provider() *schema.Provider {
 			"anypoint_connected_app":       resourceConnectedApp(),
 			"anypoint_amq":                 resourceAMQ(),
 			"anypoint_ame":                 resourceAME(),
+			"anypoint_ame_binding":         resourceAMEBinding(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                dataSourceVPCs(),
@@ -267,6 +269,7 @@ type ProviderConfOutput struct {
 	connectedappclient      *connected_app.APIClient
 	amqclient               *amq.APIClient
 	ameclient               *ame.APIClient
+	amebindingclient        *ame_binding.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -288,6 +291,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	connectedappcfg := connected_app.NewConfiguration()
 	amqcfg := amq.NewConfiguration()
 	amecfg := ame.NewConfiguration()
+	amebindingcfg := ame_binding.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -306,6 +310,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	connectedappclient := connected_app.NewAPIClient(connectedappcfg)
 	amqclient := amq.NewAPIClient(amqcfg)
 	ameclient := ame.NewAPIClient(amecfg)
+	amebindingclient := ame_binding.NewAPIClient(amebindingcfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -327,5 +332,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		connectedappclient:      connectedappclient,
 		amqclient:               amqclient,
 		ameclient:               ameclient,
+		amebindingclient:        amebindingclient,
 	}
 }
