@@ -8,7 +8,7 @@ This project was initiated by Mulesoft's consultants and architects from the pro
 
 This provider uses the anypoint platform APIs to perform actions for each one of the implemented resources.
 
-![alt text](resources/imgs/provider-arch.png)
+![alt text](drive/imgs/provider-arch.png)
 
 We use the **anypoint client library** as an abstraction layer to perform actions on the platform.
 
@@ -16,7 +16,7 @@ For better maintainability and in order to speed up the development process, the
 
 The following image describes the delivery cycle:
 
-![alt text](resources/imgs/provider-deliver.png)
+![alt text](drive/imgs/provider-deliver.png)
 
 The cycle is composed of 3 steps:
 
@@ -24,7 +24,7 @@ The cycle is composed of 3 steps:
   2. Create the OAS3 specification. The specification should at least contain GET, POST and DELETE operations.
   The specification should be contributed [here](https://github.com/mulesoft-consulting/anypoint-automation-client-generator). Using the OAS spec, a go module will be generated and pushed [here](https://github.com/mulesoft-consulting/anypoint-client-go).
   
-  ![alt text](resources/imgs/provider-cycle.png)
+  ![alt text](drive/imgs/provider-cycle.png)
   3. Implement the resource and related data sources in the provider using the generated library.
 
 ## How to use

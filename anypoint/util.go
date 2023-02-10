@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const COMPOSITE_ID_SEPARATOR = "_"
+const COMPOSITE_ID_SEPARATOR = "/"
 
 func IsString(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf("")
