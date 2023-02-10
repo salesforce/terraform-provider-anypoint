@@ -4,13 +4,14 @@ go 1.15
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect
 	github.com/iancoleman/strcase v0.2.0
-	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/mulesoft-consulting/anypoint-client-go/ame v1.0.0
+	github.com/mulesoft-consulting/anypoint-client-go/ame_binding v1.0.0
+	github.com/mulesoft-consulting/anypoint-client-go/amq v1.0.0
 	github.com/mulesoft-consulting/anypoint-client-go/authorization v0.3.0
 	github.com/mulesoft-consulting/anypoint-client-go/connected_app v0.0.3
 	github.com/mulesoft-consulting/anypoint-client-go/dlb v0.4.0

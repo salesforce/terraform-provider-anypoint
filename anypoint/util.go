@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const COMPOSITE_ID_SEPARATOR = "_"
+
 func IsString(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf("")
 }
@@ -130,4 +132,14 @@ func equalStrList(old, new interface{}) bool {
 		}
 	}
 	return true
+}
+
+// composes an id by concatenating items of array into one single string
+func ComposeResourceId(elem []string) string {
+	return strings.Join(elem, COMPOSITE_ID_SEPARATOR)
+}
+
+// decomposes a composite resource id
+func DecomposeResourceId(id string) []string {
+	return strings.Split(id, COMPOSITE_ID_SEPARATOR)
 }
