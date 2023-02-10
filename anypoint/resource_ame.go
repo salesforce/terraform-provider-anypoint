@@ -122,7 +122,7 @@ func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{})
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, exchangeid := DecomposeAMEId(d)
+	orgid, envid, regionid, exchangeid := decomposeAMEId(d)
 	authctx := getAMEAuthCtx(ctx, &pco)
 
 	//request resource
@@ -168,12 +168,12 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, exchangeid := DecomposeAMEId(d)
+	orgid, envid, regionid, exchangeid := decomposeAMEId(d)
 	authctx := getAMEAuthCtx(ctx, &pco)
 
 	if d.HasChanges(getAMEPatchWatchAttributes()...) {
 		body := newAMECreateBody(d)
-		//request user creation
+		//request resource creation
 		_, httpr, err := pco.ameclient.DefaultApi.UpdateAME(authctx, orgid, envid, regionid, exchangeid).ExchangeBody(*body).Execute()
 		if err != nil {
 			var details string
@@ -201,7 +201,7 @@ func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, exchangeid := DecomposeAMEId(d)
+	orgid, envid, regionid, exchangeid := decomposeAMEId(d)
 	authctx := getAMEAuthCtx(ctx, &pco)
 
 	httpr, err := pco.ameclient.DefaultApi.DeleteAME(authctx, orgid, envid, regionid, exchangeid).Execute()
@@ -239,7 +239,7 @@ func newAMECreateBody(d *schema.ResourceData) *ame.ExchangeBody {
 	return body
 }
 
-func DecomposeAMEId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeAMEId(d *schema.ResourceData) (string, string, string, string) {
 	s := DecomposeResourceId(d.Id())
 	return s[0], s[1], s[2], s[3]
 }

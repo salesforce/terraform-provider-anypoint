@@ -49,6 +49,7 @@ func dataSourceAME() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "The search parameters. Should only provide one occurrence of the block.",
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"offset": {

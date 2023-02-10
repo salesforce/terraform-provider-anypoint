@@ -128,7 +128,7 @@ func resourceAMQCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	authctx := getAMQAuthCtx(ctx, &pco)
 	body := newAMQCreateBody(d)
 
-	//request user creation
+	//request resource creation
 	_, httpr, err := pco.amqclient.DefaultApi.CreateAMQ(authctx, orgid, envid, regionid, queueid).QueueBody(*body).Execute()
 	if err != nil {
 		var details string
@@ -156,7 +156,7 @@ func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, queueid := DecomposeAMQId(d)
+	orgid, envid, regionid, queueid := decomposeAMQId(d)
 	authctx := getAMQAuthCtx(ctx, &pco)
 
 	//request resource
@@ -202,7 +202,7 @@ func resourceAMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, queueid := DecomposeAMQId(d)
+	orgid, envid, regionid, queueid := decomposeAMQId(d)
 	authctx := getAMQAuthCtx(ctx, &pco)
 
 	if d.HasChanges(getAMQPatchWatchAttributes()...) {
@@ -235,7 +235,7 @@ func resourceAMQDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, regionid, queueid := DecomposeAMQId(d)
+	orgid, envid, regionid, queueid := decomposeAMQId(d)
 	authctx := getAMQAuthCtx(ctx, &pco)
 
 	httpr, err := pco.amqclient.DefaultApi.DeleteAMQ(authctx, orgid, envid, regionid, queueid).Execute()
@@ -302,7 +302,7 @@ func newAMQCreateBody(d *schema.ResourceData) *amq.QueueBody {
 	return body
 }
 
-func DecomposeAMQId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeAMQId(d *schema.ResourceData) (string, string, string, string) {
 	s := DecomposeResourceId(d.Id())
 	return s[0], s[1], s[2], s[3]
 }

@@ -47,6 +47,7 @@ func dataSourceAMQ() *schema.Resource {
 			"params": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				MaxItems:    1,
 				Description: "The search parameters. Should only provide one occurrence of the block.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
