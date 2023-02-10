@@ -197,8 +197,8 @@ func dataSourceUserRolegroupsRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 /*
- Parses the users search options in order to check if the required search parameters are set correctly.
- Appends the parameters to the given request
+Parses the users search options in order to check if the required search parameters are set correctly.
+Appends the parameters to the given request
 */
 func parseUserRolegroupsSearchOpts(req user_rolegroups.DefaultApiApiOrganizationsOrgIdUsersUserIdRolegroupsGetRequest, params *schema.Set) (user_rolegroups.DefaultApiApiOrganizationsOrgIdUsersUserIdRolegroupsGetRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -223,7 +223,7 @@ func parseUserRolegroupsSearchOpts(req user_rolegroups.DefaultApiApiOrganization
 }
 
 /*
- Transforms a set of users to the dataSourceUsers schema
+Transforms a set of users to the dataSourceUsers schema
 */
 func flattenUserRolegroupsData(rolegroups *[]user_rolegroups.Rolegroup) []interface{} {
 	if rolegroups == nil || len(*rolegroups) <= 0 {

@@ -241,8 +241,8 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 /*
- Parses the users search options in order to check if the required search parameters are set correctly.
- Appends the parameters to the given request
+Parses the users search options in order to check if the required search parameters are set correctly.
+Appends the parameters to the given request
 */
 func parseUsersSearchOpts(req user.DefaultApiApiOrganizationsOrgIdUsersGetRequest, params *schema.Set) (user.DefaultApiApiOrganizationsOrgIdUsersGetRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -271,7 +271,7 @@ func parseUsersSearchOpts(req user.DefaultApiApiOrganizationsOrgIdUsersGetReques
 }
 
 /*
- Transforms a set of users to the dataSourceUsers schema
+Transforms a set of users to the dataSourceUsers schema
 */
 func flattenUsersData(users *[]user.User) []interface{} {
 	if users == nil || len(*users) <= 0 {
