@@ -487,6 +487,10 @@ func resourceAMEBindingRulesDelete(ctx context.Context, d *schema.ResourceData, 
 func newAMEBindingRuleBody(d *schema.ResourceData) *ame_binding.AMEBindingRuleBody {
 	rules := extractAMEBindingRules(d)
 
+	if rules == nil {
+		return nil
+	}
+
 	body := ame_binding.NewAMEBindingRuleBody()
 	list := make([]map[string]interface{}, len(rules))
 
