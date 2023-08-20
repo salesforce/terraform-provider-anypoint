@@ -326,7 +326,7 @@ func sortMapListRoles(roles []interface{}) {
 		sortAttrD := "envId"
 		i_context := i_elem[sortAttrB].(map[string]interface{})
 		j_context := j_elem[sortAttrB].(map[string]interface{})
-		if i_context[sortAttrC].(string) != j_context[sortAttrC].(string) {
+		if  i_context[sortAttrC] != nil && j_context[sortAttrC] != nil && i_context[sortAttrC].(string) != j_context[sortAttrC].(string) {
 			return i_context[sortAttrC].(string) < j_context[sortAttrC].(string)
 		}
 		if i_context[sortAttrD] != nil && j_context[sortAttrD] != nil && i_context[sortAttrD].(string) != j_context[sortAttrD].(string) {
