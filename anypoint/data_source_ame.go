@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/mulesoft-consulting/anypoint-client-go/ame"
-	amq "github.com/mulesoft-consulting/anypoint-client-go/amq"
+	"github.com/mulesoft-anypoint/anypoint-client-go/ame"
+	amq "github.com/mulesoft-anypoint/anypoint-client-go/amq"
 )
 
 func dataSourceAME() *schema.Resource {

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	amq "github.com/mulesoft-consulting/anypoint-client-go/amq"
+	amq "github.com/mulesoft-anypoint/anypoint-client-go/amq"
 )
 
 func resourceAMQ() *schema.Resource {

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/iancoleman/strcase"
-	"github.com/mulesoft-consulting/anypoint-client-go/dlb"
+	"github.com/mulesoft-anypoint/anypoint-client-go/dlb"
 )
 
 func resourceDLB() *schema.Resource {

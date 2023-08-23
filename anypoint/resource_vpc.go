@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
+	vpc "github.com/mulesoft-anypoint/anypoint-client-go/vpc"
 )
 
 func resourceVPC() *schema.Resource {

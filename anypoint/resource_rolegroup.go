@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	rolegroup "github.com/mulesoft-consulting/anypoint-client-go/rolegroup"
+	rolegroup "github.com/mulesoft-anypoint/anypoint-client-go/rolegroup"
 )
 
 func resourceRoleGroup() *schema.Resource {

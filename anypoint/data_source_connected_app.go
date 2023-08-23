@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	connApp "github.com/mulesoft-consulting/anypoint-client-go/connected_app"
+	connApp "github.com/mulesoft-anypoint/anypoint-client-go/connected_app"
 )
 
 func dataSourceConnectedApp() *schema.Resource {
