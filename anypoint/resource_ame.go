@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	ame "github.com/mulesoft-consulting/anypoint-client-go/ame"
+	ame "github.com/mulesoft-anypoint/anypoint-client-go/ame"
 )
 
 func resourceAME() *schema.Resource {

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	vpn "github.com/mulesoft-consulting/anypoint-client-go/vpn"
+	vpn "github.com/mulesoft-anypoint/anypoint-client-go/vpn"
 )
 
 func resourceVPN() *schema.Resource {

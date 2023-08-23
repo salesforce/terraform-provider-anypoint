@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	env "github.com/mulesoft-consulting/anypoint-client-go/env"
+	env "github.com/mulesoft-anypoint/anypoint-client-go/env"
 )
 
 func resourceENV() *schema.Resource {

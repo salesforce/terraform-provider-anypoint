@@ -22,7 +22,7 @@ The cycle is composed of 3 steps:
 
   1. Pick one resource and understand how it works using tools like Postman, anypoint's documentation and your favorite browser's inspector.
   2. Create the OAS3 specification. The specification should at least contain GET, POST and DELETE operations.
-  The specification should be contributed [here](https://github.com/mulesoft-consulting/anypoint-automation-client-generator). Using the OAS spec, a go module will be generated and pushed [here](https://github.com/mulesoft-consulting/anypoint-client-go).
+  The specification should be contributed [here](https://github.com/mulesoft-anypoint/anypoint-automation-client-generator). Using the OAS spec, a go module will be generated and pushed [here](https://github.com/mulesoft-anypoint/anypoint-client-go).
   
   ![alt text](drive/imgs/provider-cycle.png)
   3. Implement the resource and related data sources in the provider using the generated library.
@@ -35,10 +35,10 @@ Run the following command to build the provider
 go build -o terraform-provider-anypoint
 ```
 
-**N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/mulesoft-consulting`
+**N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/mulesoft-anypoint`
 
 ```bash
-go env -w GOPRIVATE=github.com/mulesoft-consulting
+go env -w GOPRIVATE=github.com/mulesoft-anypoint
 ```
 
 ## Test sample configuration
@@ -125,7 +125,7 @@ Follow [documentation](https://www.terraform.io/docs/registry/providers/publishi
 You can contribute by:
 
 * Testing the tool and letting us know of any problems you encounter.
-* Contributing specifications for resources [here](https://github.com/mulesoft-consulting/anypoint-automation-client-generator).
+* Contributing specifications for resources [here](https://github.com/mulesoft-anypoint/anypoint-automation-client-generator).
 * Contributing code in the provider itself here.
 
 ## Credits

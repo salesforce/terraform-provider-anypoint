@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/mulesoft-consulting/anypoint-client-go/team"
+	"github.com/mulesoft-anypoint/anypoint-client-go/team"
 )
 
 func dataSourceTeams() *schema.Resource {

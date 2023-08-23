@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	team_group_mappings "github.com/mulesoft-consulting/anypoint-client-go/team_group_mappings"
+	team_group_mappings "github.com/mulesoft-anypoint/anypoint-client-go/team_group_mappings"
 )
 
 func resourceTeamGroupMappings() *schema.Resource {

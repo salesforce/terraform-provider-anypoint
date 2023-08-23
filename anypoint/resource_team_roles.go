@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	team_roles "github.com/mulesoft-consulting/anypoint-client-go/team_roles"
+	team_roles "github.com/mulesoft-anypoint/anypoint-client-go/team_roles"
 )
 
 const BG_VIEWER_ROLE = "833ab9ca-0c72-45ba-9764-1df83240db57"
