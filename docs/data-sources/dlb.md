@@ -69,12 +69,17 @@ Read-Only:
 
 Read-Only:
 
+- `client_cert_cn` (String)
+- `client_cert_digest` (String)
+- `client_cert_label` (String)
 - `mappings` (List of Object) (see [below for nested schema](#nestedobjatt--ssl_endpoints--mappings))
 - `private_key_digest` (String)
 - `private_key_label` (String)
 - `public_key_cn` (String)
 - `public_key_digest` (String)
 - `public_key_label` (String)
+- `revocation_list_digest` (String)
+- `revocation_list_label` (String)
 - `verify_client_mode` (String)
 
 <a id="nestedobjatt--ssl_endpoints--mappings"></a>
