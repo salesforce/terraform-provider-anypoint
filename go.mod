@@ -14,7 +14,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/amq v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
-	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.4.0
+	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
 	github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0

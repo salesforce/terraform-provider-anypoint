@@ -258,6 +258,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1 h1:rdEuCTM4
 github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1/go.mod h1:mu7z6KyQUjL2UvunfAu8ALHuf7uzRodl780T7VGGHNM=
 github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.4.0 h1:HBwCnH/+X31X8lYAzCiy0RXywwvNJfZ5O3NbcXeaGso=
 github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.4.0/go.mod h1:5y8s0ZquF7BBP7A8kiP0bVofcEKWnzE11z2kx+Es5qY=
+github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0 h1:9alztVhipw47KH1cdpSZfF1psze2GE0nSw9eDKhCnug=
+github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0/go.mod h1:5y8s0ZquF7BBP7A8kiP0bVofcEKWnzE11z2kx+Es5qY=
 github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0 h1:Pddk9tEgPeQc4Y4uGachn2BUhxm4RiCQ4+uqO7rnroU=
 github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0/go.mod h1:oVqj2KnMt0ceHLnPVHzbrL98frInnWFZZp+jycTJdLU=
 github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0 h1:G/gneWCL9sSeAOcguxcsZeceIzwh4bvK7OrPVrJ4Pg0=
