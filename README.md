@@ -1,8 +1,31 @@
 # Terraform Provider Anypoint
 
-This is the first terraform provider for anypoint platform! We aim to provide a sustainable tool to automate your actions in anypoint.
+![badge1](https://img.shields.io/badge/Terraform->=1.0.x-blue)
+![discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)
 
-This project was initiated by Mulesoft's consultants and architects from the professional team. We welcome any volunteers interested in joining the initiative no matter where you're from !
+## Welcome to the Terraform Anypoint Provider repository
+
+Are you ready to supercharge your infrastructure as code (IaC) game for MuleSoft's Anypoint Platform? Look no further! The Terraform Anypoint Provider empowers you to manage Anypoint resources seamlessly using Terraform.
+
+## What is the Terraform Anypoint Provider?
+
+**Terraform** is the industry-standard tool for building, changing, and versioning infrastructure efficiently. With Terraform, you can describe your infrastructure as code, apply version control, and automate provisioning and configuration tasks.
+
+**Anypoint Platform** by MuleSoft is a leading integration platform that allows you to connect applications, data, and devices in the cloud and on-premises. It's a powerful tool for API management, integration, and more.
+
+**The Terraform Anypoint Provider** bridges the gap between these two worlds. It enables you to define your Anypoint resources, configurations, and integrations in code, providing you with the ability to automate deployments, enhance collaboration, reduce errors, and track changes with ease.
+
+## What You'll Find Here
+
+In this repository, you'll discover:
+
+* **Provider Code:** The source code for the Terraform Anypoint Provider, which allows you to interact with Anypoint Platform resources in your Terraform configurations.
+
+* **Documentation:** Detailed guides, examples, and reference materials to help you get started and make the most of the Terraform Anypoint Provider.
+
+* **Issues and Contributions:** A space to report issues, suggest improvements, and contribute to the development of the provider. We welcome your contributions and feedback!
+
+
 
 ## How it works
 
@@ -23,11 +46,13 @@ The cycle is composed of 3 steps:
   1. Pick one resource and understand how it works using tools like Postman, anypoint's documentation and your favorite browser's inspector.
   2. Create the OAS3 specification. The specification should at least contain GET, POST and DELETE operations.
   The specification should be contributed [here](https://github.com/mulesoft-anypoint/anypoint-automation-client-generator). Using the OAS spec, a go module will be generated and pushed [here](https://github.com/mulesoft-anypoint/anypoint-client-go).
-  
+
   ![alt text](drive/imgs/provider-cycle.png)
   3. Implement the resource and related data sources in the provider using the generated library.
 
-## How to use
+## Getting Started
+
+### How to use
 
 Run the following command to build the provider
 
@@ -41,7 +66,7 @@ go build -o terraform-provider-anypoint
 go env -w GOPRIVATE=github.com/mulesoft-anypoint
 ```
 
-## Test sample configuration
+### Test sample configuration
 
 First, build and install the provider.
 
@@ -72,7 +97,7 @@ Make sure to add the params file when you apply your terraform configuration as 
 terraform init && terraform apply -var-file="params.tfvars.json"
 ```
 
-## Debugging mode
+### Debugging mode
 
 First build the project using
 
@@ -104,7 +129,7 @@ Now you can run terraform using the debugger, here's an example:
 TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol":"grpc","Pid":69612,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/yc/k0_j_x0945jdthsw7fzw5ysh0000gp/T/plugin598168131"}}}' terraform apply --auto-approve -var-file="params.tfvars.json"
 ```
 
-### How to log
+#### How to log
 
 Use `log` package to log. Here's an exampe:
 
@@ -120,7 +145,11 @@ In order to generate a documentation, we use [tfplugindocs](https://github.com/h
 
 Follow [documentation](https://www.terraform.io/docs/registry/providers/publishing.html#using-goreleaser-locally).
 
-## How to contribute
+## Join the Community
+
+We believe in the power of community collaboration. Join our community forum to ask questions, share your experiences, and connect with fellow developers and DevOps enthusiasts using the Terraform Anypoint Provider.
+
+### How to contribute
 
 You can contribute by:
 
@@ -136,3 +165,5 @@ Made with love.
 
 **This is an [Open Source Software, please review the considerations](LICENSE.md).**
 This is an open source project, it does not form part of the official MuleSoft product stack, and is therefore not included in MuleSoft support SLAs. Issues should be directed to the community, who will try to assist on a best endeavours basis. This application is distributed **as is**.
+
+Let's automate, simplify, and supercharge your Anypoint deployments with Terraform!
