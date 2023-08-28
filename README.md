@@ -139,7 +139,9 @@ log.Println("[DEBUG] Something happened!")
 
 ## Documentation
 
-In order to generate a documentation, we use [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs).
+You can find the documentation [here](https://github.com/mulesoft-anypoint/terraform-provider-anypoint/blob/master/docs/index.md).
+
+We use [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs) to generate the documentation.
 
 ## Create Release
 
