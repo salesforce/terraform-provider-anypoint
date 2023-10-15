@@ -316,9 +316,10 @@ func resourceBG() *schema.Resource {
 			"entitlements_mqmessages_base": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     100000,
 				Description: "The number of basic MQ messages assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "100000") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_mqmessages_addon": {
@@ -332,9 +333,10 @@ func resourceBG() *schema.Resource {
 			"entitlements_mqrequests_base": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     1000000,
 				Description: "The number of MQ requests base assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1000000") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_mqrequests_addon": {
@@ -380,14 +382,16 @@ func resourceBG() *schema.Resource {
 			"entitlements_mqadvancedfeatures_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether the Anypoint MQ advanced features are enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_gateways_assigned": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     0,
 				Description: "The number of gateways assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
@@ -396,17 +400,19 @@ func resourceBG() *schema.Resource {
 			"entitlements_designcenter_api": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether te design center api is enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_designcenter_mozart": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether the design center mozart is enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_partnersproduction_assigned": {
@@ -490,9 +496,10 @@ func resourceBG() *schema.Resource {
 			"entitlements_apimonitoring_schedules": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     5,
 				Description: "The number of api monitoring schedules for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "5") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_apicommunitymanager_enabled": {
@@ -506,25 +513,28 @@ func resourceBG() *schema.Resource {
 			"entitlements_monitoringcenter_productsku": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     3,
 				Description: "The number of monitoring center products sku for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "3") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_apiquery_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether api queries are enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_apiquery_productsku": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     1,
 				Description: "The number of api query product sku for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_apiqueryc360_enabled": {
@@ -623,25 +633,28 @@ func resourceBG() *schema.Resource {
 			"entitlements_anypointsecuritytokenization_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "whether Anypoint securirty tokenization is enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_anypointsecurityedgepolicies_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether Anypoint security edge policies is enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_runtimefabriccloud_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     true,
 				Description: "Whether Runtime Fabrics (RTF) is enabled for this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
 				},
 			},
 			"entitlements_servicemesh_enabled": {
@@ -655,17 +668,19 @@ func resourceBG() *schema.Resource {
 			"entitlements_messaging_assigned": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     1,
 				Description: "The number of messaging assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_workerclouds_assigned": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     1,
 				Description: "The number of worker clouds assigned to this organization",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
 				},
 			},
 			"entitlements_workerclouds_reassigned": {
