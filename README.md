@@ -25,8 +25,6 @@ In this repository, you'll discover:
 
 * **Issues and Contributions:** A space to report issues, suggest improvements, and contribute to the development of the provider. We welcome your contributions and feedback!
 
-
-
 ## How it works
 
 This provider uses the anypoint platform APIs to perform actions for each one of the implemented resources.
@@ -128,6 +126,8 @@ Now you can run terraform using the debugger, here's an example:
 ```bash
 TF_REATTACH_PROVIDERS='{"anypoint.mulesoft.com/automation/anypoint":{"Protocol":"grpc","Pid":69612,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/yc/k0_j_x0945jdthsw7fzw5ysh0000gp/T/plugin598168131"}}}' terraform apply --auto-approve -var-file="params.tfvars.json"
 ```
+
+> **N.B:** Make sure that your script uses the source `anypoint.mulesoft.com/automation/anypoint`. Otherwise, it won't work.
 
 #### How to log
 
