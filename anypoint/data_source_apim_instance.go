@@ -470,8 +470,9 @@ func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, 
 		})
 		return diags
 	}
-
-	data := flattenApimUpstreamsResult(res.GetUpstreams())
+	list := res.GetUpstreams()
+	sortApimUpstreams(list)
+	data := flattenApimUpstreamsResult(list)
 	if err := d.Set("upstreams", data); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

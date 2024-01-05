@@ -3,6 +3,7 @@ package anypoint
 import (
 	"context"
 	"io"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -225,4 +226,13 @@ func flattenApimUpstreamAudit(audit *apim_upstream.Audit) map[string]interface{}
 func getApimUpstreamAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, apim_upstream.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, apim_upstream.ContextServerIndex, pco.server_index)
+}
+
+// sorts list of upstreams by their creation date
+func sortApimUpstreams(list []apim_upstream.UpstreamDetails) {
+	sort.SliceStable(list, func(i, j int) bool {
+		i_date := list[i].GetAudit().Created.GetDate()
+		j_date := list[j].GetAudit().Created.GetDate()
+		return i_date.Before(j_date)
+	})
 }

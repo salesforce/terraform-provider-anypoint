@@ -31,6 +31,7 @@ require (
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
@@ -56,7 +57,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
 	github.com/vmihailenco/tagparser v0.1.1 // indirect
@@ -69,8 +73,10 @@ require (
 	google.golang.org/genproto v0.0.0-20211203200212-54befc351ae9 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+//todo remove this
 replace (
 	github.com/mulesoft-anypoint/anypoint-client-go/apim => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/apim
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/apim_upstream
