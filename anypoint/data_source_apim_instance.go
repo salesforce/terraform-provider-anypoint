@@ -194,10 +194,15 @@ func dataSourceApimInstance() *schema.Resource {
 				Computed:    true,
 				Description: "The API Manager Instance id",
 			},
-			"deployment_audit": {
-				Type:        schema.TypeMap,
+			"deployment_audit_created_date": {
+				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The instance's deployment auditing data",
+				Description: "The instance's deployment auditing creation date",
+			},
+			"deployment_audit_updated_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The instance's deployment auditing update date",
 			},
 			"deployment_id": {
 				Type:        schema.TypeInt,
@@ -629,7 +634,13 @@ func flattenApimEndpointTlsContext(tc *apim.EndpointTlsContexts) map[string]inte
 func flattenApimDeployment(deployment *apim.Deployment) map[string]interface{} {
 	result := make(map[string]interface{})
 	if val, ok := deployment.GetAuditOk(); ok {
-		result["deployment_audit"] = flattenApimAudit(val)
+		audit := flattenApimAudit(val)
+		if created, ok := audit["created"]; ok {
+			result["deployment_audit_created_date"] = created
+		}
+		if updated, ok := audit["updated"]; ok {
+			result["deployment_audit_updated_date"] = updated
+		}
 	}
 	if val, ok := deployment.GetDeploymentIdOk(); ok {
 		result["deployment_id"] = *val
@@ -757,7 +768,7 @@ func getApimInstanceDetailsAttributes() []string {
 		"deprecated", "last_active_date", "endpoint_uri", "is_public", "technology", "endpoint_audit",
 		"endpoint_id", "endpoint_type", "endpoint_api_gateway_version", "endpoint_proxy_uri",
 		"endpoint_proxy_registration_uri", "endpoint_last_active_date", "endpoint_deployment_type",
-		"endpoint_tls_inbound_context", "endpoint_api_version_id", "deployment_audit", "deployment_id",
+		"endpoint_tls_inbound_context", "endpoint_api_version_id", "deployment_audit_created_date", "deployment_audit_updated_date", "deployment_id",
 		"deployment_application_id", "deployment_application_name", "deployment_gateway_version",
 		"deployment_environment_name", "deployment_environment_id", "deployment_target_id",
 		"deployment_target_name", "deployment_updated_date", "deployment_type", "deployment_expected_status",

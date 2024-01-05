@@ -238,10 +238,15 @@ func resourceApimFlexGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The API Manager Instance id",
 			},
-			"deployment_audit": {
-				Type:        schema.TypeMap,
+			"deployment_audit_created_date": {
+				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The instance's deployment auditing data",
+				Description: "The instance's deployment auditing creation date",
+			},
+			"deployment_audit_updated_date": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The instance's deployment auditing update date",
 			},
 			"deployment_id": {
 				Type:        schema.TypeInt,
