@@ -104,6 +104,18 @@ func FilterMapList(list []interface{}, filter func(map[string]interface{}) bool)
 	return result
 }
 
+// filters list of strings depending on the given filter func
+// returns a list of strings
+func FilterStrList(list []string, filter func(string) bool) []string {
+	result := make([]string, 0)
+	for _, item := range list {
+		if filter(item) {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
 // compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
 // returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
 func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
@@ -137,6 +149,11 @@ func equalStrList(old, new interface{}) bool {
 // composes an id by concatenating items of array into one single string
 func ComposeResourceId(elem []string) string {
 	return strings.Join(elem, COMPOSITE_ID_SEPARATOR)
+}
+
+// returns true if the given id is an id composed of sub-ids
+func isComposedResourceId(id string) bool {
+	return strings.Contains(id, COMPOSITE_ID_SEPARATOR)
 }
 
 // decomposes a composite resource id

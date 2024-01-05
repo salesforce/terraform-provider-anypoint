@@ -152,14 +152,15 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 }
 
 func flattenApimUpstreamsResult(upstreams []apim_upstream.UpstreamDetails) []interface{} {
-	if len(upstreams) > 0 {
-		res := make([]interface{}, len(upstreams))
+	length := len(upstreams)
+	if length > 0 {
+		res := make([]interface{}, length)
 		for i, upstream := range upstreams {
 			res[i] = flattenApimUpstream(&upstream)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return []interface{}{}
 }
 
 func flattenApimUpstream(upstream *apim_upstream.UpstreamDetails) map[string]interface{} {
