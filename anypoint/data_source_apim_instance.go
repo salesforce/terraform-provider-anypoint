@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -428,7 +427,6 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 	}
 	// process data
 	data := flattenApimInstanceDetails(&res)
-	log.Printf("Result of Flattening Details : %+v", data)
 	if err := setApimInstanceDetailsAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -450,9 +448,11 @@ func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, 
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	id := d.Get("id").(string)
+	if isComposedResourceId(id) {
+		orgid, envid, id = decomposeApimFlexGatewayId(d)
+	}
 
 	authctx := getApimUpstreamAuthCtx(ctx, &pco)
-
 	res, httpr, err := pco.apimupstreamclient.DefaultApi.GetApimInstanceUpstreams(authctx, orgid, envid, id).Execute()
 	defer httpr.Body.Close()
 	if err != nil {
@@ -743,7 +743,6 @@ func setApimInstanceDetailsAttributesToResourceData(d *schema.ResourceData, data
 				if err := d.Set(attr, val); err != nil {
 					return fmt.Errorf("unable to set api manager instance attribute %s\n\tdetails: %s", attr, err)
 				}
-				log.Printf("Attribute %s was successfully set with value %+v", attr, val)
 			}
 		}
 	}
