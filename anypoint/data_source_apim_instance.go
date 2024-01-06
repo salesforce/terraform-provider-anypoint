@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"sort"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -376,7 +378,7 @@ func dataSourceApimInstance() *schema.Resource {
 										Description: "The TLS context name",
 									},
 									"authorized": {
-										Type:        schema.TypeString,
+										Type:        schema.TypeBool,
 										Computed:    true,
 										Description: "The TLS context authorization status",
 									},
@@ -683,6 +685,7 @@ func flattenApimDeployment(deployment *apim.Deployment) map[string]interface{} {
 
 // flattens list of routing of any api manager instance
 func flattenApimRoutingCollection(routings []apim.Routing) []map[string]interface{} {
+	sortApimRouting(routings)
 	result := make([]map[string]interface{}, len(routings))
 	for i, routing := range routings {
 		result[i] = flattenApimRouting(&routing)
@@ -713,7 +716,9 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 	if rules, ok := routing.GetRulesOk(); ok && rules != nil {
 		r := make(map[string]interface{})
 		if val, ok := rules.GetMethodsOk(); ok && val != nil {
-			r["methods"] = *val
+			slice := strings.Split(*val, "|")
+			sort.Strings(slice)
+			r["methods"] = slice
 		}
 		if val, ok := rules.GetHostOk(); ok && val != nil {
 			r["host"] = *val
@@ -724,7 +729,7 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 		if val, ok := rules.GetHeadersOk(); ok && val != nil {
 			r["headers"] = *val
 		}
-		maps.Copy(item, r)
+		item["rules"] = []interface{}{r}
 	}
 	return item
 }
@@ -775,4 +780,13 @@ func getApimInstanceDetailsAttributes() []string {
 		"deployment_api_id", "routing", "status", "autodiscovery_instance_name",
 	}
 	return attributes[:]
+}
+
+// sorts list of api routing by their label
+func sortApimRouting(list []apim.Routing) {
+	sort.SliceStable(list, func(i, j int) bool {
+		i_label := list[i].GetLabel()
+		j_label := list[j].GetLabel()
+		return i_label < j_label
+	})
 }

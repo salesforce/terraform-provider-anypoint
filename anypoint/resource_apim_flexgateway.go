@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"maps"
 	"strconv"
 	"strings"
@@ -456,7 +455,7 @@ func resourceApimFlexGateway() *schema.Resource {
 										Description: "The TLS context name",
 									},
 									"authorized": {
-										Type:        schema.TypeString,
+										Type:        schema.TypeBool,
 										Computed:    true,
 										Description: "The TLS context authorization status",
 									},
@@ -960,16 +959,37 @@ func newApimFlexGatewayRoutingPostBody(d *schema.ResourceData) map[string]interf
 				}
 				routing_output["upstreams"] = upstreams_output
 			}
-			if rules_val, ok := routing_input["rules"]; ok && rules_val != nil {
-				rules_set := rules_val.(*schema.Set)
-				if rules_set.Len() > 0 {
-					rules_list := rules_set.List()
-					routing_output["rules"] = rules_list[0].(map[string]interface{})
+			if val, ok := routing_input["rules"]; ok && val != nil {
+				rules := newApimFlexGatewayRoutingRulesPostBody(val.(*schema.Set))
+				if len(rules) > 0 {
+					routing_output["rules"] = rules
 				}
 			}
 			routing_elements[i] = routing_output
 		}
 		body["routing"] = routing_elements
+	}
+	return body
+}
+
+func newApimFlexGatewayRoutingRulesPostBody(rules *schema.Set) map[string]interface{} {
+	body := make(map[string]interface{})
+	if rules.Len() > 0 {
+		rules_list := rules.List()
+		rules_map := rules_list[0].(map[string]interface{})
+		if val, ok := rules_map["methods"]; ok && val != nil {
+			set := val.(*schema.Set)
+			body["methods"] = JoinStringInterfaceSlice(set.List(), "|")
+		}
+		if val, ok := rules_map["host"]; ok && val != nil {
+			body["host"] = val.(string)
+		}
+		if val, ok := rules_map["path"]; ok && val != nil {
+			body["path"] = val.(string)
+		}
+		if val, ok := rules_map["headers"]; ok && val != nil {
+			body["headers"] = val.(map[string]interface{})
+		}
 	}
 	return body
 }
@@ -1111,7 +1131,6 @@ func setApimFlexGatewayAttributesToResourceData(d *schema.ResourceData, data map
 					if err != nil {
 						return err
 					}
-					log.Printf("Setting the attribute %s with value %+v", attr, result)
 					if err := d.Set(attr, result); err != nil {
 						return fmt.Errorf("unable to set flex gateway instance attribute %s\n details: %s", attr, err)
 					}

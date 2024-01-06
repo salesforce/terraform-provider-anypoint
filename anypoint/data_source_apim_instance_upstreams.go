@@ -79,7 +79,7 @@ func dataSourceApimInstanceUpstreams() *schema.Resource {
 										Description: "The TLS context name",
 									},
 									"authorized": {
-										Type:        schema.TypeString,
+										Type:        schema.TypeBool,
 										Computed:    true,
 										Description: "The TLS context authorization status",
 									},
@@ -196,7 +196,7 @@ func flattenApimUpstream(upstream *apim_upstream.UpstreamDetails) map[string]int
 		if val, ok := tlscontext.GetSecretGroupIdOk(); ok && val != nil {
 			tlcres["secret_group_id"] = *val
 		}
-		result["tls_context"] = tlcres
+		result["tls_context"] = []interface{}{tlcres}
 	}
 
 	return result

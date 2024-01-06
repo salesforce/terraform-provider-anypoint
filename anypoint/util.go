@@ -3,6 +3,7 @@ package anypoint
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -159,4 +160,12 @@ func isComposedResourceId(id string) bool {
 // decomposes a composite resource id
 func DecomposeResourceId(id string) []string {
 	return strings.Split(id, COMPOSITE_ID_SEPARATOR)
+}
+
+func JoinStringInterfaceSlice(slice []interface{}, sep string) string {
+	dump := make([]string, len(slice))
+	for i, val := range slice {
+		dump[i] = fmt.Sprint(val)
+	}
+	return strings.Join(dump, sep)
 }
