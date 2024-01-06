@@ -408,7 +408,6 @@ func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	//execut request
 	res, httpr, err := req.Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -424,6 +423,7 @@ func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	assets := flattenApimAssetsResult(res.GetAssets())
 	if err := d.Set("assets", assets); err != nil {
