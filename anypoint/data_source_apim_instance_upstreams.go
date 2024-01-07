@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 	"sort"
+	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -140,7 +142,7 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	if err := d.Set("total", res.GetTotal); err != nil {
+	if err := d.Set("total", res.GetTotal()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set total number of apim instance upstreams for instance " + id,
@@ -149,6 +151,7 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
+	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
 	return diags
 }
 
