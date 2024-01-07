@@ -84,7 +84,7 @@ func Provider() *schema.Provider {
 			"anypoint_amq":                 resourceAMQ(),
 			"anypoint_ame":                 resourceAME(),
 			"anypoint_ame_binding":         resourceAMEBinding(),
-			"anypoint_apim_flex_gateway":   resourceApimFlexGateway(),
+			"anypoint_apim_flexgateway":    resourceApimFlexGateway(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"anypoint_vpcs":                    dataSourceVPCs(),
