@@ -114,6 +114,8 @@ func Provider() *schema.Provider {
 			"anypoint_apim":                    dataSourceApim(),
 			"anypoint_apim_instance":           dataSourceApimInstance(),
 			"anypoint_apim_instance_upstreams": dataSourceApimInstanceUpstreams(),
+			"anypoint_flexgateway_target":      dataSourceFlexGatewayTarget(),
+			"anypoint_flexgateway_targets":     dataSourceFlexGatewayTargets(),
 		},
 		ConfigureContextFunc: providerConfigure,
 		TerraformVersion:     "v1.0.1",
