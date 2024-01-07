@@ -101,6 +101,7 @@ func dataSourceApim() *schema.Resource {
 						"sort": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "name",
 							Description: "The field to sort on",
 						},
 						"ascending": {
