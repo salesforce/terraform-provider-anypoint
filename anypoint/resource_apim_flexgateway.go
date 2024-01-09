@@ -501,7 +501,6 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	body := newApimFlexGatewayPostBody(d)
 	// execute post request
 	res, httpr, err := pco.apimclient.DefaultApi.PostApimInstance(authctx, orgid, envid).ApimInstancePostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -517,6 +516,7 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//update ids following the creation
 	id := res.GetId()
 	d.SetId(ComposeResourceId([]string{orgid, envid, strconv.Itoa(int(id))}))
@@ -578,7 +578,6 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 	authctx := getApimAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -594,6 +593,7 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	// read upstreams
 	if diagsbis := readApimInstanceUpstreamsOnly(ctx, d, m); diagsbis.HasError() {
 		diags = append(diags, diagsbis...)
