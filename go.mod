@@ -14,7 +14,6 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
 	github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0
-	github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0
@@ -57,6 +56,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

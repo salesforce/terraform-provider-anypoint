@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	flex_gateway "github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway"
+	flexgateway "github.com/mulesoft-anypoint/anypoint-client-go/flexgateway"
 )
 
 func dataSourceFlexGatewayTarget() *schema.Resource {
@@ -138,7 +138,7 @@ func dataSourceFlexGatewayTargetRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenFlexGatewayTargetDetails(target *flex_gateway.FlexGatewayTargetDetails) map[string]interface{} {
+func flattenFlexGatewayTargetDetails(target *flexgateway.FlexGatewayTargetDetails) map[string]interface{} {
 	elem := make(map[string]interface{})
 	if val, ok := target.GetNameOk(); ok && val != nil {
 		elem["name"] = *val
@@ -165,7 +165,7 @@ func flattenFlexGatewayTargetDetails(target *flex_gateway.FlexGatewayTargetDetai
 	return elem
 }
 
-func flattenFlexGatewayTargetReplicas(replicas []flex_gateway.FlexGatewayTargetDetailsReplicas) []map[string]interface{} {
+func flattenFlexGatewayTargetReplicas(replicas []flexgateway.FlexGatewayTargetDetailsReplicas) []map[string]interface{} {
 	slice := make([]map[string]interface{}, len(replicas))
 	for i, r := range replicas {
 		elem := make(map[string]interface{})

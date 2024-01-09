@@ -9,7 +9,7 @@ import (
 	connected_app "github.com/mulesoft-anypoint/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-anypoint/anypoint-client-go/dlb"
 	env "github.com/mulesoft-anypoint/anypoint-client-go/env"
-	flex_gateway "github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway"
+	flexgateway "github.com/mulesoft-anypoint/anypoint-client-go/flexgateway"
 	idp "github.com/mulesoft-anypoint/anypoint-client-go/idp"
 	org "github.com/mulesoft-anypoint/anypoint-client-go/org"
 	role "github.com/mulesoft-anypoint/anypoint-client-go/role"
@@ -47,7 +47,7 @@ type ProviderConfOutput struct {
 	amebindingclient        *ame_binding.APIClient
 	apimclient              *apim.APIClient
 	apimupstreamclient      *apim_upstream.APIClient
-	flexgatewayclient       *flex_gateway.APIClient
+	flexgatewayclient       *flexgateway.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -72,7 +72,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	amebindingcfg := ame_binding.NewConfiguration()
 	apimcfg := apim.NewConfiguration()
 	apimupstreamcfg := apim_upstream.NewConfiguration()
-	flexgatewaycfg := flex_gateway.NewConfiguration()
+	flexgatewaycfg := flexgateway.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -94,7 +94,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	amebindingclient := ame_binding.NewAPIClient(amebindingcfg)
 	apimclient := apim.NewAPIClient(apimcfg)
 	apimupstreamclient := apim_upstream.NewAPIClient(apimupstreamcfg)
-	flexgatewayclient := flex_gateway.NewAPIClient(flexgatewaycfg)
+	flexgatewayclient := flexgateway.NewAPIClient(flexgatewaycfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,

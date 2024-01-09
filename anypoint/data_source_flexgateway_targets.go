@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	flex_gateway "github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway"
+	flexgateway "github.com/mulesoft-anypoint/anypoint-client-go/flexgateway"
 )
 
 func dataSourceFlexGatewayTargets() *schema.Resource {
@@ -123,7 +123,7 @@ func dataSourceFlexGatewayTargetsRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func flattenFlexGatewayTargets(targets []flex_gateway.FlexGatewayTargetSummary) []map[string]interface{} {
+func flattenFlexGatewayTargets(targets []flexgateway.FlexGatewayTargetSummary) []map[string]interface{} {
 	slice := make([]map[string]interface{}, len(targets))
 	for i, target := range targets {
 		slice[i] = flattenFlexGatewayTargetSummary(&target)
@@ -132,7 +132,7 @@ func flattenFlexGatewayTargets(targets []flex_gateway.FlexGatewayTargetSummary) 
 	return slice
 }
 
-func flattenFlexGatewayTargetSummary(target *flex_gateway.FlexGatewayTargetSummary) map[string]interface{} {
+func flattenFlexGatewayTargetSummary(target *flexgateway.FlexGatewayTargetSummary) map[string]interface{} {
 	elem := make(map[string]interface{})
 	if val, ok := target.GetIdOk(); ok && val != nil {
 		elem["id"] = *val
@@ -167,6 +167,6 @@ func flattenFlexGatewayTargetSummary(target *flex_gateway.FlexGatewayTargetSumma
  * Returns authentication context (includes authorization header)
  */
 func getFlexGatewayAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	tmp := context.WithValue(ctx, flex_gateway.ContextAccessToken, pco.access_token)
-	return context.WithValue(tmp, flex_gateway.ContextServerIndex, pco.server_index)
+	tmp := context.WithValue(ctx, flexgateway.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, flexgateway.ContextServerIndex, pco.server_index)
 }
