@@ -501,7 +501,6 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	body := newApimFlexGatewayPostBody(d)
 	// execute post request
 	res, httpr, err := pco.apimclient.DefaultApi.PostApimInstance(authctx, orgid, envid).ApimInstancePostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -517,6 +516,7 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//update ids following the creation
 	id := res.GetId()
 	d.SetId(ComposeResourceId([]string{orgid, envid, strconv.Itoa(int(id))}))
@@ -578,7 +578,6 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 	authctx := getApimAuthCtx(ctx, &pco)
 
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil {
@@ -594,6 +593,7 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	// read upstreams
 	if diagsbis := readApimInstanceUpstreamsOnly(ctx, d, m); diagsbis.HasError() {
 		diags = append(diags, diagsbis...)
@@ -663,7 +663,7 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 			defer httpr.Body.Close()
 		}
 	}
-	if d.HasChanges(getApimInstanceUpdatableAttributes()...) {
+	if d.HasChanges(getApimFlexGatewayUpdatableAttributes()...) {
 		body := newApimFlexGatewayPatchBody(d)
 		authctx := getApimAuthCtx(ctx, &pco)
 		_, httpr, err := pco.apimclient.DefaultApi.PatchApimInstance(authctx, orgid, envid, apimid).Body(body).Execute()
@@ -1035,7 +1035,7 @@ func newApimFlexGatewayUpstreamPostBody(upstreams []interface{}) []*apim_upstrea
 // creates patch body depending on the changes occured on the updatable attributes
 func newApimFlexGatewayPatchBody(d *schema.ResourceData) map[string]interface{} {
 	body := make(map[string]interface{})
-	attributes := FilterStrList(getApimInstanceUpdatableAttributes(), func(s string) bool {
+	attributes := FilterStrList(getApimFlexGatewayUpdatableAttributes(), func(s string) bool {
 		return !strings.HasPrefix(s, "endpoint") && !strings.HasPrefix(s, "deployment") && s != "routing" && s != "upstreams"
 	})
 	for _, attr := range attributes {
@@ -1064,7 +1064,7 @@ func newApimFlexGatewayRoutingPatchBody(d *schema.ResourceData) map[string]inter
 func newPatchBodyMap4FlattenedAttr(prefix string, d *schema.ResourceData) map[string]interface{} {
 	separator := "_"
 	endpoint_params := make(map[string]interface{})
-	attributes := FilterStrList(getApimInstanceUpdatableAttributes(), func(s string) bool {
+	attributes := FilterStrList(getApimFlexGatewayUpdatableAttributes(), func(s string) bool {
 		return strings.HasPrefix(s, prefix)
 	})
 	for _, attr := range attributes {
@@ -1222,7 +1222,7 @@ func validateRoutingUpstreams(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func getApimInstanceUpdatableAttributes() []string {
+func getApimFlexGatewayUpdatableAttributes() []string {
 	attributes := [...]string{
 		"instance_label", "description", "tags", "provider_id",
 		"deprecated", "endpoint_uri", "endpoint_proxy_uri",
