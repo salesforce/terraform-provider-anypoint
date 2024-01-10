@@ -14,7 +14,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
 	github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0
-	github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0

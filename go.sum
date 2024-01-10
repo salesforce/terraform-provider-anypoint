@@ -264,8 +264,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0 h1:9alztVhipw47KH1cdp
 github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0/go.mod h1:5y8s0ZquF7BBP7A8kiP0bVofcEKWnzE11z2kx+Es5qY=
 github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0 h1:Pddk9tEgPeQc4Y4uGachn2BUhxm4RiCQ4+uqO7rnroU=
 github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0/go.mod h1:oVqj2KnMt0ceHLnPVHzbrL98frInnWFZZp+jycTJdLU=
-github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway v0.0.1 h1:SrYDx113ffvq3EyQmwv4M0l9+mMLoOOMY0kE10dp8GQ=
-github.com/mulesoft-anypoint/anypoint-client-go/flex_gateway v0.0.1/go.mod h1:6rG9Wj13Up7cLjXvegoQqVSgT7W4z+vP8JWIXCfCqdI=
+github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1 h1:ecxh7W3wh8RGKQOCcPo2Fdxx8FlLMIgHzbqV/BBO1g8=
+github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1/go.mod h1:XGCBLRxWZSIRDEuRmQTbnYp5NPshcus1pQKnx3myRbs=
 github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0 h1:G/gneWCL9sSeAOcguxcsZeceIzwh4bvK7OrPVrJ4Pg0=
 github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0/go.mod h1:04KH3Uhtu+DMxoCmbfgtoM0v5hscfdoH02+7S2q/Cok=
 github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0 h1:TOaHNJbX/aFMhFB8Y12TnHO+XSVr/mWv9ASU0QsdGf8=
