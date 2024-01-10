@@ -347,7 +347,7 @@ func newApimMule4PostBody(d *schema.ResourceData) *apim.ApimInstancePostBody {
 	} else {
 		body.SetInstanceLabelNil()
 	}
-	body.SetTechnology(FLEX_GATEWAY_TECHNOLOGY)
+	body.SetTechnology(APIM_MULE4_TECHNOLOGY)
 	body.SetEndpoint(*endpoint)
 	body.SetDeploymentNil()
 	body.SetSpec(*spec)
