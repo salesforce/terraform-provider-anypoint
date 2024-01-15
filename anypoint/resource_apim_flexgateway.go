@@ -15,6 +15,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim"
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream"
+	flexgateway "github.com/mulesoft-anypoint/anypoint-client-go/flexgateway"
 )
 
 const FLEX_GATEWAY_TECHNOLOGY = "flexGateway"
@@ -40,7 +41,7 @@ func resourceApimFlexGateway() *schema.Resource {
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The Instance's unique id",
+				Description: "The API Manager Flex Gateway instance id.",
 			},
 			"audit": {
 				Type:        schema.TypeMap,
@@ -63,11 +64,6 @@ func resourceApimFlexGateway() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "The environment id where the flex gateway instance is defined.",
-			},
-			"apim_id": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The API Manager Flex Gateway instance id.",
 			},
 			"instance_label": {
 				Type:        schema.TypeString,
@@ -519,8 +515,7 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	defer httpr.Body.Close()
 	//update ids following the creation
 	id := res.GetId()
-	d.SetId(ComposeResourceId([]string{orgid, envid, strconv.Itoa(int(id))}))
-	d.Set("apim_id", id)
+	d.SetId(strconv.Itoa(int(id)))
 
 	//create all upstreams if available
 	diags = append(diags, resourceApimFlexGatewayUpstreamsCreate(ctx, d, m)...)
@@ -574,8 +569,13 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, id := decomposeApimFlexGatewayId(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	id := d.Get("id").(string)
 	authctx := getApimAuthCtx(ctx, &pco)
+	if isComposedResourceId(id) {
+		orgid, envid, id = decomposeApimFlexGatewayId(d)
+	}
 
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
 	if err != nil {
@@ -608,6 +608,10 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 
+	d.SetId(id)
+	d.Set("env_id", envid)
+	d.Set("org_id", orgid)
+
 	return diags
 }
 
@@ -615,7 +619,9 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, apimid := decomposeApimFlexGatewayId(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	apimid := d.Get("id").(string)
 	tocreate, toupdate, todelete := calcUpstreamsDiff(d)
 	if len(toupdate) > 0 {
 		authctx := getApimUpstreamAuthCtx(ctx, &pco)
@@ -714,7 +720,9 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 func resourceApimFlexGatewayRoutingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, id := decomposeApimFlexGatewayId(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	id := d.Get("id").(string)
 	authctx := getApimAuthCtx(ctx, &pco)
 
 	if _, ok := d.GetOk("routing"); ok {
@@ -1316,4 +1324,12 @@ func isUpstreamTlsContextEqual(a *schema.Set, b *schema.Set) bool {
 	}
 
 	return true
+}
+
+/*
+ * Returns authentication context (includes authorization header)
+ */
+func getFlexGatewayAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
+	tmp := context.WithValue(ctx, flexgateway.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, flexgateway.ContextServerIndex, pco.server_index)
 }

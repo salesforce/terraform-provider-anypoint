@@ -162,11 +162,3 @@ func flattenFlexGatewayTargetSummary(target *flexgateway.FlexGatewayTargetSummar
 	}
 	return elem
 }
-
-/*
- * Returns authentication context (includes authorization header)
- */
-func getFlexGatewayAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	tmp := context.WithValue(ctx, flexgateway.ContextAccessToken, pco.access_token)
-	return context.WithValue(tmp, flexgateway.ContextServerIndex, pco.server_index)
-}
