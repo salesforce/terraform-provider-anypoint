@@ -60,11 +60,6 @@ func resourceApimMule4() *schema.Resource {
 				ForceNew:    true,
 				Description: "The environment id where the api manager instance is defined.",
 			},
-			"apim_id": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The api manager instance id.",
-			},
 			"instance_label": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -230,8 +225,7 @@ func resourceApimMule4Create(ctx context.Context, d *schema.ResourceData, m inte
 
 	//update ids following the creation
 	id := res.GetId()
-	d.SetId(ComposeResourceId([]string{orgid, envid, strconv.Itoa(int(id))}))
-	d.Set("apim_id", id)
+	d.SetId(strconv.Itoa(int(id)))
 
 	//perform read
 	diags = append(diags, resourceApimMule4Read(ctx, d, m)...)
@@ -242,8 +236,13 @@ func resourceApimMule4Create(ctx context.Context, d *schema.ResourceData, m inte
 func resourceApimMule4Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, id := decomposeApimMule4Id(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	id := d.Get("id").(string)
 	authctx := getApimAuthCtx(ctx, &pco)
+	if isComposedResourceId(id) {
+		orgid, envid, id = decomposeApimMule4Id(d)
+	}
 
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
 	if err != nil {
@@ -272,6 +271,10 @@ func resourceApimMule4Read(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 
+	d.SetId(id)
+	d.Set("env_id", envid)
+	d.Set("org_id", orgid)
+
 	return diags
 }
 
@@ -279,7 +282,9 @@ func resourceApimMule4Read(ctx context.Context, d *schema.ResourceData, m interf
 func resourceApimMule4Update(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, apimid := decomposeApimMule4Id(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	apimid := d.Get("id").(string)
 
 	if d.HasChanges(getApimMule4UpdatableAttributes()...) {
 		body := newApimMule4PatchBody(d)
@@ -310,7 +315,9 @@ func resourceApimMule4Update(ctx context.Context, d *schema.ResourceData, m inte
 func resourceApimMule4Delete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, id := decomposeApimMule4Id(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	id := d.Get("id").(string)
 	authctx := getApimAuthCtx(ctx, &pco)
 
 	httpr, err := pco.apimclient.DefaultApi.DeleteApimInstance(authctx, orgid, envid, id).Execute()
