@@ -37,7 +37,6 @@ Create an API Manager Instance of type Mule4.
 
 ### Read-Only
 
-- `apim_id` (Number) The api manager instance id.
 - `audit` (Map of String) The instance's auditing data
 - `autodiscovery_instance_name` (String) The instance's discovery name
 - `endpoint_audit` (Map of String) The instance's endpoint auditing data

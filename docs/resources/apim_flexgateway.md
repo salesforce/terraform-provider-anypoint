@@ -98,7 +98,6 @@ resource "anypoint_apim_flexgateway" "fg" {
 
 ### Read-Only
 
-- `apim_id` (Number) The API Manager Flex Gateway instance id.
 - `audit` (Map of String) The instance's auditing data
 - `autodiscovery_instance_name` (String) The instance's discovery name
 - `deployment_api_id` (Number) The API Manager Instance id
@@ -117,7 +116,7 @@ resource "anypoint_apim_flexgateway" "fg" {
 - `endpoint_id` (Number) The instance's endpoint id
 - `endpoint_last_active_date` (String) Endpoint's last active date
 - `endpoint_type` (String) The endpoint's specification type
-- `id` (String) The Instance's unique id
+- `id` (String) The API Manager Flex Gateway instance id.
 - `is_public` (Boolean) If this API is Public
 - `last_active_date` (String) The date of last activity for this instance
 - `master_organization_id` (String) The root business group id

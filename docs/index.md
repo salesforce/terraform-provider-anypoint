@@ -84,5 +84,5 @@ provider "anypoint" {
 - `client_id` (String, Sensitive) the connected app's id
 - `client_secret` (String, Sensitive) the connected app's secret
 - `cplane` (String) the anypoint control plane
-- `password` (String, Sensitive) the user's password
-- `username` (String, Sensitive) the user's username
+- `password` (String, Sensitive, Deprecated) the user's password
+- `username` (String, Sensitive, Deprecated) the user's username
