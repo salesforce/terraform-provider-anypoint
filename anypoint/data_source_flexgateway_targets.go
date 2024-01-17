@@ -155,7 +155,7 @@ func flattenFlexGatewayTargetSummary(target *flexgateway.FlexGatewayTargetSummar
 		}
 	}
 	if val, ok := target.GetTagsOk(); ok && val != nil {
-		elem["tags"] = *val
+		elem["tags"] = val
 	}
 	if val, ok := target.GetLastUpdateOk(); ok && val != nil {
 		elem["last_update"] = val.String()

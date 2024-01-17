@@ -125,7 +125,7 @@ func dataSourceFlexGatewayTargetRead(ctx context.Context, d *schema.ResourceData
 	}
 	defer httpr.Body.Close()
 
-	data := flattenFlexGatewayTargetDetails(&res)
+	data := flattenFlexGatewayTargetDetails(res)
 	if err := setFlexGatewayTargetAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -147,16 +147,16 @@ func flattenFlexGatewayTargetDetails(target *flexgateway.FlexGatewayTargetDetail
 		elem["status"] = *val
 	}
 	if val, ok := target.GetReplicasOk(); ok && val != nil {
-		elem["replicas"] = flattenFlexGatewayTargetReplicas(*val)
+		elem["replicas"] = flattenFlexGatewayTargetReplicas(val)
 	}
 	if val, ok := target.GetTagsOk(); ok && val != nil {
-		elem["tags"] = *val
+		elem["tags"] = val
 	}
 	if val, ok := target.GetLastUpdateOk(); ok && val != nil {
 		elem["last_update"] = val.String()
 	}
 	if val, ok := target.GetVersionsOk(); ok && val != nil {
-		elem["versions"] = *val
+		elem["versions"] = val
 	}
 	if val, ok := target.GetVersionOk(); ok && val != nil {
 		elem["version"] = *val
@@ -165,7 +165,7 @@ func flattenFlexGatewayTargetDetails(target *flexgateway.FlexGatewayTargetDetail
 	return elem
 }
 
-func flattenFlexGatewayTargetReplicas(replicas []flexgateway.FlexGatewayTargetDetailsReplicas) []map[string]interface{} {
+func flattenFlexGatewayTargetReplicas(replicas []flexgateway.FlexGatewayTargetDetailsReplicasInner) []map[string]interface{} {
 	slice := make([]map[string]interface{}, len(replicas))
 	for i, r := range replicas {
 		elem := make(map[string]interface{})
@@ -176,8 +176,8 @@ func flattenFlexGatewayTargetReplicas(replicas []flexgateway.FlexGatewayTargetDe
 			elem["count"] = *val
 		}
 		if dates, ok := r.GetCertificateExpirationDatesOk(); ok && dates != nil {
-			strdates := make([]string, len(*dates))
-			for j, d := range *dates {
+			strdates := make([]string, len(dates))
+			for j, d := range dates {
 				strdates[j] = d.String()
 			}
 			elem["certificate_expiration_dates"] = strdates
