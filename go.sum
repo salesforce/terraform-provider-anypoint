@@ -268,6 +268,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1 h1:ecxh7W3wh8
 github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.0.1/go.mod h1:XGCBLRxWZSIRDEuRmQTbnYp5NPshcus1pQKnx3myRbs=
 github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.0 h1:dCLsPdz7Z3mcsVWUF2BWfVaRBMCXLed2dGwiq8V8C+c=
 github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.0/go.mod h1:XGCBLRxWZSIRDEuRmQTbnYp5NPshcus1pQKnx3myRbs=
+github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.1 h1:iJ1iw6J3c88jI5D3Hoo3RMV7EROJfDzNCNb3Hgq0uqU=
+github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.1/go.mod h1:tNX6qnXU2gnvGeQQInD9uKRK2Kcq1nKQdjgyzTZfWLQ=
 github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0 h1:G/gneWCL9sSeAOcguxcsZeceIzwh4bvK7OrPVrJ4Pg0=
 github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0/go.mod h1:04KH3Uhtu+DMxoCmbfgtoM0v5hscfdoH02+7S2q/Cok=
 github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0 h1:TOaHNJbX/aFMhFB8Y12TnHO+XSVr/mWv9ASU0QsdGf8=
@@ -276,6 +278,18 @@ github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0 h1:q5TddUXaFrY7Vs/7A
 github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0/go.mod h1:igRAIoG0Zo+SVoxRwGxxeAQEgUiz1efQ+n1JfeFV/b0=
 github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0 h1:1TzIdYGZpvaA8/6v7RM+c2ryWhcMhL2ZK/uLe1neypk=
 github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0/go.mod h1:4l1nfYhuDY+FUqCfMRVO9/lEkMqvXb6w0ZCX11ZUSyA=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0 h1:KsQJV6GeenYvdJp/oz+45fdzReSH0bqQIuMepHCxG/8=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0/go.mod h1:KxUtpYEcBqgnWJiyWdTOHF5DJ4jaoSBE7qNBCYsPKb4=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0 h1:P1R+zk7588zo/IuvkR8lbwrMAvwtZBSWzta1WvgCL40=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0/go.mod h1:9cIOhDGZ3yMexdMqexKuKJfIT4jrs9toQzHmn2MedrI=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs v0.1.0 h1:YdNzKg/F2kMiU+rzZ8BuvRZxMmnS1yMAY/HHwp3KOuU=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs v0.1.0/go.mod h1:lzca4Br5gKqeYODSDryjKIwwZvqjFWHQmYOlRu12W88=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_keystore v0.1.0 h1:Wvs+/jBX5ga37PDrvGBdSe1Pu07DlE6W6WQ2NCqkllo=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_keystore v0.1.0/go.mod h1:uTt6gE661L5UPo3eUHR/RK4X4lB40abwC7NtQmVSd0M=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_tlscontext v0.1.0 h1:30cz+diHY9FYIepkl7xm2v2UzenPvndDeVHDj7Yn5Tw=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_tlscontext v0.1.0/go.mod h1:XoV1HLCvtmktGQ2dms2isIeabyj34yI1fo+iOqhBQt4=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_truststore v0.1.0 h1:PC5ZNODl5qwOWiDGUyHOGR6tcqciPoKim/ic/ywos14=
+github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_truststore v0.1.0/go.mod h1:4tiFW/jYax2MpOuMcV+MT3q6B+aczj8P3lB0bKVLpeU=
 github.com/mulesoft-anypoint/anypoint-client-go/team v0.3.0 h1:+PnR8Pr/Kd9c2DTjPyhlksgM0cFgEq2meTQRIwlglPk=
 github.com/mulesoft-anypoint/anypoint-client-go/team v0.3.0/go.mod h1:2GR3QKqPcDm8Yzpr1AChNV235zs9fr2UVF/QIAqvIkc=
 github.com/mulesoft-anypoint/anypoint-client-go/team_group_mappings v0.2.1 h1:mfgqU2y6UPvabqRSyPRJk/Uo6mgH8olCcvX0p4Ex47w=

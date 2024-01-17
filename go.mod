@@ -14,11 +14,17 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
 	github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0
-	github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_keystore v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_tlscontext v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_truststore v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/team v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/team_group_mappings v0.2.1
 	github.com/mulesoft-anypoint/anypoint-client-go/team_members v0.2.0
