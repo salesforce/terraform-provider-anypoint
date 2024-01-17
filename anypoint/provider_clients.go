@@ -14,6 +14,12 @@ import (
 	org "github.com/mulesoft-anypoint/anypoint-client-go/org"
 	role "github.com/mulesoft-anypoint/anypoint-client-go/role"
 	rolegroup "github.com/mulesoft-anypoint/anypoint-client-go/rolegroup"
+	secretgroup "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup"
+	secretgroup_certificate "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate"
+	secretgroup_crl_distributor_configs "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs"
+	secretgroup_keystore "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_keystore"
+	secretgroup_tlscontext "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_tlscontext"
+	secretgroup_truststore "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_truststore"
 	team "github.com/mulesoft-anypoint/anypoint-client-go/team"
 	team_group_mappings "github.com/mulesoft-anypoint/anypoint-client-go/team_group_mappings"
 	team_members "github.com/mulesoft-anypoint/anypoint-client-go/team_members"
@@ -48,6 +54,12 @@ type ProviderConfOutput struct {
 	apimclient              *apim.APIClient
 	apimupstreamclient      *apim_upstream.APIClient
 	flexgatewayclient       *flexgateway.APIClient
+	secretgroupclient       *secretgroup.APIClient
+	sgkeystoreclient        *secretgroup_keystore.APIClient
+	sgtruststoreclient      *secretgroup_truststore.APIClient
+	sgcertificateclient     *secretgroup_certificate.APIClient
+	sgtlscontextclient      *secretgroup_tlscontext.APIClient
+	sgcrldistribcfgsclient  *secretgroup_crl_distributor_configs.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -73,6 +85,12 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	apimcfg := apim.NewConfiguration()
 	apimupstreamcfg := apim_upstream.NewConfiguration()
 	flexgatewaycfg := flexgateway.NewConfiguration()
+	secretgroupcfg := secretgroup.NewConfiguration()
+	sgkeystorecfg := secretgroup_keystore.NewConfiguration()
+	sgtruststorecfg := secretgroup_truststore.NewConfiguration()
+	sgcertificatecfg := secretgroup_certificate.NewConfiguration()
+	sgtlscontextcfg := secretgroup_tlscontext.NewConfiguration()
+	sgcrldistribcfgs_cfg := secretgroup_crl_distributor_configs.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -95,6 +113,12 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	apimclient := apim.NewAPIClient(apimcfg)
 	apimupstreamclient := apim_upstream.NewAPIClient(apimupstreamcfg)
 	flexgatewayclient := flexgateway.NewAPIClient(flexgatewaycfg)
+	secretgroupclient := secretgroup.NewAPIClient(secretgroupcfg)
+	sgkeystoreclient := secretgroup_keystore.NewAPIClient(sgkeystorecfg)
+	sgtruststoreclient := secretgroup_truststore.NewAPIClient(sgtruststorecfg)
+	sgcertificateclient := secretgroup_certificate.NewAPIClient(sgcertificatecfg)
+	sgtlscontextclient := secretgroup_tlscontext.NewAPIClient(sgtlscontextcfg)
+	sgcrldistribcfgsclient := secretgroup_crl_distributor_configs.NewAPIClient(sgcrldistribcfgs_cfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -120,5 +144,11 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		apimclient:              apimclient,
 		apimupstreamclient:      apimupstreamclient,
 		flexgatewayclient:       flexgatewayclient,
+		secretgroupclient:       secretgroupclient,
+		sgkeystoreclient:        sgkeystoreclient,
+		sgtruststoreclient:      sgtruststoreclient,
+		sgcertificateclient:     sgcertificateclient,
+		sgtlscontextclient:      sgtlscontextclient,
+		sgcrldistribcfgsclient:  sgcrldistribcfgsclient,
 	}
 }

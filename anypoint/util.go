@@ -162,6 +162,7 @@ func DecomposeResourceId(id string) []string {
 	return strings.Split(id, COMPOSITE_ID_SEPARATOR)
 }
 
+// same as strings.Join but for a slice of interface{} that are in reality strings
 func JoinStringInterfaceSlice(slice []interface{}, sep string) string {
 	dump := make([]string, len(slice))
 	for i, val := range slice {
