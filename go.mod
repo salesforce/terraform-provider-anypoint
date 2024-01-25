@@ -9,6 +9,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/ame_binding v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/amq v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/apim v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
@@ -82,3 +83,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/mulesoft-anypoint/anypoint-client-go/apim_policy => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/apim_policy

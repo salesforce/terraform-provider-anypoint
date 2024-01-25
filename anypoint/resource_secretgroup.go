@@ -107,7 +107,7 @@ func resourceSecretGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 	res, httpr, err := pco.secretgroupclient.DefaultApi.PostSecretGroup(authctx, orgid, envid).SecretGroupPostBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -141,7 +141,7 @@ func resourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 	res, httpr, err := pco.secretgroupclient.DefaultApi.GetSecretGroup(authctx, orgid, envid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -185,7 +185,7 @@ func resourceSecretGroupUpdate(ctx context.Context, d *schema.ResourceData, m in
 		_, httpr, err := pco.secretgroupclient.DefaultApi.PatchSecretGroup(authctx, orgid, envid, id).SecretGroupPatchBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -216,7 +216,7 @@ func resourceSecretGroupDelete(ctx context.Context, d *schema.ResourceData, m in
 	httpr, err := pco.secretgroupclient.DefaultApi.DeleteSecretGroup(authctx, orgid, envid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

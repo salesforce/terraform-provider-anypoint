@@ -38,16 +38,19 @@ func resourceSecretGroupTlsContextSF() *schema.Resource {
 			"sg_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The secret-group id where the tls-context instance is defined.",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The organization id where the tls-context's secret group is defined.",
 			},
 			"env_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The environment id where the tls-context's secret group is defined.",
 			},
 			"path": {
@@ -447,7 +450,7 @@ func resourceSecretGroupTlsContextSFCreate(ctx context.Context, d *schema.Resour
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.PostSecretGroupTlsContext(authctx, orgid, envid, sgid).TlsContextPostBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -481,7 +484,7 @@ func resourceSecretGroupTlsContextSFRead(ctx context.Context, d *schema.Resource
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.GetSecretGroupTlsContextDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -536,7 +539,7 @@ func resourceSecretGroupTlsContextSFUpdate(ctx context.Context, d *schema.Resour
 		_, httpr, err := pco.sgtlscontextclient.DefaultApi.PutSecretGroupTlsContext(authctx, orgid, envid, sgid, id).TlsContextPutBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

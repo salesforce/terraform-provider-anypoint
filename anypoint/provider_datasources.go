@@ -29,6 +29,8 @@ var DATASOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_ame":                                   dataSourceAME(),
 	"anypoint_apim":                                  dataSourceApim(),
 	"anypoint_apim_instance":                         dataSourceApimInstance(),
+	"anypoint_apim_instance_policy":                  dataSourceApimInstancePolicy(),
+	"anypoint_apim_instance_policies":                dataSourceApimInstancePolicies(),
 	"anypoint_apim_instance_upstreams":               dataSourceApimInstanceUpstreams(),
 	"anypoint_flexgateway_target":                    dataSourceFlexGatewayTarget(),
 	"anypoint_flexgateway_targets":                   dataSourceFlexGatewayTargets(),
@@ -47,4 +49,6 @@ var DATASOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_secretgroup_tlscontext_mule":           dataSourceSecretGroupTlsContextMule(),
 	"anypoint_secretgroup_crldistrib_cfgs_list":      dataSourceSecretGroupCrlDistribCfgsList(),
 	"anypoint_secretgroup_crldistrib_cfgs":           dataSourceSecretGroupCrlDistribCfgs(),
+	"anypoint_exchange_policy_templates":             dataSourceExchangePolicyTemplates(),
+	"anypoint_exchange_policy_template":              dataSourceExchangePolicyTemplate(),
 }

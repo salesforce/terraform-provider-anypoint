@@ -5,6 +5,7 @@ import (
 	ame_binding "github.com/mulesoft-anypoint/anypoint-client-go/ame_binding"
 	amq "github.com/mulesoft-anypoint/anypoint-client-go/amq"
 	apim "github.com/mulesoft-anypoint/anypoint-client-go/apim"
+	"github.com/mulesoft-anypoint/anypoint-client-go/apim_policy"
 	apim_upstream "github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream"
 	connected_app "github.com/mulesoft-anypoint/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-anypoint/anypoint-client-go/dlb"
@@ -52,6 +53,7 @@ type ProviderConfOutput struct {
 	ameclient               *ame.APIClient
 	amebindingclient        *ame_binding.APIClient
 	apimclient              *apim.APIClient
+	apimpolicyclient        *apim_policy.APIClient
 	apimupstreamclient      *apim_upstream.APIClient
 	flexgatewayclient       *flexgateway.APIClient
 	secretgroupclient       *secretgroup.APIClient
@@ -83,6 +85,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	amecfg := ame.NewConfiguration()
 	amebindingcfg := ame_binding.NewConfiguration()
 	apimcfg := apim.NewConfiguration()
+	apimpolicycfg := apim_policy.NewConfiguration()
 	apimupstreamcfg := apim_upstream.NewConfiguration()
 	flexgatewaycfg := flexgateway.NewConfiguration()
 	secretgroupcfg := secretgroup.NewConfiguration()
@@ -111,6 +114,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	ameclient := ame.NewAPIClient(amecfg)
 	amebindingclient := ame_binding.NewAPIClient(amebindingcfg)
 	apimclient := apim.NewAPIClient(apimcfg)
+	apimpolicyclient := apim_policy.NewAPIClient(apimpolicycfg)
 	apimupstreamclient := apim_upstream.NewAPIClient(apimupstreamcfg)
 	flexgatewayclient := flexgateway.NewAPIClient(flexgatewaycfg)
 	secretgroupclient := secretgroup.NewAPIClient(secretgroupcfg)
@@ -142,6 +146,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		ameclient:               ameclient,
 		amebindingclient:        amebindingclient,
 		apimclient:              apimclient,
+		apimpolicyclient:        apimpolicyclient,
 		apimupstreamclient:      apimupstreamclient,
 		flexgatewayclient:       flexgatewayclient,
 		secretgroupclient:       secretgroupclient,

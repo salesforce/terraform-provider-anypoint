@@ -106,11 +106,11 @@ func dataSourceFlexGatewayTargetRead(ctx context.Context, d *schema.ResourceData
 	envid := d.Get("env_id").(string)
 	id := d.Get("id").(string)
 	authctx := getFlexGatewayAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.flexgatewayclient.DefaultApi.GetFlexGatewayTargetById(authctx, orgid, envid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -124,7 +124,7 @@ func dataSourceFlexGatewayTargetRead(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 	defer httpr.Body.Close()
-
+	//parse data
 	data := flattenFlexGatewayTargetDetails(res)
 	if err := setFlexGatewayTargetAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{

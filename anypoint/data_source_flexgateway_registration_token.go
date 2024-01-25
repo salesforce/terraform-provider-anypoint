@@ -46,7 +46,7 @@ func dataSourceFlexGatewayRegistrationTokenRead(ctx context.Context, d *schema.R
 	res, httpr, err := pco.flexgatewayclient.DefaultApi.GetFlexGatewayRegistrationToken(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -60,7 +60,7 @@ func dataSourceFlexGatewayRegistrationTokenRead(ctx context.Context, d *schema.R
 		return diags
 	}
 	defer httpr.Body.Close()
-
+	//process data
 	if err := d.Set("registration_token", res.GetRegistrationToken()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

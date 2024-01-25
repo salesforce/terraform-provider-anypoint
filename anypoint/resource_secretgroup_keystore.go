@@ -38,16 +38,19 @@ func resourceSecretGroupKeystore() *schema.Resource {
 			"sg_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The secret-group id where the keystore instance is defined.",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The organization id where the keystore's secret group is defined.",
 			},
 			"env_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The environment id where the keystore's secret group is defined.",
 			},
 			"allow_expired_cert": {
@@ -204,7 +207,7 @@ func resourceSecretGroupKeystoreCreate(ctx context.Context, d *schema.ResourceDa
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -237,7 +240,7 @@ func resourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceData
 	}
 	authctx := getSgKeystoreAuthCtx(ctx, &pco)
 	res, httpr, err := pco.sgkeystoreclient.DefaultApi.GetSecretGroupKeystoreDetails(authctx, orgid, envid, sgid, id).Execute()
-	if err != nil {
+	if err != nil && httpr.StatusCode >= 400 {
 		var details string
 		if httpr != nil {
 			b, _ := io.ReadAll(httpr.Body)
@@ -303,7 +306,7 @@ func resourceSecretGroupKeystoreUpdate(ctx context.Context, d *schema.ResourceDa
 		_, httpr, err := req.Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

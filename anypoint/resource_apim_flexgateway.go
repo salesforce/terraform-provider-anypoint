@@ -499,7 +499,7 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	res, httpr, err := pco.apimclient.DefaultApi.PostApimInstance(authctx, orgid, envid).ApimInstancePostBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -544,7 +544,7 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 			_, httpr, err := pco.apimupstreamclient.DefaultApi.PostApimInstanceUpstream(authctx, orgid, envid, id).UpstreamPostBody(*body).Execute()
 			if err != nil {
 				var details error
-				if httpr != nil {
+				if httpr != nil && httpr.StatusCode >= 400 {
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {
@@ -580,7 +580,7 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -632,7 +632,7 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, httpr, err := pco.apimupstreamclient.DefaultApi.PatchApimInstanceUpstream(authctx, orgid, envid, apimid, id).UpstreamPatchBody(*body).Execute()
 			if err != nil {
 				var details error
-				if httpr != nil {
+				if httpr != nil && httpr.StatusCode >= 400 {
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {
@@ -731,7 +731,7 @@ func resourceApimFlexGatewayRoutingUpdate(ctx context.Context, d *schema.Resourc
 		_, httpr, err := pco.apimclient.DefaultApi.PatchApimInstance(authctx, orgid, envid, id).Body(body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

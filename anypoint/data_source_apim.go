@@ -411,7 +411,7 @@ func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

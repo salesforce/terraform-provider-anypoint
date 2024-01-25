@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,6 +36,26 @@ func IsFloat64(v interface{}) bool {
 
 func IsBool(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf(true)
+}
+
+// converts a primitive value in a interface{} format to a string
+func ConvPrimtiveInterface2String(p interface{}) string {
+	if IsInt32(p) {
+		return strconv.Itoa(int(p.(int32)))
+	}
+	if IsInt64(p) {
+		return strconv.Itoa(int(p.(int64)))
+	}
+	if IsFloat32(p) {
+		return fmt.Sprintf("%f", p.(float32))
+	}
+	if IsFloat64(p) {
+		return fmt.Sprintf("%f", p.(float64))
+	}
+	if IsBool(p) {
+		return strconv.FormatBool(p.(bool))
+	}
+	return p.(string)
 }
 
 func ListInterface2ListStrings(array []interface{}) []string {

@@ -94,7 +94,7 @@ func dataSourceFlexGatewayTargetsRead(ctx context.Context, d *schema.ResourceDat
 	res, httpr, err := pco.flexgatewayclient.DefaultApi.GetFlexGatewayTargets(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -108,7 +108,7 @@ func dataSourceFlexGatewayTargetsRead(ctx context.Context, d *schema.ResourceDat
 		return diags
 	}
 	defer httpr.Body.Close()
-
+	//parse data
 	data := flattenFlexGatewayTargets(res)
 	if err := d.Set("targets", data); err != nil {
 		diags = append(diags, diag.Diagnostic{

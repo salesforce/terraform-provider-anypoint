@@ -37,16 +37,19 @@ func resourceSecretGroupCertificate() *schema.Resource {
 			"sg_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The secret-group id where the certificate instance is defined.",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The organization id where the certificate's secret group is defined.",
 			},
 			"env_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The environment id where the certificate's secret group is defined.",
 			},
 			"allow_expired_cert": {
@@ -130,7 +133,7 @@ func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.Resourc
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -165,7 +168,7 @@ func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceD
 	res, httpr, err := pco.sgcertificateclient.DefaultApi.GetSecretGroupCertificateDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -222,7 +225,7 @@ func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.Resourc
 		_, httpr, err := req.Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

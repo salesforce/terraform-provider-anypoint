@@ -116,7 +116,7 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 
 	res, httpr, err := pco.apimupstreamclient.DefaultApi.GetApimInstanceUpstreams(authctx, orgid, envid, id).Execute()
 	defer httpr.Body.Close()
-	if err != nil {
+	if err != nil && httpr.StatusCode >= 400 {
 		var details string
 		if httpr != nil {
 			b, _ := io.ReadAll(httpr.Body)

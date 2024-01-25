@@ -38,16 +38,19 @@ func resourceSecretGroupTruststore() *schema.Resource {
 			"sg_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The secret-group id where the truststore instance is defined.",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The organization id where the truststore instance is defined.",
 			},
 			"env_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The environment id where the truststore instance is defined.",
 			},
 			"allow_expired_cert": {
@@ -159,7 +162,7 @@ func resourceSecretGroupTruststoreCreate(ctx context.Context, d *schema.Resource
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -194,7 +197,7 @@ func resourceSecretGroupTruststoreRead(ctx context.Context, d *schema.ResourceDa
 	res, httpr, err := pco.sgtruststoreclient.DefaultApi.GetSecretGroupTruststoreDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -257,7 +260,7 @@ func resourceSecretGroupTruststoreUpdate(ctx context.Context, d *schema.Resource
 		_, httpr, err := req.Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

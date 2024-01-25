@@ -416,10 +416,9 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 	authctx := getApimAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -432,6 +431,7 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	// process data
 	data := flattenApimInstanceDetails(&res)
 	if err := setApimInstanceDetailsAttributesToResourceData(d, data); err != nil {

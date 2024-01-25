@@ -36,16 +36,19 @@ func resourceSecretGroupCrlDistribCfgs() *schema.Resource {
 			"sg_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The secret-group id where the crl-distributor-configs instance is defined.",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The organization id where the crl-distributor-configs's secret group is defined.",
 			},
 			"env_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The environment id where the crl-distributor-configs's secret group is defined.",
 			},
 			"name": {
@@ -115,7 +118,7 @@ func resourceSecretGroupCrlDistribCfgsCreate(ctx context.Context, d *schema.Reso
 	res, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.PostSecretGroupCrlDistribCfgs(authctx, orgid, envid, sgid).CrlDistribCfgsReqBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -148,7 +151,7 @@ func resourceSecretGroupCrlDistribCfgsRead(ctx context.Context, d *schema.Resour
 	res, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.GetSecretGroupCrlDistribCfgsDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -195,7 +198,7 @@ func resourceSecretGroupCrlDistribCfgsUpdate(ctx context.Context, d *schema.Reso
 		_, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.PutSecretGroupTlsContext(authctx, orgid, envid, sgid, id).CrlDistribCfgsReqBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
