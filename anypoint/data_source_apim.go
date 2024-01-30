@@ -564,7 +564,7 @@ func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssetsInner) map[s
 }
 
 func flattenApimAssetApisResult(apis []apim.ApimInstanceCollectionAssetsInnerApisInner) []map[string]interface{} {
-	if apis == nil || len(apis) == 0 {
+	if len(apis) == 0 {
 		return []map[string]interface{}{}
 	}
 	result := make([]map[string]interface{}, len(apis))
