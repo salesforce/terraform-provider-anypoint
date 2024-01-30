@@ -140,10 +140,10 @@ func resourceApimFlexGateway() *schema.Resource {
 				Description: "The type of API Manager instance. Always equals to 'flexGateway'",
 			},
 			"endpoint_uri": {
-				Type:             schema.TypeString,
-				Required:         true,
-				Description:      "The endpoint URI of this instance API",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The endpoint URI of this instance API",
+				// ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 			},
 			"endpoint_audit": {
 				Type:        schema.TypeMap,
@@ -261,7 +261,6 @@ func resourceApimFlexGateway() *schema.Resource {
 			"deployment_gateway_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "1.0.0",
 				Description: "The instance's deployment gateway version",
 			},
 			"deployment_environment_name": {
@@ -282,7 +281,8 @@ func resourceApimFlexGateway() *schema.Resource {
 			},
 			"deployment_target_name": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Required:    true,
+				ForceNew:    true,
 				Description: "The instance's deployment flex gateway target name",
 			},
 			"deployment_updated_date": {
@@ -600,7 +600,7 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 	if diagsbis := readApimInstanceUpstreamsOnly(ctx, d, m); diagsbis.HasError() {
 		diags = append(diags, diagsbis...)
 	}
-	details := flattenApimInstanceDetails(&res)
+	details := flattenApimInstanceDetails(res)
 	if err := setApimFlexGatewayAttributesToResourceData(d, details); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -1049,16 +1049,23 @@ func newApimFlexGatewayUpstreamPostBody(upstreams []interface{}) []*apim_upstrea
 // creates patch body depending on the changes occured on the updatable attributes
 func newApimFlexGatewayPatchBody(d *schema.ResourceData) map[string]interface{} {
 	body := make(map[string]interface{})
+	deployment := newApimFlexGatewayDeploymentPostBody(d)
+	deployment_map, _ := deployment.ToMap()
+	endpoint := newApimFlexGatewayEndpointPostBody(d)
+	endpoint_map, _ := endpoint.ToMap()
 	attributes := FilterStrList(getApimFlexGatewayUpdatableAttributes(), func(s string) bool {
 		return !strings.HasPrefix(s, "endpoint") && !strings.HasPrefix(s, "deployment") && s != "routing" && s != "upstreams"
 	})
 	for _, attr := range attributes {
 		if d.HasChange(attr) {
-			body[strcase.ToCamel(attr)] = d.Get(attr)
+			body[strcase.ToLowerCamel(attr)] = d.Get(attr)
 		}
 	}
-	maps.Copy(body, newPatchBodyMap4FlattenedAttr("endpoint", d))
-	maps.Copy(body, newPatchBodyMap4FlattenedAttr("deployment", d))
+
+	//maps.Copy(body, newPatchBodyMap4FlattenedAttr("endpoint", d))
+	//maps.Copy(body, newPatchBodyMap4FlattenedAttr("deployment", d))
+	body["endpoint"] = endpoint_map
+	body["deployment"] = deployment_map
 	maps.Copy(body, newApimFlexGatewayRoutingPatchBody(d))
 	return body
 }
@@ -1077,19 +1084,19 @@ func newApimFlexGatewayRoutingPatchBody(d *schema.ResourceData) map[string]inter
 // if no changes occured on the prefixed attributes, an empty map is returned
 func newPatchBodyMap4FlattenedAttr(prefix string, d *schema.ResourceData) map[string]interface{} {
 	separator := "_"
-	endpoint_params := make(map[string]interface{})
+	params := make(map[string]interface{})
 	attributes := FilterStrList(getApimFlexGatewayUpdatableAttributes(), func(s string) bool {
 		return strings.HasPrefix(s, prefix)
 	})
 	for _, attr := range attributes {
 		if d.HasChange(attr) {
 			attr_without_prefix, _ := strings.CutPrefix(attr, prefix+separator)
-			endpoint_params[strcase.ToCamel(attr_without_prefix)] = d.Get(attr)
+			params[strcase.ToCamel(attr_without_prefix)] = d.Get(attr)
 		}
 	}
 	body := make(map[string]interface{})
-	if len(endpoint_params) > 0 {
-		body[prefix] = endpoint_params
+	if len(params) > 0 {
+		body[prefix] = params
 	}
 	return body
 }
@@ -1239,10 +1246,10 @@ func validateRoutingUpstreams(d *schema.ResourceDiff) error {
 func getApimFlexGatewayUpdatableAttributes() []string {
 	attributes := [...]string{
 		"instance_label", "description", "tags", "provider_id",
-		"deprecated", "endpoint_uri", "endpoint_proxy_uri",
+		"deprecated", "endpoint_proxy_uri",
 		"endpoint_proxy_registration_uri", "endpoint_deployment_type",
 		"endpoint_tls_inbound_context", "deployment_gateway_version",
-		"deployment_target_id", "deployment_expected_status",
+		"deployment_target_id", "deployment_target_name", "deployment_expected_status",
 		"deployment_type", "deployment_overwrite",
 		"routing", "upstreams",
 	}

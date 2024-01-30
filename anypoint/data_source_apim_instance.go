@@ -433,7 +433,7 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 	}
 	defer httpr.Body.Close()
 	// process data
-	data := flattenApimInstanceDetails(&res)
+	data := flattenApimInstanceDetails(res)
 	if err := setApimInstanceDetailsAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -523,7 +523,7 @@ func flattenApimInstanceDetails(details *apim.ApimInstanceDetails) map[string]in
 		result["description"] = *val
 	}
 	if val, ok := details.GetTagsOk(); ok {
-		result["tags"] = *val
+		result["tags"] = val
 	}
 	if val, ok := details.GetOrderOk(); ok {
 		result["order"] = *val
@@ -555,7 +555,7 @@ func flattenApimInstanceDetails(details *apim.ApimInstanceDetails) map[string]in
 		maps.Copy(result, deployment)
 	}
 	if val, ok := details.GetRoutingOk(); ok && val != nil {
-		result["routing"] = flattenApimRoutingCollection(*val)
+		result["routing"] = flattenApimRoutingCollection(val)
 	}
 	if val, ok := details.GetStatusOk(); ok && val != nil {
 		result["status"] = *val
@@ -644,40 +644,40 @@ func flattenApimDeployment(deployment *apim.Deployment) map[string]interface{} {
 			result["deployment_audit_updated_date"] = updated
 		}
 	}
-	if val, ok := deployment.GetDeploymentIdOk(); ok {
+	if val, ok := deployment.GetDeploymentIdOk(); ok && val != nil {
 		result["deployment_id"] = *val
 	}
-	if val, ok := deployment.GetApplicationIdOk(); ok {
+	if val, ok := deployment.GetApplicationIdOk(); ok && val != nil {
 		result["deployment_application_id"] = *val
 	}
-	if val, ok := deployment.GetApplicationNameOk(); ok {
+	if val, ok := deployment.GetApplicationNameOk(); ok && val != nil {
 		result["deployment_application_name"] = *val
 	}
-	if val, ok := deployment.GetGatewayVersionOk(); ok {
+	if val, ok := deployment.GetGatewayVersionOk(); ok && val != nil {
 		result["deployment_gateway_version"] = *val
 	}
-	if val, ok := deployment.GetEnvironmentNameOk(); ok {
+	if val, ok := deployment.GetEnvironmentNameOk(); ok && val != nil {
 		result["deployment_environment_name"] = *val
 	}
-	if val, ok := deployment.GetEnvironmentIdOk(); ok {
+	if val, ok := deployment.GetEnvironmentIdOk(); ok && val != nil {
 		result["deployment_environment_id"] = *val
 	}
-	if val, ok := deployment.GetTargetIdOk(); ok {
+	if val, ok := deployment.GetTargetIdOk(); ok && val != nil {
 		result["deployment_target_id"] = *val
 	}
-	if val, ok := deployment.GetTargetNameOk(); ok {
+	if val, ok := deployment.GetTargetNameOk(); ok && val != nil {
 		result["deployment_target_name"] = *val
 	}
-	if val, ok := deployment.GetUpdatedDateOk(); ok {
+	if val, ok := deployment.GetUpdatedDateOk(); ok && val != nil {
 		result["deployment_updated_date"] = *val
 	}
-	if val, ok := deployment.GetTypeOk(); ok {
+	if val, ok := deployment.GetTypeOk(); ok && val != nil {
 		result["deployment_type"] = *val
 	}
-	if val, ok := deployment.GetExpectedStatusOk(); ok {
+	if val, ok := deployment.GetExpectedStatusOk(); ok && val != nil {
 		result["deployment_expected_status"] = *val
 	}
-	if val, ok := deployment.GetApiIdOk(); ok {
+	if val, ok := deployment.GetApiIdOk(); ok && val != nil {
 		result["deployment_api_id"] = *val
 	}
 	return result
@@ -700,8 +700,8 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 		item["label"] = *val
 	}
 	if upstreams, ok := routing.GetUpstreamsOk(); ok && upstreams != nil {
-		set := make([]map[string]interface{}, len(*upstreams))
-		for i, u := range *upstreams {
+		set := make([]map[string]interface{}, len(upstreams))
+		for i, u := range upstreams {
 			upstream := make(map[string]interface{})
 			if val, ok := u.GetIdOk(); ok {
 				upstream["id"] = *val
@@ -727,7 +727,7 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 			r["path"] = *val
 		}
 		if val, ok := rules.GetHeadersOk(); ok && val != nil {
-			r["headers"] = *val
+			r["headers"] = val
 		}
 		item["rules"] = []interface{}{r}
 	}
@@ -741,12 +741,12 @@ func flattenApimAudit(audit *apim.Audit) map[string]interface{} {
 	}
 	if created, ok := audit.GetCreatedOk(); ok && created != nil {
 		if val, ok := created.GetDateOk(); ok && val != nil {
-			result["created"] = val.String()
+			result["created"] = *val
 		}
 	}
 	if updated, ok := audit.GetUpdatedOk(); ok && updated != nil {
 		if val, ok := updated.GetDateOk(); ok && updated != nil {
-			result["updated"] = val.String()
+			result["updated"] = *val
 		}
 	}
 	return result

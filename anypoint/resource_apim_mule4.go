@@ -261,7 +261,7 @@ func resourceApimMule4Read(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 	defer httpr.Body.Close()
-	details := flattenApimInstanceDetails(&res)
+	details := flattenApimInstanceDetails(res)
 	if err := setApimMule4AttributesToResourceData(d, details); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,

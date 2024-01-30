@@ -8,7 +8,8 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/ame v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/ame_binding v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/amq v1.0.0
-	github.com/mulesoft-anypoint/anypoint-client-go/apim v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/apim v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1
@@ -63,7 +64,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

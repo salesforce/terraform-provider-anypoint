@@ -19,47 +19,37 @@ Create an API Manager Instance of type Flex Gateway.
 ```terraform
 resource "anypoint_apim_flexgateway" "fg" {
   org_id = var.root_org
-  env_id = var.env_id
+  env_id = "7074fcdd-9b23-4ab3-97c8-5db5f4adf17d"
   asset_group_id = var.root_org
   asset_id = "flex-backend-app-test"
   asset_version = "1.0.0"
-  deployment_target_id = "c33dac89-4ca6-4951-9ad5-19ace129029e"
+  deployment_target_id = data.anypoint_flexgateway_target.target.id
+  deployment_target_name = data.anypoint_flexgateway_target.target.name
+  deployment_gateway_version = data.anypoint_flexgateway_target.target.version
   deployment_expected_status = "deployed"
   deployment_overwrite = true
   deployment_type = "HY"
-  instance_label  = "my flex instance"
-  endpoint_uri = "http://consumer.url"
+  instance_label  = "my terraform flex instance"
+  endpoint_proxy_uri = "http://consumer.url/hello/world/2"
   routing {
     label = "my-route01"
     upstreams {
-      label = "upstream03"
-      weight = 70
-    }
-    upstreams {
       label = "upstream01"
-      weight = 30
+      weight = 100
     }
     rules {
       methods = [ "POST", "GET" ]
-      host = "http://.*example\\.com"
-      path = "/api/.*"
+      host = ".*"
+      path = "/.*"
       headers = {
         "x-example-header" = ".*"
-        "x-correlation-id" = "[\\W\\d\\-]+"
+        "x-correlation-id" = ".*"
       }
     }
   }
   upstreams {
     label = "upstream01"
-    uri = "http://google.com"
-    tls_context {
-      secret_group_id = "39731075-0521-47aa-82b2-d9745f2ac2eb"
-      tls_context_id = "a20282b6-3708-4f2a-93b2-18fdd7d9fa34"
-    }
-  }
-  upstreams {
-    label = "upstream03"
-    uri = "http://helloworld.com"
+    uri = "http://192.168.1.166:3000"
   }
 }
 ```
@@ -73,7 +63,7 @@ resource "anypoint_apim_flexgateway" "fg" {
 - `asset_id` (String) The API specification's asset id in exchange
 - `asset_version` (String) The API specification's version number in exchange
 - `deployment_target_id` (String) The instance's deployment flex gateway target id
-- `endpoint_uri` (String) The endpoint URI of this instance API
+- `deployment_target_name` (String) The instance's deployment flex gateway target name
 - `env_id` (String) The environment id where the flex gateway instance is defined.
 - `org_id` (String) The organization id where the flex gateway instance is defined.
 - `routing` (Block List, Min: 1) The instance's routing mapping (see [below for nested schema](#nestedblock--routing))
@@ -108,7 +98,6 @@ resource "anypoint_apim_flexgateway" "fg" {
 - `deployment_environment_id` (String) The instance's deployment environment id
 - `deployment_environment_name` (String) The instance's deployment environment name
 - `deployment_id` (Number) The instance's deployment id
-- `deployment_target_name` (String) The instance's deployment flex gateway target name
 - `deployment_updated_date` (String) The instance's deployment update date
 - `endpoint_api_gateway_version` (String) Endpoint's api gateway version
 - `endpoint_api_version_id` (Number) The API Manager Instance id
@@ -116,6 +105,7 @@ resource "anypoint_apim_flexgateway" "fg" {
 - `endpoint_id` (Number) The instance's endpoint id
 - `endpoint_last_active_date` (String) Endpoint's last active date
 - `endpoint_type` (String) The endpoint's specification type
+- `endpoint_uri` (String) The endpoint URI of this instance API
 - `id` (String) The API Manager Flex Gateway instance id.
 - `is_public` (Boolean) If this API is Public
 - `last_active_date` (String) The date of last activity for this instance

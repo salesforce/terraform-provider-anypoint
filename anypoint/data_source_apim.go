@@ -452,7 +452,7 @@ func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface
 Parses the api manager search options in order to check if the required search parameters are set correctly.
 Appends the parameters to the given request
 */
-func parseApimSearchOpts(req apim.DefaultApiApiGetEnvApimInstancesRequest, params *schema.Set) (apim.DefaultApiApiGetEnvApimInstancesRequest, diag.Diagnostics) {
+func parseApimSearchOpts(req apim.DefaultApiGetEnvApimInstancesRequest, params *schema.Set) (apim.DefaultApiGetEnvApimInstancesRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if params.Len() == 0 {
 		return req, diags
@@ -517,7 +517,7 @@ func parseApimSearchOpts(req apim.DefaultApiApiGetEnvApimInstancesRequest, param
 	return req, diags
 }
 
-func flattenApimAssetsResult(assets []apim.ApimInstanceCollectionAssets) []interface{} {
+func flattenApimAssetsResult(assets []apim.ApimInstanceCollectionAssetsInner) []interface{} {
 	if len(assets) > 0 {
 		res := make([]interface{}, len(assets))
 		for i, asset := range assets {
@@ -528,7 +528,7 @@ func flattenApimAssetsResult(assets []apim.ApimInstanceCollectionAssets) []inter
 	return make([]interface{}, 0)
 }
 
-func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssets) map[string]interface{} {
+func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssetsInner) map[string]interface{} {
 	item := make(map[string]interface{})
 	if asset == nil {
 		return item
@@ -563,12 +563,12 @@ func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssets) map[string
 	return item
 }
 
-func flattenApimAssetApisResult(apis *[]apim.ApimInstanceCollectionApis) []map[string]interface{} {
-	if apis == nil || len(*apis) == 0 {
+func flattenApimAssetApisResult(apis []apim.ApimInstanceCollectionAssetsInnerApisInner) []map[string]interface{} {
+	if apis == nil || len(apis) == 0 {
 		return []map[string]interface{}{}
 	}
-	result := make([]map[string]interface{}, len(*apis))
-	for i, api := range *apis {
+	result := make([]map[string]interface{}, len(apis))
+	for i, api := range apis {
 		item := make(map[string]interface{})
 		if val, ok := api.GetAuditOk(); ok {
 			item["audit"] = flattenApimAudit(val)
@@ -604,7 +604,7 @@ func flattenApimAssetApisResult(apis *[]apim.ApimInstanceCollectionApis) []map[s
 			item["description"] = *val
 		}
 		if val, ok := api.GetTagsOk(); ok {
-			item["tags"] = *val
+			item["tags"] = val
 		}
 		if val, ok := api.GetOrderOk(); ok {
 			item["order"] = *val
@@ -635,7 +635,7 @@ func flattenApimAssetApisResult(apis *[]apim.ApimInstanceCollectionApis) []map[s
 			maps.Copy(item, deployment)
 		}
 		if val, ok := api.GetRoutingOk(); ok && val != nil {
-			item["routing"] = flattenApimRoutingCollection(*val)
+			item["routing"] = flattenApimRoutingCollection(val)
 		}
 		result[i] = item
 	}
