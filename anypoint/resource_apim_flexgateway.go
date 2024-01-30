@@ -534,7 +534,9 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	if input, ok := d.GetOk("upstreams"); ok {
 		pco := m.(ProviderConfOutput)
-		orgid, envid, id := decomposeApimFlexGatewayId(d)
+		orgid := d.Get("org_id").(string)
+		envid := d.Get("env_id").(string)
+		id := d.Get("id").(string)
 		authctx := getApimUpstreamAuthCtx(ctx, &pco)
 		bodies := newApimFlexGatewayUpstreamPostBody(input.([]interface{}))
 		//upstreams := make([]apim_upstream.UpstreamDetails, 0)
