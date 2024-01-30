@@ -758,7 +758,9 @@ func resourceApimFlexGatewayRoutingUpdate(ctx context.Context, d *schema.Resourc
 func resourceApimFlexGatewayDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	orgid, envid, id := decomposeApimFlexGatewayId(d)
+	orgid := d.Get("org_id").(string)
+	envid := d.Get("env_id").(string)
+	id := d.Get("id").(string)
 	authctx := getApimAuthCtx(ctx, &pco)
 
 	httpr, err := pco.apimclient.DefaultApi.DeleteApimInstance(authctx, orgid, envid, id).Execute()
@@ -795,7 +797,9 @@ func resourceApimFlexGatewayDeleteDefaultUpstream(ctx context.Context, d *schema
 			item := filtered[0].(map[string]interface{})
 			id := item["id"].(string)
 			pco := m.(ProviderConfOutput)
-			orgid, envid, apimid := decomposeApimFlexGatewayId(d)
+			orgid := d.Get("org_id").(string)
+			envid := d.Get("env_id").(string)
+			apimid := d.Get("id").(string)
 			authctx := getApimUpstreamAuthCtx(ctx, &pco)
 			httpr, err := pco.apimupstreamclient.DefaultApi.DeleteApimInstanceUpstream(authctx, orgid, envid, apimid, id).Execute()
 			if err != nil {
