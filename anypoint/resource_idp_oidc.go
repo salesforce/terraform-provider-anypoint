@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -131,6 +131,9 @@ func resourceOIDC() *schema.Resource {
 				Description: "The provider's sign out url, only available for SAML",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -147,11 +150,10 @@ func resourceOIDCCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersPost(authctx, orgid).IdpPostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -163,6 +165,7 @@ func resourceOIDCCreate(ctx context.Context, d *schema.ResourceData, m interface
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 
 	d.SetId(res.GetProviderId())
 
@@ -174,15 +177,17 @@ func resourceOIDCRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
+	if isComposedResourceId(idpid) {
+		orgid, idpid = decomposeOIDCId(d)
+	}
 	authctx := getIDPAuthCtx(ctx, &pco)
 
 	//request idp
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -194,6 +199,7 @@ func resourceOIDCRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	idpinstance := flattenIDPData(&res)
 	//save in data source schema
@@ -205,6 +211,9 @@ func resourceOIDCRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		})
 		return diags
 	}
+
+	d.SetId(idpid)
+	d.Set("org_id", orgid)
 
 	return diags
 }
@@ -225,8 +234,8 @@ func resourceOIDCUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		_, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdPatch(authctx, orgid, idpid).IdpPatchBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -256,8 +265,8 @@ func resourceOIDCDelete(ctx context.Context, d *schema.ResourceData, m interface
 	httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdDelete(authctx, orgid, idpid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -421,4 +430,9 @@ func newOIDCPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 func getIDPAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, idp.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, idp.ContextServerIndex, pco.server_index)
+}
+
+func decomposeOIDCId(d *schema.ResourceData) (string, string) {
+	s := DecomposeResourceId(d.Id())
+	return s[0], s[1]
 }

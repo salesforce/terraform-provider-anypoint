@@ -3,8 +3,7 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"strings"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -31,7 +30,7 @@ func resourceTeamMember() *schema.Resource {
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The unique id of this team membership composed by `org_id`_`team_id`_`user_id`_members",
+				Description: "The unique id of this team membership composed by {org_id}/{team_id}/{user_id}",
 			},
 			"team_id": {
 				Type:        schema.TypeString,
@@ -85,6 +84,9 @@ func resourceTeamMember() *schema.Resource {
 				Description: "The member team assignment update date",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -102,8 +104,8 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdPut(authctx, orgid, teamid, userid).TeamMemberPutBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -117,30 +119,32 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	defer httpr.Body.Close()
 
-	d.SetId(orgid + "_" + teamid + "_" + userid + "_members")
+	d.SetId(ComposeResourceId([]string{orgid, teamid, userid}))
 	d.Set("last_updated", time.Now().Format(time.RFC850))
 
-	resourceTeamMemberRead(ctx, d, m)
-
-	return diags
+	return resourceTeamMemberRead(ctx, d, m)
 }
 
 func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
+	userid := d.Get("user_id").(string)
 	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
+	if isComposedResourceId(id) {
+		orgid, teamid, userid = decomposeTeamMemberId(d)
+	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
+		orgid, teamid, userid = decomposeTeamMemberId(d, "_")
+	}
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
 	//request members
 	res, httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersGet(authctx, orgid, teamid).Execute()
-
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -153,10 +157,17 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diags
 	}
 	defer httpr.Body.Close()
-
-	item := res.GetData()[0]
-	teammember := flattenTeamMemberData(&item)
-
+	//parse result
+	item := search4MemberByIdInSlice(res.GetData(), userid)
+	if item == nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to find team member " + userid + " for team " + teamid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
+	teammember := flattenTeamMemberData(item)
 	if err := setTeamMemberAttributesToResourceData(d, teammember); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -166,32 +177,34 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diags
 	}
 
+	d.Set("org_id", orgid)
+	d.Set("team_id", teamid)
+	d.Set("user_id", userid)
+	d.SetId(ComposeResourceId([]string{orgid, teamid, userid}))
+
 	return diags
 }
 
 func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
-	userid := split[2]
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
+	userid := d.Get("user_id").(string)
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
 
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdDelete(authctx, orgid, teamid, userid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete team " + teamid + " members",
+			Summary:  "Unable to delete team " + teamid + " member" + userid,
 			Detail:   details,
 		})
 		return diags
@@ -207,7 +220,6 @@ func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m int
 func newTeamMemberPutBody(d *schema.ResourceData) *team_members.TeamMemberPutBody {
 	body := team_members.NewTeamMemberPutBodyWithDefaults()
 	body.SetMembershipType(d.Get("membership_type").(string))
-
 	return body
 }
 
@@ -233,10 +245,26 @@ func getTeamMemberAttributes() []string {
 	return attributes[:]
 }
 
+// returns a member from the given team_member with the given user_id.
+// if not found, returns nil
+func search4MemberByIdInSlice(members []team_members.TeamMember, user_id string) *team_members.TeamMember {
+	for _, member := range members {
+		if member.GetId() == user_id {
+			return &member
+		}
+	}
+	return nil
+}
+
 /*
  * Returns authentication context (includes authorization header)
  */
 func getTeamMembersAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, team_members.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, team_members.ContextServerIndex, pco.server_index)
+}
+
+func decomposeTeamMemberId(d *schema.ResourceData, separator ...string) (string, string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1], s[2]
 }

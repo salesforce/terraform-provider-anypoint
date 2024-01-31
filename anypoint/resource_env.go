@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -62,6 +62,9 @@ func resourceENV() *schema.Resource {
 				Description: "The environment client id",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -79,8 +82,8 @@ func resourceENVCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	res, httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsPost(authctx, orgid).EnvCore(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -107,14 +110,16 @@ func resourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	pco := m.(ProviderConfOutput)
 	envid := d.Id()
 	orgid := d.Get("org_id").(string)
-
 	authctx := getENVAuthCtx(ctx, &pco)
+	if isComposedResourceId(envid) {
+		orgid, envid = decomposeEnvId(d)
+	}
 
 	res, httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsEnvironmentIdGet(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -139,6 +144,9 @@ func resourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diags
 	}
 
+	d.SetId(envid)
+	d.Set("org_id", orgid)
+
 	return diags
 }
 
@@ -156,8 +164,8 @@ func resourceENVUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		_, httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsEnvironmentIdPut(authctx, orgid, envid).EnvCore(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -189,8 +197,8 @@ func resourceENVDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsEnvironmentIdDelete(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -238,4 +246,9 @@ func newENVPutBody(d *schema.ResourceData) *env.EnvCore {
 func getENVAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, env.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, env.ContextServerIndex, pco.server_index)
+}
+
+func decomposeEnvId(d *schema.ResourceData) (string, string) {
+	s := DecomposeResourceId(d.Id())
+	return s[0], s[1]
 }

@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,7 +30,7 @@ func resourceUserRolegroup() *schema.Resource {
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The unique id of this user-rolegroup resource composed by `org_id`_`user_id`_`rolegroup_id`",
+				Description: "The unique id of this user-rolegroup resource composed by {org_id}/{user_id}/{rolegroup_id}",
 			},
 			"org_id": {
 				Type:        schema.TypeString,
@@ -99,25 +99,25 @@ func resourceUserRolegroup() *schema.Resource {
 				Description: "The unique if of the user assignment to the role-group",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
 	rolegroupid := d.Get("rolegroup_id").(string)
-
 	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
-
 	//request user creation
 	httpr, err := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsRolegroupIdPost(authctx, orgid, userid, rolegroupid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -130,26 +130,28 @@ func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 	defer httpr.Body.Close()
+	d.SetId(ComposeResourceId([]string{orgid, userid, rolegroupid}))
 
-	d.SetId(orgid + "_" + userid + "_" + rolegroupid)
-
-	resourceUserRead(ctx, d, m)
-
-	return diags
+	return resourceUserRead(ctx, d, m)
 }
 
 func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
+	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
 	rolegroupid := d.Get("rolegroup_id").(string)
-
+	id := d.Id()
+	if isComposedResourceId(id) {
+		orgid, userid, rolegroupid = decomposeUserRolegroupId(d)
+	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
+		orgid, userid, rolegroupid = decomposeUserRolegroupId(d, "_")
+	}
 	rg, errDiags := searchUserRolegroup(ctx, d, m)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
 	//process data
 	rolegroup := flattenUserRolegroupData(rg)
 	//save in data source schema
@@ -161,25 +163,28 @@ func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m in
 		})
 		return diags
 	}
+	// set main identifiers parameters
+	d.SetId(ComposeResourceId([]string{orgid, userid, rolegroupid}))
+	d.Set("rolegroup_id", rolegroupid)
+	d.Set("user_id", userid)
+	d.Set("org_id", orgid)
 
 	return diags
 }
 
 func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
 	rolegroupid := d.Get("rolegroup_id").(string)
-
 	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsRolegroupIdDelete(authctx, orgid, userid, rolegroupid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -200,7 +205,7 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
 }
 
 /*
-  Returns authentication context (includes authorization header)
+Returns authentication context (includes authorization header)
 */
 func getUserRolegroupsAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, user_rolegroups.ContextAccessToken, pco.access_token)

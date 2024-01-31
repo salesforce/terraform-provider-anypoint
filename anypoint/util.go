@@ -169,18 +169,30 @@ func equalStrList(old, new interface{}) bool {
 }
 
 // composes an id by concatenating items of array into one single string
-func ComposeResourceId(elem []string) string {
-	return strings.Join(elem, COMPOSITE_ID_SEPARATOR)
+func ComposeResourceId(elem []string, separator ...string) string {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Join(elem, s)
 }
 
 // returns true if the given id is an id composed of sub-ids
-func isComposedResourceId(id string) bool {
-	return strings.Contains(id, COMPOSITE_ID_SEPARATOR)
+func isComposedResourceId(id string, separator ...string) bool {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Contains(id, s)
 }
 
 // decomposes a composite resource id
-func DecomposeResourceId(id string) []string {
-	return strings.Split(id, COMPOSITE_ID_SEPARATOR)
+func DecomposeResourceId(id string, separator ...string) []string {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Split(id, s)
 }
 
 // same as strings.Join but for a slice of interface{} that are in reality strings
