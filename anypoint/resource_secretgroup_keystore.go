@@ -208,6 +208,7 @@ func resourceSecretGroupKeystoreCreate(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -221,10 +222,8 @@ func resourceSecretGroupKeystoreCreate(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	id := res.GetId()
 	d.SetId(id)
-
 	return resourceSecretGroupKeystoreRead(ctx, d, m)
 }
 
@@ -242,7 +241,8 @@ func resourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceData
 	res, httpr, err := pco.sgkeystoreclient.DefaultApi.GetSecretGroupKeystoreDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil && httpr.StatusCode >= 400 {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -307,6 +307,7 @@ func resourceSecretGroupKeystoreUpdate(ctx context.Context, d *schema.ResourceDa
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

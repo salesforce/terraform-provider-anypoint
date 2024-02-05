@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -248,20 +248,18 @@ func dataSourceDLBs() *schema.Resource {
 }
 
 func dataSourceDLBsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
-
 	authctx := getDLBAuthCtx(ctx, &pco)
-
 	//request dlb
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersGet(authctx, orgid, vpcid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -276,7 +274,6 @@ func dataSourceDLBsRead(ctx context.Context, d *schema.ResourceData, m interface
 	defer httpr.Body.Close()
 	//process data
 	dlbs := flattenDLBsData(res.GetData())
-
 	//save in data source schema
 	if err := d.Set("dlbs", dlbs); err != nil {
 		diags = append(diags, diag.Diagnostic{

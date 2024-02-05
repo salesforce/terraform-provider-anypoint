@@ -84,7 +84,6 @@ func resourceAME() *schema.Resource {
 }
 
 func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -93,12 +92,12 @@ func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{
 	exchangeid := d.Get("exchange_id").(string)
 	authctx := getAMEAuthCtx(ctx, &pco)
 	body := newAMECreateBody(d)
-
 	//request user creation
 	_, httpr, err := pco.ameclient.DefaultApi.CreateAME(authctx, orgid, envid, regionid, exchangeid).ExchangeBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -119,7 +118,6 @@ func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{
 }
 
 func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -131,12 +129,12 @@ func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{})
 		orgid, envid, regionid, exchangeid = decomposeAMEId(d)
 	}
 	authctx := getAMEAuthCtx(ctx, &pco)
-
 	//request resource
 	res, httpr, err := pco.ameclient.DefaultApi.GetAME(authctx, orgid, envid, regionid, exchangeid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -150,7 +148,6 @@ func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	//process data
 	queue := flattenAMEData(&res)
 	//save in data source schema
@@ -180,7 +177,7 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	regionid := d.Get("region_id").(string)
 	exchangeid := d.Get("exchange_id").(string)
 	authctx := getAMEAuthCtx(ctx, &pco)
-
+	//check for changes
 	if d.HasChanges(getAMEPatchWatchAttributes()...) {
 		body := newAMECreateBody(d)
 		//request resource creation
@@ -188,6 +185,7 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -208,7 +206,6 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 }
 
 func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -216,11 +213,12 @@ func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	regionid := d.Get("region_id").(string)
 	exchangeid := d.Get("exchange_id").(string)
 	authctx := getAMEAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.ameclient.DefaultApi.DeleteAME(authctx, orgid, envid, regionid, exchangeid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

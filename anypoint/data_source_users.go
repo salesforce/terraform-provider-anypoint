@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -179,20 +179,20 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, m interfac
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	authctx := getUserAuthCtx(ctx, &pco)
-
+	//prepare request
 	req := pco.userclient.DefaultApi.OrganizationsOrgIdUsersGet(authctx, orgid)
 	req, errDiags := parseUsersSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
-	//request roles
+	//perform request
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()

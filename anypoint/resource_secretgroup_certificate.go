@@ -134,6 +134,7 @@ func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -169,6 +170,7 @@ func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -211,6 +213,7 @@ func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.Resourc
 		id := d.Get("id").(string)
 		allow_expired_cert := d.Get("allow_expired_cert").(bool)
 		authctx := getSgCertificateAuthCtx(ctx, &pco)
+		//prepare request
 		req := pco.sgcertificateclient.DefaultApi.PutSecretGroupCertificate(authctx, orgid, envid, sgid, id).AllowExpiredCert(allow_expired_cert)
 		req, err := loadSgCertificatePutBody(req, d)
 		if err != nil {
@@ -226,6 +229,7 @@ func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.Resourc
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

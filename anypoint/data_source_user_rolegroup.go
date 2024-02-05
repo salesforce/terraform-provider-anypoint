@@ -130,7 +130,6 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 	offset := 0
 	count := 0
 	end := false
-
 	for !end {
 		req := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsGet(authctx, orgid, userid)
 		req = req.Limit(int32(limit))
@@ -139,6 +138,7 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {

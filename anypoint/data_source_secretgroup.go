@@ -89,10 +89,12 @@ func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m in
 	envid := d.Get("env_id").(string)
 	id := d.Get("id").(string)
 	authctx := getSecretGroupAuthCtx(ctx, &pco)
+	//perform request
 	res, httpr, err := pco.secretgroupclient.DefaultApi.GetSecretGroup(authctx, orgid, envid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -106,7 +108,7 @@ func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m in
 		return diags
 	}
 	defer httpr.Body.Close()
-
+	//process response data
 	data := flattenSecretGroupResult(res)
 	if err := setSecretGroupAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{

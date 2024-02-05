@@ -102,6 +102,7 @@ func dataSourceSecretGroupKeystoresRead(ctx context.Context, d *schema.ResourceD
 	envid := d.Get("env_id").(string)
 	sgid := d.Get("sg_id").(string)
 	authctx := getSgKeystoreAuthCtx(ctx, &pco)
+	//prepare request
 	req := pco.sgkeystoreclient.DefaultApi.GetSecretGroupKeystores(authctx, orgid, envid, sgid)
 	req, errDiags := parseSgKeystoreSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
@@ -112,7 +113,8 @@ func dataSourceSecretGroupKeystoresRead(ctx context.Context, d *schema.ResourceD
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

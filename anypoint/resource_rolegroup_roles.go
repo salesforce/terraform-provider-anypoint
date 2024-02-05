@@ -115,6 +115,7 @@ func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -133,7 +134,6 @@ func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	org_id := d.Get("org_id").(string)
@@ -150,6 +150,7 @@ func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -194,24 +195,23 @@ func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	org_id := d.Get("org_id").(string)
 	rolegroup_id := d.Get("role_group_id").(string)
-
 	authctx := getRoleAuthCtx(ctx, &pco)
-
+	//prepare request
 	body, errDiags := newRolegroupRolesDeleteBody(d)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
+	//perform request
 	_, httpr, err := pco.roleclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdRolesDelete(authctx, org_id, rolegroup_id).RequestBody(body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

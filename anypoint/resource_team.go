@@ -97,12 +97,12 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	body := newTeamPostBody(d)
-
 	//request user creation
 	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsPost(authctx, orgid).TeamPostBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -129,12 +129,12 @@ func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		orgid, teamid = decomposeTeamId(d)
 	}
 	authctx := getTeamAuthCtx(ctx, &pco)
-
 	//request roles
 	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGet(authctx, orgid, teamid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -172,7 +172,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
-
+	//check for changes
 	if d.HasChanges(getTeamPatchWatchAttributes()...) {
 		body := newTeamPatchBody(d)
 		//request user creation
@@ -180,6 +180,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -193,7 +194,6 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
@@ -204,6 +204,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -217,7 +218,6 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
@@ -230,11 +230,12 @@ func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdDelete(authctx, orgid, teamid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

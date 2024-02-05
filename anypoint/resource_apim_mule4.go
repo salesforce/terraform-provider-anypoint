@@ -24,7 +24,7 @@ func resourceApimMule4() *schema.Resource {
 		UpdateContext: resourceApimMule4Update,
 		DeleteContext: resourceApimMule4Delete,
 		Description: `
-		Create an API Manager Instance of type Mule4.
+		Create and manage an API Manager Instance of type Mule4.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -206,10 +206,10 @@ func resourceApimMule4Create(ctx context.Context, d *schema.ResourceData, m inte
 	body := newApimMule4PostBody(d)
 	// execute post request
 	res, httpr, err := pco.apimclient.DefaultApi.PostApimInstance(authctx, orgid, envid).ApimInstancePostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -222,7 +222,7 @@ func resourceApimMule4Create(ctx context.Context, d *schema.ResourceData, m inte
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
 	//update ids following the creation
 	id := res.GetId()
 	d.SetId(strconv.Itoa(int(id)))
@@ -248,6 +248,7 @@ func resourceApimMule4Read(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -293,6 +294,7 @@ func resourceApimMule4Update(ctx context.Context, d *schema.ResourceData, m inte
 		if err != nil {
 			var details error
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = fmt.Errorf(string(b))
 			} else {
@@ -303,11 +305,11 @@ func resourceApimMule4Update(ctx context.Context, d *schema.ResourceData, m inte
 				Summary:  "Unable to update api manager instance " + apimid,
 				Detail:   details.Error(),
 			})
+			return diags
 		}
 		defer httpr.Body.Close()
+		return resourceApimMule4Read(ctx, d, m)
 	}
-
-	diags = append(diags, resourceApimMule4Read(ctx, d, m)...)
 	return diags
 }
 
@@ -324,6 +326,7 @@ func resourceApimMule4Delete(ctx context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

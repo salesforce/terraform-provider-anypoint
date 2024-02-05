@@ -419,6 +419,7 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -458,13 +459,13 @@ func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, 
 	if isComposedResourceId(id) {
 		orgid, envid, id = decomposeApimFlexGatewayId(d)
 	}
-
 	authctx := getApimUpstreamAuthCtx(ctx, &pco)
+	//perform request
 	res, httpr, err := pco.apimupstreamclient.DefaultApi.GetApimInstanceUpstreams(authctx, orgid, envid, id).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -477,6 +478,8 @@ func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, 
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
+	//process response data
 	list := res.GetUpstreams()
 	sortApimUpstreams(list)
 	data := flattenApimUpstreamsResult(list)

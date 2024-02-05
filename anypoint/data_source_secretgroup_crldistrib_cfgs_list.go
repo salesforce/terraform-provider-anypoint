@@ -78,7 +78,8 @@ func dataSourceSecretGroupCrlDistribCfgsListRead(ctx context.Context, d *schema.
 	res, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.GetSecretGroupCrlDistribCfgsList(authctx, orgid, envid, sgid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -92,7 +93,6 @@ func dataSourceSecretGroupCrlDistribCfgsListRead(ctx context.Context, d *schema.
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	// process response
 	data := flattenSgCrlDistribCfgsSummaryCollection(res)
 	if err := d.Set("list", data); err != nil {

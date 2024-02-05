@@ -341,12 +341,12 @@ func resourceAMEBindingRead(ctx context.Context, d *schema.ResourceData, m inter
 		orgid, envid, regionid, exchangeid, queueid = decomposeAMEBindingId(d)
 	}
 	authctx := getAMEBindingAuthCtx(ctx, &pco)
-
 	//request resource
 	res, httpr, err := pco.amebindingclient.DefaultApi.GetAMEBinding(authctx, orgid, envid, regionid, exchangeid, queueid).Inclusion("ALL").Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -360,7 +360,6 @@ func resourceAMEBindingRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	// setting resource id components for import purposes
 	d.Set("org_id", orgid)
 	d.Set("env_id", envid)
@@ -396,7 +395,6 @@ func resourceAMEBindingUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func resourceAMEBindingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -405,11 +403,12 @@ func resourceAMEBindingDelete(ctx context.Context, d *schema.ResourceData, m int
 	exchangeid := d.Get("exchange_id").(string)
 	queueid := d.Get("queue_id").(string)
 	authctx := getAMEBindingAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.amebindingclient.DefaultApi.DeleteAMEBinding(authctx, orgid, envid, regionid, exchangeid, queueid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -449,12 +448,12 @@ func resourceAMEBindingRulesCreate(ctx context.Context, d *schema.ResourceData, 
 	if body == nil {
 		return diags
 	}
-
 	//request resource creation
 	_, httpr, err := pco.amebindingclient.DefaultApi.CreateAMEBindingRule(authctx, orgid, envid, regionid, exchangeid, queueid).AMEBindingRuleBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -481,12 +480,12 @@ func resourceAMEBindingRulesDelete(ctx context.Context, d *schema.ResourceData, 
 	exchangeid := d.Get("exchange_id").(string)
 	queueid := d.Get("queue_id").(string)
 	authctx := getAMEBindingAuthCtx(ctx, &pco)
-
 	//request resource creation
 	httpr, err := pco.amebindingclient.DefaultApi.DeleteAMEBindingRule(authctx, orgid, envid, regionid, exchangeid, queueid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
