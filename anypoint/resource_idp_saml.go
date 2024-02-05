@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -137,6 +137,9 @@ func resourceSAML() *schema.Resource {
 				Description: "The identity provider's sign out url, only available for SAML",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -153,11 +156,10 @@ func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersPost(authctx, orgid).IdpPostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -169,6 +171,7 @@ func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m interface
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 
 	d.SetId(res.GetProviderId())
 
@@ -180,15 +183,18 @@ func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
+	if isComposedResourceId(idpid) {
+		orgid, idpid = decomposeSAMLId(d)
+	}
+
 	authctx := getIDPAuthCtx(ctx, &pco)
 
 	//request idp
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -200,6 +206,7 @@ func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	idpinstance := flattenIDPData(&res)
 	//save in data source schema
@@ -211,6 +218,9 @@ func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		})
 		return diags
 	}
+
+	d.SetId(idpid)
+	d.Set("org_id", orgid)
 
 	return diags
 }
@@ -231,8 +241,8 @@ func resourceSAMLUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		_, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdPatch(authctx, orgid, idpid).IdpPatchBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -262,8 +272,8 @@ func resourceSAMLDelete(ctx context.Context, d *schema.ResourceData, m interface
 	httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdDelete(authctx, orgid, idpid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -441,4 +451,9 @@ func newSAMLPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 	body.SetType(*saml_type)
 
 	return body, diags
+}
+
+func decomposeSAMLId(d *schema.ResourceData) (string, string) {
+	s := DecomposeResourceId(d.Id())
+	return s[0], s[1]
 }

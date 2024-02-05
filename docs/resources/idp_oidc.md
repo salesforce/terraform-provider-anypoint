@@ -92,4 +92,16 @@ Read-Only:
 - `client_token_endpoint_auth_methods_supported` (List of String) The list of authentication methods supported
 - `redirect_url` (String) The redirect url of the openid-connect provider
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{IDP_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_idp_oidc.example1 \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/452a2081-5bde-4fb9-9a8b-54d180ee2358    #resource ID
+```

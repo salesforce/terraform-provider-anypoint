@@ -2,8 +2,8 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
-	"strings"
+	"io"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,7 +32,7 @@ func resourceTeamGroupMappings() *schema.Resource {
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The unique id of this group mappings composed by `org_id`_`team_id`_groupmappings",
+				Description: "The unique id of this group mappings composed by {org_id}/{team_id}/groupmappings",
 			},
 			"team_id": {
 				Type:        schema.TypeString,
@@ -81,6 +81,9 @@ func resourceTeamGroupMappings() *schema.Resource {
 				Computed:    true,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -97,61 +100,53 @@ func resourceTeamGroupMappingsCreate(ctx context.Context, d *schema.ResourceData
 	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team group mappings ",
+			Summary:  "Unable to create team group mappings for team" + teamid,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
-	d.SetId(orgid + "_" + teamid + "_groupmappings")
-
-	resourceTeamGroupMappingsRead(ctx, d, m)
-
-	return diags
+	d.SetId(ComposeResourceId([]string{orgid, teamid}))
+	return resourceTeamGroupMappingsRead(ctx, d, m)
 }
 
 func resourceTeamGroupMappingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
 	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	body := newTeamGroupMappingsPutBody(d)
-	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
 
-	//request put
+	//perform request
 	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team group mappings ",
+			Summary:  "Unable to update team group mappings for team " + teamid,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
-	resourceTeamGroupMappingsRead(ctx, d, m)
-
-	return diags
+	d.Set("last_updated", time.Now().Format(time.RFC850))
+	return resourceTeamGroupMappingsRead(ctx, d, m)
 }
 
 func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -163,27 +158,25 @@ func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData
 	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	body := newTeamGroupMappingsPutBody(d)
 
-	//request put
+	//perform request
 	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team group mappings ",
+			Summary:  "Unable to delete team group mappings for team " + teamid,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	d.SetId("")
-
 	return diags
 }
 
@@ -191,17 +184,21 @@ func resourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
 	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
+	if isComposedResourceId(id) {
+		orgid, teamid = decomposeTeamGroupMappingId(d)
+	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
+		orgid, teamid = decomposeTeamGroupMappingId(d, "_")
+	}
 	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	//request get
 	res, httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsGet(authctx, orgid, teamid).Limit(500).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -235,6 +232,10 @@ func resourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, 
 		})
 		return diags
 	}
+
+	d.Set("org_id", orgid)
+	d.Set("team_id", teamid)
+	d.SetId(ComposeResourceId([]string{orgid, teamid}))
 
 	return diags
 }
@@ -303,4 +304,9 @@ func equalTeamGroupMapping(old, new interface{}) bool {
 func getTeamGroupMappingsAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, team_group_mappings.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, team_group_mappings.ContextServerIndex, pco.server_index)
+}
+
+func decomposeTeamGroupMappingId(d *schema.ResourceData, separator ...string) (string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1]
 }

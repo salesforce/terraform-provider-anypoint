@@ -3,7 +3,7 @@ package anypoint
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"sort"
 	"strings"
 
@@ -164,6 +164,9 @@ func resourceConnectedApp() *schema.Resource {
 				Computed: true,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -180,8 +183,8 @@ func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m i
 	res, httpr, err := pco.connectedappclient.DefaultApi.ConnectedApplicationsPost(authctx).ConnectedAppCore(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -232,8 +235,8 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -291,8 +294,8 @@ func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m i
 
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -340,8 +343,8 @@ func resourceConnectedAppDelete(ctx context.Context, d *schema.ResourceData, m i
 
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -374,8 +377,8 @@ func replaceConnectedAppScopes(ctx context.Context, d *schema.ResourceData, m in
 
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
