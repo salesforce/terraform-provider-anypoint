@@ -36,14 +36,6 @@ resource "anypoint_vpc" "avpc" {
       protocol = "tcp"
       to_port = 8092
   }
-  vpc_routes {
-    cidr = "10.0.0.0/20"
-    next_hop = "Local"
-  }
-  vpc_routes{
-    cidr = "0.0.0.0/0"
-    next_hop = "Internet Gateway"
-  }
 }
 ```
 
