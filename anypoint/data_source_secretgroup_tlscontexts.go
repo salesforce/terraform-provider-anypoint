@@ -83,7 +83,8 @@ func dataSourceSecretGroupTlsContextsRead(ctx context.Context, d *schema.Resourc
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.GetSecretGroupTlsContexts(authctx, orgid, envid, sgid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -97,7 +98,6 @@ func dataSourceSecretGroupTlsContextsRead(ctx context.Context, d *schema.Resourc
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	// process response
 	data := flattenSgTlsContextSummaryCollection(res)
 	if err := d.Set("tlscontexts", data); err != nil {

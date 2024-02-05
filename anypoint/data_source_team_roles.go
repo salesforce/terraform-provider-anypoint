@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -104,21 +104,21 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
-
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
+	//prepare request
 	req := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesGet(authctx, orgid, teamid)
 	req, errDiags := parseTeamRolesSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
 	//request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -166,8 +166,8 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 /*
- Parses the team roles search options in order to check if the required search parameters are set correctly.
- Appends the parameters to the given request
+Parses the team roles search options in order to check if the required search parameters are set correctly.
+Appends the parameters to the given request
 */
 func parseTeamRolesSearchOpts(req team_roles.DefaultApiApiOrganizationsOrgIdTeamsTeamIdRolesGetRequest, params *schema.Set) (team_roles.DefaultApiApiOrganizationsOrgIdTeamsTeamIdRolesGetRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics

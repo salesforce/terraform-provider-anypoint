@@ -3,7 +3,7 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -578,13 +578,13 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("id").(string)
 	authctx := getBGAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -596,9 +596,9 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
+	//process response data
 	bg := flattenBGData(&res)
-
 	if err := setBGCoreAttributesToResourceData(d, bg); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,

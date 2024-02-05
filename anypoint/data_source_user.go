@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -148,17 +148,16 @@ func dataSourceUser() *schema.Resource {
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("id").(string)
 	authctx := getUserAuthCtx(ctx, &pco)
-
 	//request roles
 	res, httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersUserIdGet(authctx, orgid, userid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -189,7 +188,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 /*
- Transforms a set of users to the dataSourceUsers schema
+Transforms a set of users to the dataSourceUsers schema
 */
 func flattenUserData(usr *user.User) map[string]interface{} {
 	res := make(map[string]interface{})

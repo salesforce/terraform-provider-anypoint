@@ -139,12 +139,12 @@ func dataSourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m i
 	connappid := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
-
 	//request connected app
 	res, httpr, err := pco.connectedappclient.DefaultApi.GetConnectedApp(authctx, orgid, connappid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

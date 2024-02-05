@@ -105,7 +105,8 @@ func dataSourceSecretGroupTruststoreRead(ctx context.Context, d *schema.Resource
 	res, httpr, err := pco.sgtruststoreclient.DefaultApi.GetSecretGroupTruststoreDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
