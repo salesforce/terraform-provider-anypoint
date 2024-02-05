@@ -111,14 +111,13 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	id := d.Get("id").(string)
-
 	authctx := getApimUpstreamAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.apimupstreamclient.DefaultApi.GetApimInstanceUpstreams(authctx, orgid, envid, id).Execute()
-	defer httpr.Body.Close()
-	if err != nil && httpr.StatusCode >= 400 {
+	if err != nil {
 		var details string
-		if httpr != nil {
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -131,7 +130,8 @@ func dataSourceApimInstanceUpstreamsRead(ctx context.Context, d *schema.Resource
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
+	//parse response
 	upstreams := flattenApimUpstreamsResult(res.GetUpstreams())
 	if err := d.Set("upstreams", upstreams); err != nil {
 		diags = append(diags, diag.Diagnostic{
