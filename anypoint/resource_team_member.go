@@ -91,7 +91,6 @@ func resourceTeamMember() *schema.Resource {
 }
 
 func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -99,12 +98,12 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 	userid := d.Get("user_id").(string)
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
 	body := newTeamMemberPutBody(d)
-
 	//request user creation
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdPut(authctx, orgid, teamid, userid).TeamMemberPutBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -126,7 +125,6 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -144,6 +142,7 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -192,11 +191,12 @@ func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m int
 	teamid := d.Get("team_id").(string)
 	userid := d.Get("user_id").(string)
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdDelete(authctx, orgid, teamid, userid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

@@ -118,7 +118,6 @@ func resourceAMQ() *schema.Resource {
 }
 
 func resourceAMQCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -127,12 +126,12 @@ func resourceAMQCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	queueid := d.Get("queue_id").(string)
 	authctx := getAMQAuthCtx(ctx, &pco)
 	body := newAMQCreateBody(d)
-
 	//request resource creation
 	_, httpr, err := pco.amqclient.DefaultApi.CreateAMQ(authctx, orgid, envid, regionid, queueid).QueueBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -153,7 +152,6 @@ func resourceAMQCreate(ctx context.Context, d *schema.ResourceData, m interface{
 }
 
 func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -165,12 +163,12 @@ func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		orgid, envid, regionid, queueid = decomposeAMQId(d)
 	}
 	authctx := getAMQAuthCtx(ctx, &pco)
-
 	//request resource
 	res, httpr, err := pco.amqclient.DefaultApi.GetAMQ(authctx, orgid, envid, regionid, queueid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -207,7 +205,6 @@ func resourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{})
 }
 
 func resourceAMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -215,7 +212,7 @@ func resourceAMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	regionid := d.Get("region_id").(string)
 	queueid := d.Get("queue_id").(string)
 	authctx := getAMQAuthCtx(ctx, &pco)
-
+	//check for changes
 	if d.HasChanges(getAMQPatchWatchAttributes()...) {
 		body := newAMQCreateBody(d)
 		//request user creation
@@ -223,6 +220,7 @@ func resourceAMQUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -252,11 +250,12 @@ func resourceAMQDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	regionid := d.Get("region_id").(string)
 	queueid := d.Get("queue_id").(string)
 	authctx := getAMQAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.amqclient.DefaultApi.DeleteAMQ(authctx, orgid, envid, regionid, queueid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

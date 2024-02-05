@@ -117,6 +117,7 @@ func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -136,7 +137,6 @@ func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
@@ -184,6 +184,7 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -191,7 +192,7 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Delete user " + userid + " rolegroup " + rolegroupid,
+			Summary:  "Unable to delete user " + userid + " rolegroup " + rolegroupid,
 			Detail:   details,
 		})
 		return diags

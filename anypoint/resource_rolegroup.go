@@ -96,17 +96,18 @@ func resourceRoleGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 	orgid := d.Get("org_id").(string)
 	name := d.Get("name").(string)
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
+	//prepare request
 	body, errDiags := newRolegroupPostBody(d)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
+	//perform request
 	res, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsPost(authctx, orgid).RolegroupPostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -119,11 +120,9 @@ func resourceRoleGroupCreate(ctx context.Context, d *schema.ResourceData, m inte
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	d.SetId(res.GetRoleGroupId())
-
-	resourceRoleGroupRead(ctx, d, m)
-
-	return diags
+	return resourceRoleGroupRead(ctx, d, m)
 }
 
 func resourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -135,11 +134,12 @@ func resourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 		orgid, rolegroupid = decomposeRolegroupId(d)
 	}
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdGet(authctx, orgid, rolegroupid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -147,7 +147,7 @@ func resourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to get rolegroup",
+			Summary:  "Unable to get rolegroup " + rolegroupid,
 			Detail:   details,
 		})
 		return diags
@@ -159,7 +159,7 @@ func resourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interf
 	if err := setRolegroupAttributesToResourceData(d, rolegroup); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to read rolegroup",
+			Summary:  "Unable to read rolegroup " + rolegroupid,
 			Detail:   err.Error(),
 		})
 		return diags
@@ -176,20 +176,20 @@ func resourceRoleGroupUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	rolegroupid := d.Id()
-
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
-
+	//check changes
 	if d.HasChanges(getRolegroupWatchAttributes()...) {
 		body, errDiags := newRolegroupPutBody(d)
 		if errDiags.HasError() {
 			diags = append(diags, errDiags...)
 			return diags
 		}
-
+		//perform request
 		_, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdPut(authctx, orgid, rolegroupid).RolegroupPutBody(*body).Execute()
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -215,13 +215,13 @@ func resourceRoleGroupDelete(ctx context.Context, d *schema.ResourceData, m inte
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	rolegroupid := d.Id()
-
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
-
+	//perform request
 	_, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdDelete(authctx, orgid, rolegroupid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

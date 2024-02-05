@@ -500,6 +500,7 @@ func resourceApimFlexGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -539,7 +540,6 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 		id := d.Get("id").(string)
 		authctx := getApimUpstreamAuthCtx(ctx, &pco)
 		bodies := newApimFlexGatewayUpstreamPostBody(input.([]interface{}))
-		//upstreams := make([]apim_upstream.UpstreamDetails, 0)
 		// loop over all new upstreams to create them
 		for _, body := range bodies {
 			//execute post upstream
@@ -547,6 +547,7 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 			if err != nil {
 				var details error
 				if httpr != nil && httpr.StatusCode >= 400 {
+					defer httpr.Body.Close()
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {
@@ -560,7 +561,6 @@ func resourceApimFlexGatewayUpstreamsCreate(ctx context.Context, d *schema.Resou
 				return diags
 			}
 			defer httpr.Body.Close()
-			//upstreams = append(upstreams, res)
 		}
 		return readApimInstanceUpstreamsOnly(ctx, d, m)
 	}
@@ -583,6 +583,7 @@ func resourceApimFlexGatewayRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -635,6 +636,7 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 			if err != nil {
 				var details error
 				if httpr != nil && httpr.StatusCode >= 400 {
+					defer httpr.Body.Close()
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {
@@ -656,7 +658,8 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, httpr, err := pco.apimupstreamclient.DefaultApi.PostApimInstanceUpstream(authctx, orgid, envid, apimid).UpstreamPostBody(*body).Execute()
 			if err != nil {
 				var details error
-				if httpr != nil {
+				if httpr != nil && httpr.StatusCode >= 400 {
+					defer httpr.Body.Close()
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {
@@ -677,7 +680,8 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 		_, httpr, err := pco.apimclient.DefaultApi.PatchApimInstance(authctx, orgid, envid, apimid).Body(body).Execute()
 		if err != nil {
 			var details error
-			if httpr != nil {
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = fmt.Errorf(string(b))
 			} else {
@@ -699,7 +703,8 @@ func resourceApimFlexGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 			httpr, err := pco.apimupstreamclient.DefaultApi.DeleteApimInstanceUpstream(authctx, orgid, envid, apimid, id).Execute()
 			if err != nil {
 				var details error
-				if httpr != nil {
+				if httpr != nil && httpr.StatusCode >= 400 {
+					defer httpr.Body.Close()
 					b, _ := io.ReadAll(httpr.Body)
 					details = fmt.Errorf(string(b))
 				} else {

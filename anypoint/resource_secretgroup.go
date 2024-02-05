@@ -108,6 +108,7 @@ func resourceSecretGroupCreate(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -142,6 +143,7 @@ func resourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -186,6 +188,7 @@ func resourceSecretGroupUpdate(ctx context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -217,6 +220,7 @@ func resourceSecretGroupDelete(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

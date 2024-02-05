@@ -101,6 +101,7 @@ func resourceTeamGroupMappingsCreate(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -119,19 +120,18 @@ func resourceTeamGroupMappingsCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTeamGroupMappingsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
 	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	body := newTeamGroupMappingsPutBody(d)
-
 	//perform request
 	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -150,19 +150,18 @@ func resourceTeamGroupMappingsUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
 	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	body := newTeamGroupMappingsPutBody(d)
-
 	//perform request
 	httpr, err := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsPut(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -181,7 +180,6 @@ func resourceTeamGroupMappingsDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -198,6 +196,7 @@ func resourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -211,7 +210,6 @@ func resourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	//process data
 	teamgroupmappings := flattenTeamGroupMappingsData(res.Data)
 	//save in data source schema

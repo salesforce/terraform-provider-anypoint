@@ -69,20 +69,17 @@ func resourceENV() *schema.Resource {
 }
 
 func resourceENVCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-
 	authctx := getENVAuthCtx(ctx, &pco)
-
 	body := newENVPostBody(d)
-
 	//request env creation
 	res, httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsPost(authctx, orgid).EnvCore(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -96,16 +93,11 @@ func resourceENVCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	d.SetId(res.GetId())
-
-	resourceENVRead(ctx, d, m)
-
-	return diags
+	return resourceENVRead(ctx, d, m)
 }
 
 func resourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	envid := d.Id()
@@ -114,11 +106,12 @@ func resourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if isComposedResourceId(envid) {
 		orgid, envid = decomposeEnvId(d)
 	}
-
+	//perform request
 	res, httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsEnvironmentIdGet(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -126,27 +119,25 @@ func resourceENVRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get ENV",
+			Summary:  "Unable to read environment " + envid,
 			Detail:   details,
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
 	//process data
 	envinstance := flattenENVData(&res)
 	//save in data source schema
 	if err := setENVCoreAttributesToResourceData(d, envinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set ENV",
+			Summary:  "Unable to set environment " + envid,
 			Detail:   err.Error(),
 		})
 		return diags
 	}
-
 	d.SetId(envid)
 	d.Set("org_id", orgid)
-
 	return diags
 }
 
@@ -155,9 +146,8 @@ func resourceENVUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	envid := d.Id()
 	orgid := d.Get("org_id").(string)
-
 	authctx := getENVAuthCtx(ctx, &pco)
-
+	//check changes
 	if d.HasChanges(getENVCoreAttributes()...) {
 		body := newENVPutBody(d)
 		//request env creation
@@ -165,6 +155,7 @@ func resourceENVUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -172,32 +163,30 @@ func resourceENVUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to Update ENV",
+				Summary:  "Unable to update environment " + envid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
+		return resourceENVRead(ctx, d, m)
 	}
-
-	return resourceENVRead(ctx, d, m)
+	return diags
 }
 
 func resourceENVDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	envid := d.Id()
 	orgid := d.Get("org_id").(string)
-
 	authctx := getENVAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.envclient.DefaultApi.OrganizationsOrgIdEnvironmentsEnvironmentIdDelete(authctx, orgid, envid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -205,7 +194,7 @@ func resourceENVDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Delete ENV",
+			Summary:  "Unable to delete environment " + envid,
 			Detail:   details,
 		})
 		return diags

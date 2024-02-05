@@ -200,6 +200,7 @@ func resourceVPNCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -207,7 +208,7 @@ func resourceVPNCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Create VPN " + name,
+			Summary:  "Unable to create vpn " + name,
 			Detail:   details,
 		})
 		return diags
@@ -233,6 +234,7 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -240,7 +242,7 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to get VPN " + vpnid,
+			Summary:  "Unable to get vpn " + vpnid,
 			Detail:   details,
 		})
 		return diags
@@ -251,7 +253,7 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to parse data for VPN " + vpnid,
+			Summary:  "Unable to parse data for vpn " + vpnid,
 			Detail:   err.Error(),
 		})
 		return diags
@@ -260,7 +262,7 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if err := setVPNCoreAttributesToResourceData(d, vpcinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set data for VPN " + vpnid,
+			Summary:  "Unable to set data for vpn " + vpnid,
 			Detail:   err.Error(),
 		})
 		return diags
@@ -285,6 +287,7 @@ func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -292,7 +295,7 @@ func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete VPN " + vpnid,
+			Summary:  "Unable to delete vpn " + vpnid,
 			Detail:   details,
 		})
 		return diags

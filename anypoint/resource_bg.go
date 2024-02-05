@@ -783,17 +783,16 @@ func resourceBG() *schema.Resource {
 }
 
 func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-
 	authctx := getBGAuthCtx(ctx, &pco)
 	body := newBGPostBody(d)
-
+	//perform request
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsPost(authctx).BGPostReqBody(*body).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -809,23 +808,20 @@ func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}
 	defer httpr.Body.Close()
 
 	d.SetId(res.GetId())
-	resourceBGRead(ctx, d, m)
-
-	return diags
+	return resourceBGRead(ctx, d, m)
 }
 
 func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
-
 	authctx := getBGAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -833,15 +829,14 @@ func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get Business Group",
+			Summary:  "Unable to read business group " + orgid,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
+	//process response data
 	orginstance := flattenBGData(&res)
-
 	if err := setBGCoreAttributesToResourceData(d, orginstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -850,7 +845,7 @@ func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 		})
 		return diags
 	}
-
+	d.SetId(orgid)
 	return diags
 }
 
@@ -858,15 +853,15 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
-
 	authctx := getBGAuthCtx(ctx, &pco)
-
+	//check for updates
 	if d.HasChanges(getBGUpdatableAttributes()...) {
 		body := newBGPutBody(d)
 		_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdPut(authctx, orgid).BGPutReqBody(*body).Execute()
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -874,30 +869,29 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to Update Business Group",
+				Summary:  "Unable to update business group " + orgid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
 		d.Set("last_updated", time.Now().Format(time.RFC850))
+		return resourceBGRead(ctx, d, m)
 	}
-
-	return resourceBGRead(ctx, d, m)
+	return diags
 }
 
 func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
-
 	authctx := getBGAuthCtx(ctx, &pco)
-
+	//perform request
 	_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdDelete(authctx, orgid).Execute()
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {

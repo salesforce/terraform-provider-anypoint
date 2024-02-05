@@ -190,6 +190,7 @@ func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -237,6 +238,7 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -275,6 +277,8 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 		})
 		return diags
 	}
+	d.SetId(connappid)
+	d.Set("org_id", orgid)
 	return diags
 }
 
@@ -291,6 +295,7 @@ func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m i
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -335,6 +340,7 @@ func resourceConnectedAppDelete(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
