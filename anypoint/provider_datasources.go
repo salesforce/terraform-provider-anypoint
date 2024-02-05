@@ -25,6 +25,7 @@ var DATASOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_idp":                                   dataSourceIDP(),
 	"anypoint_idps":                                  dataSourceIDPs(),
 	"anypoint_connected_app":                         dataSourceConnectedApp(),
+	"anypoint_connected_apps":                        dataSourceConnectedApps(),
 	"anypoint_amq":                                   dataSourceAMQ(),
 	"anypoint_ame":                                   dataSourceAME(),
 	"anypoint_apim":                                  dataSourceApim(),

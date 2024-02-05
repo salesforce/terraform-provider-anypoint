@@ -262,6 +262,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0 h1:9CmX/n8K
 github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0/go.mod h1:V5QUMbu/p3eKOCwjpkhEH4uYDEg3f0/u9H8PLz1R060=
 github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1 h1:rdEuCTM4+ykmg1i6dJ3ZMf8CL/cnnF0y3mcyoJzgD7E=
 github.com/mulesoft-anypoint/anypoint-client-go/connected_app v0.1.1/go.mod h1:mu7z6KyQUjL2UvunfAu8ALHuf7uzRodl780T7VGGHNM=
+github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.0.0 h1:GbWLUYm9jqkJSid2M5UtyD7TutAkyEQE3Q+LxpgT/68=
+github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.0.0/go.mod h1:4spXojnPs7c0BM76Dbo6sTDZt1kexGIc1jJRncwI+So=
 github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0 h1:9alztVhipw47KH1cdpSZfF1psze2GE0nSw9eDKhCnug=
 github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0/go.mod h1:5y8s0ZquF7BBP7A8kiP0bVofcEKWnzE11z2kx+Es5qY=
 github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0 h1:Pddk9tEgPeQc4Y4uGachn2BUhxm4RiCQ4+uqO7rnroU=

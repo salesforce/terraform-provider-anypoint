@@ -316,10 +316,10 @@ func resourceBG() *schema.Resource {
 			"entitlements_mqmessages_base": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     100000,
+				Default:     50000000,
 				Description: "The number of basic MQ messages assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "100000") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "50000000") // default value of integers if not set is 50000000
 				},
 			},
 			"entitlements_mqmessages_addon": {
@@ -333,10 +333,10 @@ func resourceBG() *schema.Resource {
 			"entitlements_mqrequests_base": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     1000000,
+				Default:     100000000,
 				Description: "The number of MQ requests base assigned to this organization.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1000000") // default value of integers if not set is 0
+					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "100000000") // default value of integers if not set is 100000000
 				},
 			},
 			"entitlements_mqrequests_addon": {
