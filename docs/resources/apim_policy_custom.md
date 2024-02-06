@@ -13,7 +13,7 @@ Create and manage an API Policy of any type.
 ## Example Usage
 
 ```terraform
-#Client Id Enforcement Policy
+#Client Id Enforcement Policy Example
 resource "anypoint_apim_policy_custom" "policy_custom_01" {
   org_id = var.root_org
   env_id = var.env_id
@@ -29,10 +29,10 @@ resource "anypoint_apim_policy_custom" "policy_custom_01" {
   })
 }
 
-#Rate Limit Policy
+#Rate Limit Policy Example
 resource "anypoint_apim_policy_custom" "policy_custom_02" {
   org_id = var.root_org
-  env_id = "7074fcdd-9b23-4ab3-97c8-5db5f4adf17d"
+  env_id = var.env_id
   apim_id = anypoint_apim_mule4.api.id
   disabled = false
   asset_group_id="68ef9520-24e9-4cf2-b2f5-620025690913"
@@ -61,6 +61,24 @@ resource "anypoint_apim_policy_custom" "policy_custom_02" {
     method_regex = ["PUT"]
     uri_template_regex = "/api/v1/.*"
   }
+}
+
+
+#Basic Auth Policy Example
+resource "anypoint_apim_policy_custom" "policy_custom_02" {
+  org_id = var.root_org
+  env_id = var.env_id
+  apim_id = anypoint_apim_mule4.api.id
+  disabled = false
+  asset_group_id="68ef9520-24e9-4cf2-b2f5-620025690913"
+  asset_id="http-basic-authentication"
+  asset_version = "1.3.1"
+
+  configuration_data = jsonencode({
+    username= "user",
+    password = "mySupaDupaPasswordWithALotOfCharacters"
+  })
+
 }
 ```
 
