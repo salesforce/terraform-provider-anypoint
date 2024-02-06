@@ -611,8 +611,6 @@ func newApimPolicyJwtValidationBody(d *schema.ResourceData) *apim_policy.ApimPol
 	if val, ok := d.GetOk("configuration_data"); ok {
 		l := val.([]interface{})
 		cfg := l[0].(map[string]interface{})
-		// set := val.(*schema.Set)
-		// cfg := set.List()[0].(map[string]interface{})
 		data := newApimPolicyJwtValidationCfg(cfg)
 		body.SetConfigurationData(data)
 	}
