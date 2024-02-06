@@ -91,3 +91,27 @@ resource "anypoint_apim_policy_custom" "policy_custom_04" {
     ]
   })
 }
+
+
+#HTTP Caching Policy Example
+resource "anypoint_apim_policy_custom" "policy_custom_05" {
+  org_id = var.root_org
+  env_id = var.env_id
+  apim_id = anypoint_apim_mule4.api.id
+  disabled = false
+  asset_group_id="68ef9520-24e9-4cf2-b2f5-620025690913"
+  asset_id="http-caching"
+  asset_version = "1.0.5"
+
+  configuration_data = jsonencode({
+    httpCachingKey= "#[attributes.requestPath]"
+    maxCacheEntries= 10000
+    ttl = 600
+    distributed = true
+    persistCache = true
+    useHttpCacheHeaders = true
+    invalidationHeader = "invalidate"
+    requestExpression = "#[attributes.method == 'GET' or attributes.method == 'HEAD']"
+    responseExpression = "#[[200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] contains attributes.statusCode]"
+  })
+}
