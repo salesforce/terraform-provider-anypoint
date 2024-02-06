@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -85,23 +85,25 @@ func resourceTeam() *schema.Resource {
 				Description: "The time the team was last modified.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	body := newTeamPostBody(d)
-
 	//request user creation
 	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsPost(authctx, orgid).TeamPostBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -114,28 +116,26 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	d.SetId(res.GetTeamId())
-
-	resourceTeamRead(ctx, d, m)
-
-	return diags
+	return resourceTeamRead(ctx, d, m)
 }
 
 func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
+	if isComposedResourceId(teamid) {
+		orgid, teamid = decomposeTeamId(d)
+	}
 	authctx := getTeamAuthCtx(ctx, &pco)
-
 	//request roles
 	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGet(authctx, orgid, teamid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -148,7 +148,6 @@ func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	//process data
 	team := flattenTeamData(&res)
 	//save in data source schema
@@ -161,6 +160,9 @@ func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diags
 	}
 
+	d.SetId(teamid)
+	d.Set("org_id", orgid)
+
 	return diags
 }
 
@@ -170,15 +172,16 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
-
+	//check for changes
 	if d.HasChanges(getTeamPatchWatchAttributes()...) {
 		body := newTeamPatchBody(d)
 		//request user creation
 		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdPatch(authctx, orgid, teamid).TeamPatchBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -191,7 +194,6 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
@@ -201,8 +203,9 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdParentPut(authctx, orgid, teamid).TeamPutBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -215,7 +218,6 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
@@ -223,18 +225,18 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdDelete(authctx, orgid, teamid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -318,4 +320,9 @@ func getTeamPutWatchAttributes() []string {
 func getTeamAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, team.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, team.ContextServerIndex, pco.server_index)
+}
+
+func decomposeTeamId(d *schema.ResourceData, separator ...string) (string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1]
 }

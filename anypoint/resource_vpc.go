@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"sort"
 	"time"
 
@@ -20,7 +20,7 @@ func resourceVPC() *schema.Resource {
 		UpdateContext: resourceVPCUpdate,
 		DeleteContext: resourceVPCDelete,
 		Description: `
-		Creates a ` + "`" + `vpc` + "`" + `component.
+		Creates and manages a ` + "`" + `vpc` + "`" + `component.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -159,82 +159,85 @@ func resourceVPC() *schema.Resource {
 				},
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-
+	name := d.Get("name").(string)
 	authctx := getVPCAuthCtx(ctx, &pco)
-
+	//prepare body request
 	body := newVPCBody(d)
-
 	//request vpc creation
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsPost(authctx, orgid).VpcCore(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Create VPC",
+			Summary:  "Unable to create vpc " + name,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	d.SetId(res.GetId())
-
-	resourceVPCRead(ctx, d, m)
-
-	return diags
+	return resourceVPCRead(ctx, d, m)
 }
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 	orgid := d.Get("org_id").(string)
-
+	if isComposedResourceId(vpcid) {
+		orgid, vpcid = decomposeVPCId(d)
+	}
 	authctx := getVPCAuthCtx(ctx, &pco)
-
+	//perform request
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdGet(authctx, orgid, vpcid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get VPC",
+			Summary:  "Unable to get vpc " + vpcid,
 			Detail:   details,
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
 	//process data
 	vpcinstance := flattenVPCData(&res)
 	//save in data source schema
 	if err := setVPCCoreAttributesToResourceData(d, vpcinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set VPC",
+			Summary:  "Unable to set VPC " + vpcid,
 			Detail:   err.Error(),
 		})
 		return diags
 	}
+	//set identifiers params
+	d.SetId(vpcid)
+	d.Set("org_id", orgid)
 
 	return diags
 }
@@ -244,57 +247,57 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 	orgid := d.Get("org_id").(string)
-
 	authctx := getVPCAuthCtx(ctx, &pco)
-
+	//check for updates
 	if d.HasChanges(getVPCCoreAttributes()...) {
 		body := newVPCBody(d)
 		//request vpc creation
 		_, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdPut(authctx, orgid, vpcid).VpcCore(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
 			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to Update VPC",
+				Summary:  "Unable to update vpc " + vpcid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
-
+		//updates date
 		d.Set("last_updated", time.Now().Format(time.RFC850))
+		return resourceVPCRead(ctx, d, m)
 	}
 
-	return resourceVPCRead(ctx, d, m)
+	return diags
 }
 
 func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Id()
 	orgid := d.Get("org_id").(string)
-
 	authctx := getVPCAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdDelete(authctx, orgid, vpcid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Delete VPC",
+			Summary:  "Unable to delete vpc " + vpcid,
 			Detail:   details,
 		})
 		return diags
@@ -455,4 +458,9 @@ func sortFirewallRules(list []interface{}) {
 
 		return true
 	})
+}
+
+func decomposeVPCId(d *schema.ResourceData, separator ...string) (string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1]
 }

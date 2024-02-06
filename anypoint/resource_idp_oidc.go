@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -131,6 +131,9 @@ func resourceOIDC() *schema.Resource {
 				Description: "The provider's sign out url, only available for SAML",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -138,20 +141,20 @@ func resourceOIDCCreate(ctx context.Context, d *schema.ResourceData, m interface
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
-
 	authctx := getIDPAuthCtx(ctx, &pco)
+	//prepare request
 	body, errDiags := newOIDCPostBody(d)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
+	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersPost(authctx, orgid).IdpPostBody(*body).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -163,9 +166,8 @@ func resourceOIDCCreate(ctx context.Context, d *schema.ResourceData, m interface
 		})
 		return diags
 	}
-
+	defer httpr.Body.Close()
 	d.SetId(res.GetProviderId())
-
 	return resourceOIDCRead(ctx, d, m)
 }
 
@@ -174,38 +176,42 @@ func resourceOIDCRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
+	if isComposedResourceId(idpid) {
+		orgid, idpid = decomposeOIDCId(d)
+	}
 	authctx := getIDPAuthCtx(ctx, &pco)
-
-	//request idp
+	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get IDP " + idpid + " in org " + orgid,
+			Summary:  "Unable to read OIDC provider " + idpid + " in org " + orgid,
 			Detail:   details,
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	idpinstance := flattenIDPData(&res)
 	//save in data source schema
 	if err := setIDPAttributesToResourceData(d, idpinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set IDP " + idpid + " in org " + orgid,
+			Summary:  "Unable to set OIDC provider " + idpid + " in org " + orgid,
 			Detail:   err.Error(),
 		})
 		return diags
 	}
-
+	d.SetId(idpid)
+	d.Set("org_id", orgid)
 	return diags
 }
 
@@ -214,36 +220,38 @@ func resourceOIDCUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
-
+	//check for changes
 	if d.HasChanges(getIDPAttributes()...) {
 		authctx := getIDPAuthCtx(ctx, &pco)
+		//prepare request
 		body, errDiags := newOIDCPatchBody(d)
 		if errDiags.HasError() {
 			diags = append(diags, errDiags...)
 			return diags
 		}
+		//perform request
 		_, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdPatch(authctx, orgid, idpid).IdpPatchBody(*body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
 			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to Update IDP " + idpid + " in org " + orgid,
+				Summary:  "Unable to update OIDC provider " + idpid + " in org " + orgid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
+		return resourceOIDCRead(ctx, d, m)
 	}
-
-	return resourceOIDCRead(ctx, d, m)
+	return diags
 }
 
 func resourceOIDCDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -252,12 +260,13 @@ func resourceOIDCDelete(ctx context.Context, d *schema.ResourceData, m interface
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getIDPAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdDelete(authctx, orgid, idpid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -421,4 +430,9 @@ func newOIDCPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 func getIDPAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, idp.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, idp.ContextServerIndex, pco.server_index)
+}
+
+func decomposeOIDCId(d *schema.ResourceData) (string, string) {
+	s := DecomposeResourceId(d.Id())
+	return s[0], s[1]
 }

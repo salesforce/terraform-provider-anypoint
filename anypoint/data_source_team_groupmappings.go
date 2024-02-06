@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -88,21 +88,21 @@ func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
-
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
+	//prepare request
 	req := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsGet(authctx, orgid, teamid)
 	req, errDiags := parseTeamGroupMappingsSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
 	//request members
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -142,8 +142,8 @@ func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData
 }
 
 /*
- Parses the team members search options in order to check if the required search parameters are set correctly.
- Appends the parameters to the given request
+Parses the team members search options in order to check if the required search parameters are set correctly.
+Appends the parameters to the given request
 */
 func parseTeamGroupMappingsSearchOpts(req team_group_mappings.DefaultApiApiOrganizationsOrgIdTeamsTeamIdGroupmappingsGetRequest, params *schema.Set) (team_group_mappings.DefaultApiApiOrganizationsOrgIdTeamsTeamIdGroupmappingsGetRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics

@@ -3,7 +3,7 @@ package anypoint
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"strings"
 	"time"
@@ -231,24 +231,24 @@ func resourceDLB() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"input_uri": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "The URI that the client requests: for example, `/{app}/`. The input URI is appended to the host header of the load balancer.",
 									},
 									"app_name": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "The name of the CloudHub application that processes the request: for example, {app}-example",
 									},
 									"app_uri": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "The URI string to pass to the app: for example, `/`. The output path cannot contain patterns.",
 									},
 									"upstream_protocol": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default: "http",
+										Default:  "http",
 										Description: `
 										The protocol on which the application listens:
 											* http (port 8091)
@@ -299,11 +299,11 @@ func resourceDLB() *schema.Resource {
 				Description: "Whether to activate TLS v1.2 for this dlb upstream.",
 			},
 			"proxy_read_timeout": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     300,
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          300,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
-				Description: "The proxy read timeout",
+				Description:      "The proxy read timeout",
 			},
 			"ip_addresses_info": {
 				Type:        schema.TypeList,
@@ -345,11 +345,13 @@ func resourceDLB() *schema.Resource {
 				Description: "Setting this to true will forward any incoming client certificates to upstream application",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -364,13 +366,13 @@ func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		})
 		return diags
 	}
-
 	//request user creation
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersPost(authctx, orgid, vpcid).DlbPostBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -386,26 +388,26 @@ func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{
 
 	d.SetId(res.GetId())
 
-	resourceDLBRead(ctx, d, m)
-
-	return diags
+	return resourceDLBRead(ctx, d, m)
 }
 
 func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Id()
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
-
+	if isComposedResourceId(dlbid) {
+		orgid, vpcid, dlbid = decomposeDlbId(d)
+	}
 	//request roles
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdGet(authctx, orgid, vpcid, dlbid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -418,7 +420,6 @@ func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	//process data
 	dlb := flattenDLBData(&res)
 	//save in data source schema
@@ -430,7 +431,9 @@ func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		})
 		return diags
 	}
-
+	d.SetId(dlbid)
+	d.Set("org_id", orgid)
+	d.Set("vpc_id", vpcid)
 	return diags
 }
 
@@ -441,16 +444,16 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
-
-	//if d.HasChanges(getDLBPatchWatchAttributes()...) {
+	//check changes
 	if isDLBChanged(ctx, d, m) {
 		body := newDLBPatchBody(d)
 		//request user creation
 		_, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdPatch(authctx, orgid, vpcid, dlbid).RequestBody(body).Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -463,27 +466,27 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 			return diags
 		}
 		defer httpr.Body.Close()
-
 		d.Set("last_updated", time.Now().Format(time.RFC850))
+		return resourceDLBRead(ctx, d, m)
 	}
 
-	return resourceDLBRead(ctx, d, m)
+	return diags
 }
 
 func resourceDLBDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Id()
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdDelete(authctx, orgid, vpcid, dlbid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -695,7 +698,6 @@ func convertMap2DlbPostBodySslEndpoints(ssl_endpoints_array []map[string]interfa
 	return list, nil
 }
 
-
 func getDLBPatchWatchAttributes() []string {
 	attributes := [...]string{
 		"state", "ip_whitelist", "ip_allowlist", "http_mode",
@@ -853,4 +855,9 @@ func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bo
 		}
 	}
 	return false
+}
+
+func decomposeDlbId(d *schema.ResourceData) (string, string, string) {
+	s := DecomposeResourceId(d.Id())
+	return s[0], s[1], s[2]
 }

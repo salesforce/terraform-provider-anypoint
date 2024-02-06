@@ -37,10 +37,22 @@ resource "anypoint_team_member" "team_member" {
 ### Read-Only
 
 - `created_at` (String) The member team assignment creation date
-- `id` (String) The unique id of this team membership composed by `org_id`_`team_id`_`user_id`_members
+- `id` (String) The unique id of this team membership composed by {org_id}/{team_id}/{user_id}
 - `identity_type` (String) The member's identity type.
 - `is_assigned_via_external_groups` (Boolean) Whether the member was assigned to the team via a external group mapping
 - `name` (String) The name of the team
 - `updated_at` (String) The member team assignment update date
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{TEAM_ID}/{USER_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_team_member.team_member \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/99c41e16-1075-40ae-8c8b-d722a8256f81/18f23771-c78a-4be2-af8f-1bae66f43942    #resource ID
+```

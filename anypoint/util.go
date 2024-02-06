@@ -3,8 +3,10 @@ package anypoint
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,6 +36,26 @@ func IsFloat64(v interface{}) bool {
 
 func IsBool(v interface{}) bool {
 	return reflect.TypeOf(v) == reflect.TypeOf(true)
+}
+
+// converts a primitive value in a interface{} format to a string
+func ConvPrimtiveInterface2String(p interface{}) string {
+	if IsInt32(p) {
+		return strconv.Itoa(int(p.(int32)))
+	}
+	if IsInt64(p) {
+		return strconv.Itoa(int(p.(int64)))
+	}
+	if IsFloat32(p) {
+		return fmt.Sprintf("%f", p.(float32))
+	}
+	if IsFloat64(p) {
+		return fmt.Sprintf("%f", p.(float64))
+	}
+	if IsBool(p) {
+		return strconv.FormatBool(p.(bool))
+	}
+	return p.(string)
 }
 
 func ListInterface2ListStrings(array []interface{}) []string {
@@ -104,6 +126,18 @@ func FilterMapList(list []interface{}, filter func(map[string]interface{}) bool)
 	return result
 }
 
+// filters list of strings depending on the given filter func
+// returns a list of strings
+func FilterStrList(list []string, filter func(string) bool) []string {
+	result := make([]string, 0)
+	for _, item := range list {
+		if filter(item) {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
 // compares diffing for optional values, if the new value is equal to the initial value (that is the default value)
 // returns true if the attribute has the same value as the initial or if the new and old value are the same which needs no updaten false otherwise.
 func DiffSuppressFunc4OptionalPrimitives(k, old, new string, d *schema.ResourceData, initial string) bool {
@@ -135,11 +169,37 @@ func equalStrList(old, new interface{}) bool {
 }
 
 // composes an id by concatenating items of array into one single string
-func ComposeResourceId(elem []string) string {
-	return strings.Join(elem, COMPOSITE_ID_SEPARATOR)
+func ComposeResourceId(elem []string, separator ...string) string {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Join(elem, s)
+}
+
+// returns true if the given id is an id composed of sub-ids
+func isComposedResourceId(id string, separator ...string) bool {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Contains(id, s)
 }
 
 // decomposes a composite resource id
-func DecomposeResourceId(id string) []string {
-	return strings.Split(id, COMPOSITE_ID_SEPARATOR)
+func DecomposeResourceId(id string, separator ...string) []string {
+	s := COMPOSITE_ID_SEPARATOR
+	if len(separator) > 0 {
+		s = separator[0]
+	}
+	return strings.Split(id, s)
+}
+
+// same as strings.Join but for a slice of interface{} that are in reality strings
+func JoinStringInterfaceSlice(slice []interface{}, sep string) string {
+	dump := make([]string, len(slice))
+	for i, val := range slice {
+		dump[i] = fmt.Sprint(val)
+	}
+	return strings.Join(dump, sep)
 }

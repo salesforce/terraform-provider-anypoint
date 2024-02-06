@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,7 +18,7 @@ func resourceVPN() *schema.Resource {
 		DeleteContext: resourceVPNDelete,
 		// UpdateContext: resourceVPNUpdate,
 		Description: `
-		Creates a ` + "`" + `vpn` + "`" + `component.
+		Creates and manages a ` + "`" + `vpn` + "`" + `component.
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -180,77 +180,80 @@ func resourceVPN() *schema.Resource {
 				Description: "Activated if an update is available",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceVPNCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
+	name := d.Get("name").(string)
 	authctx := getVPNAuthCtx(ctx, &pco)
-
+	//prepare request body
 	body := newVPNBody(d)
-
-	//request vpn creation
+	//perform request
 	res, httpr, err := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecPost(authctx, orgid, vpcid).VpnPostReqBody(*body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Create VPN",
+			Summary:  "Unable to create vpn " + name,
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	d.SetId(res.GetId())
-
 	return resourceVPNRead(ctx, d, m)
 }
 
 func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
 	vpnid := d.Id()
-
+	if isComposedResourceId(vpnid) {
+		orgid, vpcid, vpnid = decomposeVPNId(d)
+	}
 	authctx := getVPNAuthCtx(ctx, &pco)
-
+	//perform request
 	req := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdGet(authctx, orgid, vpcid, vpnid)
 	res, httpr, err := req.Execute()
-
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to get VPN",
+			Summary:  "Unable to get vpn " + vpnid,
 			Detail:   details,
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	vpcinstance, err := flattenVPNData(&res)
 	if err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to parse VPN data",
+			Summary:  "Unable to parse data for vpn " + vpnid,
 			Detail:   err.Error(),
 		})
 		return diags
@@ -259,37 +262,40 @@ func resourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	if err := setVPNCoreAttributesToResourceData(d, vpcinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set VPN",
+			Summary:  "Unable to set data for vpn " + vpnid,
 			Detail:   err.Error(),
 		})
 		return diags
 	}
+	//set identifiers params
+	d.SetId(vpnid)
+	d.Set("vpc_id", vpcid)
+	d.Set("org_id", orgid)
 
 	return diags
 }
 
 func resourceVPNDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	vpcid := d.Get("vpc_id").(string)
 	vpnid := d.Id()
-
 	authctx := getVPNAuthCtx(ctx, &pco)
-
+	//perform request
 	httpr, err := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdDelete(authctx, orgid, vpcid, vpnid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete VPN",
+			Summary:  "Unable to delete vpn " + vpnid,
 			Detail:   details,
 		})
 		return diags
@@ -335,4 +341,9 @@ func newVPNBody(d *schema.ResourceData) *vpn.VpnPostReqBody {
 func getVPNAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, vpn.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, vpn.ContextServerIndex, pco.server_index)
+}
+
+func decomposeVPNId(d *schema.ResourceData, separator ...string) (string, string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1], s[2]
 }

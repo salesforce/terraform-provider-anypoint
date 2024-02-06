@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
@@ -135,20 +135,20 @@ func dataSourceUserRolegroupsRead(ctx context.Context, d *schema.ResourceData, m
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
 	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
-
+	//prepare reques
 	req := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsGet(authctx, orgid, userid)
 	req, errDiags := parseUserRolegroupsSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
 	//request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
