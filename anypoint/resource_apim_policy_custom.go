@@ -2,8 +2,10 @@ package anypoint
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,14 +14,14 @@ import (
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim_policy"
 )
 
-func resourceApimInstancePolicyClientIdEnf() *schema.Resource {
+func resourceApimInstancePolicyCustom() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceApimInstancePolicyClientIdEnfCreate,
-		ReadContext:   resourceApimInstancePolicyClientIdEnfRead,
-		UpdateContext: resourceApimInstancePolicyClientIdEnfUpdate,
-		DeleteContext: resourceApimInstancePolicyClientIdEnfDelete,
+		CreateContext: resourceApimInstancePolicyCustomCreate,
+		ReadContext:   resourceApimInstancePolicyCustomRead,
+		UpdateContext: resourceApimInstancePolicyCustomUpdate,
+		DeleteContext: resourceApimInstancePolicyCustomDelete,
 		Description: `
-		Create and manage an API Policy of type client-id-enforcement.
+		Create and manage an API Policy of any type.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -62,42 +64,10 @@ func resourceApimInstancePolicyClientIdEnf() *schema.Resource {
 				Description: "The organization id where the api instance is defined.",
 			},
 			"configuration_data": {
-				Type:        schema.TypeList,
-				Required:    true,
-				MaxItems:    1,
-				Description: "The policy configuration data",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"credentials_origin_has_http_basic_authentication_header": {
-							Type:     schema.TypeString,
-							Required: true,
-							Description: `
-							Whether to use custom header or to use basic authentication header.
-							Values can be either "httpBasicAuthenticationHeader" or "customExpression".
-							In the case of using "httpBasicAuthenticationHeader", you don't need to supply client_id_expression or client_secret_expression.
-							`,
-							ValidateDiagFunc: validation.ToDiagFunc(
-								validation.StringInSlice(
-									[]string{
-										"httpBasicAuthenticationHeader",
-										"customExpression",
-									},
-									false,
-								),
-							),
-						},
-						"client_id_expression": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The client id header location",
-						},
-						"client_secret_expression": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The client secret header location",
-						},
-					},
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The policy configuration data in json format",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsJSON),
 			},
 			"policy_template_id": {
 				Type:        schema.TypeString,
@@ -118,13 +88,12 @@ func resourceApimInstancePolicyClientIdEnf() *schema.Resource {
 			"pointcut_data": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "The Method & resource conditions",
+				Description: "The method & resource conditions",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"method_regex": {
 							Type:        schema.TypeSet,
 							Required:    true,
-							MinItems:    1,
 							Description: "The list of HTTP methods",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -146,28 +115,22 @@ func resourceApimInstancePolicyClientIdEnf() *schema.Resource {
 			},
 			"asset_group_id": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Default:     "68ef9520-24e9-4cf2-b2f5-620025690913",
 				Description: "The policy template group id in anypoint exchange. Don't change unless mulesoft has renamed the policy group id.",
 			},
 			"asset_id": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Default:     "client-id-enforcement",
 				Description: "The policy template id in anypoint exchange. Don't change unless mulesoft has renamed the policy asset id.",
 			},
 			"asset_version": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Default:     "1.3.2",
 				Description: "the policy template version in anypoint exchange.",
 			},
-		},
-		CustomizeDiff: func(ctx context.Context, rd *schema.ResourceDiff, i interface{}) error {
-			return validateClientIdEnfCfg(rd)
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -175,7 +138,7 @@ func resourceApimInstancePolicyClientIdEnf() *schema.Resource {
 	}
 }
 
-func resourceApimInstancePolicyClientIdEnfCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyCustomCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -183,7 +146,15 @@ func resourceApimInstancePolicyClientIdEnfCreate(ctx context.Context, d *schema.
 	apimid := d.Get("apim_id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//prepare body
-	body := newApimPolicyClientIdEnfBody(d)
+	body, err := newApimPolicyCustomBody(d)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to parse policy configuration for api " + apimid,
+			Detail:   err.Error(),
+		})
+		return diags
+	}
 	//perform request
 	res, httpr, err := pco.apimpolicyclient.DefaultApi.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
 	if err != nil {
@@ -197,7 +168,7 @@ func resourceApimInstancePolicyClientIdEnfCreate(ctx context.Context, d *schema.
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create policy client-id-enforcement for api " + apimid,
+			Summary:  "Unable to create custom policy for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -205,18 +176,18 @@ func resourceApimInstancePolicyClientIdEnfCreate(ctx context.Context, d *schema.
 	defer httpr.Body.Close()
 	id := res.GetId()
 	d.SetId(strconv.Itoa(int(id)))
-	diags = append(diags, resourceApimInstancePolicyClientIdEnfRead(ctx, d, m)...)
-	// in case disabled
+	diags = append(diags, resourceApimInstancePolicyCustomRead(ctx, d, m)...)
+	//in case disabled
 	disabled := d.Get("disabled").(bool)
 	if disabled {
-		diags = append(diags, disableApimInstancePolicyClientIdEnf(ctx, d, m)...)
-		diags = append(diags, resourceApimInstancePolicyClientIdEnfRead(ctx, d, m)...)
+		diags = append(diags, disableApimInstancePolicyCustom(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyCustomRead(ctx, d, m)...)
 	}
 
 	return diags
 }
 
-func resourceApimInstancePolicyClientIdEnfRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyCustomRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -224,7 +195,7 @@ func resourceApimInstancePolicyClientIdEnfRead(ctx context.Context, d *schema.Re
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, apimid, id = decomposeApimPolicyClientIdEnfId(d)
+		orgid, envid, apimid, id = decomposeApimPolicyCustomId(d)
 	}
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//perform request
@@ -240,7 +211,7 @@ func resourceApimInstancePolicyClientIdEnfRead(ctx context.Context, d *schema.Re
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to read policy client-id-enforcement " + id + " for api " + apimid,
+			Summary:  "Unable to read custom policy " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -248,10 +219,20 @@ func resourceApimInstancePolicyClientIdEnfRead(ctx context.Context, d *schema.Re
 	defer httpr.Body.Close()
 	// process data
 	data := flattenApimInstancePolicy(res)
+	if cfg, err := flattenApimPolicyCustomCfg(d, res); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to parse configuration data of custom policy " + id + " for api " + apimid,
+			Detail:   err.Error(),
+		})
+		return diags
+	} else {
+		data["configuration_data"] = cfg
+	}
 	if err := setApimInstancePolicyAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set api policy client-id-enforcement details attributes",
+			Summary:  "Unable to set api custom policy " + id + " details attributes",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -263,7 +244,7 @@ func resourceApimInstancePolicyClientIdEnfRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceApimInstancePolicyClientIdEnfUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyCustomUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	//detect change
 	if d.HasChanges("configuration_data", "pointcut_data") {
@@ -274,7 +255,15 @@ func resourceApimInstancePolicyClientIdEnfUpdate(ctx context.Context, d *schema.
 		id := d.Get("id").(string)
 		authctx := getApimPolicyAuthCtx(ctx, &pco)
 		//prepare body
-		body := newApimPolicyClientIdEnfPatchBody(d)
+		body, err := newApimPolicyCustomPatchBody(d)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to parse policy configuration for api " + apimid,
+				Detail:   err.Error(),
+			})
+			return diags
+		}
 		//perform request
 		_, httpr, err := pco.apimpolicyclient.DefaultApi.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
 		if err != nil {
@@ -288,28 +277,28 @@ func resourceApimInstancePolicyClientIdEnfUpdate(ctx context.Context, d *schema.
 			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to update policy client-id-enforcement for api " + apimid,
+				Summary:  "Unable to update custom policy for api " + apimid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
-		diags = append(diags, resourceApimInstancePolicyClientIdEnfRead(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyCustomRead(ctx, d, m)...)
 	}
 	if d.HasChange("disabled") {
 		disabled := d.Get("disabled").(bool)
 		if disabled {
-			diags = append(diags, disableApimInstancePolicyClientIdEnf(ctx, d, m)...)
+			diags = append(diags, disableApimInstancePolicyCustom(ctx, d, m)...)
 		} else {
-			diags = append(diags, enableApimInstancePolicyClientIdEnf(ctx, d, m)...)
+			diags = append(diags, enableApimInstancePolicyCustom(ctx, d, m)...)
 		}
-		diags = append(diags, resourceApimInstancePolicyClientIdEnfRead(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyCustomRead(ctx, d, m)...)
 	}
 
 	return diags
 }
 
-func resourceApimInstancePolicyClientIdEnfDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyCustomDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -329,7 +318,7 @@ func resourceApimInstancePolicyClientIdEnfDelete(ctx context.Context, d *schema.
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete policy client-id-enforcement " + id + " for api " + apimid,
+			Summary:  "Unable to delete custom policy " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -341,7 +330,7 @@ func resourceApimInstancePolicyClientIdEnfDelete(ctx context.Context, d *schema.
 	return diags
 }
 
-func enableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func enableApimInstancePolicyCustom(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -361,7 +350,7 @@ func enableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.Resource
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to enable policy client-id-enforcement " + id + " for api " + apimid,
+			Summary:  "Unable to enable custom policy " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -370,7 +359,7 @@ func enableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func disableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func disableApimInstancePolicyCustom(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -390,7 +379,7 @@ func disableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.Resourc
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to disable policy client-id-enforcement " + id + " for api " + apimid,
+			Summary:  "Unable to disable custom policy " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -399,16 +388,30 @@ func disableApimInstancePolicyClientIdEnf(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func newApimPolicyClientIdEnfBody(d *schema.ResourceData) *apim_policy.ApimPolicyBody {
-	body := apim_policy.NewApimPolicyBodyWithDefaults()
+func flattenApimPolicyCustomCfg(d *schema.ResourceData, policy *apim_policy.ApimPolicy) (string, error) {
+	data := policy.GetConfigurationData()
+	var dst map[string]interface{}
+	err := json.Unmarshal([]byte(d.Get("configuration_data").(string)), &dst)
+	if err != nil {
+		return "", fmt.Errorf("configuration_data expected to be a valid JSON Object. %s", err.Error())
+	}
+	maps.Copy(dst, data)
+	b, _ := json.Marshal(data)
+	return string(b), nil
+}
+
+func newApimPolicyCustomBody(d *schema.ResourceData) (*apim_policy.ApimPolicyBody, error) {
+	body := apim_policy.NewApimPolicyBody()
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
-		data := newApimPolicyClientIdEnfCfg(cfg)
-		body.SetConfigurationData(data)
+		var cfg map[string]interface{}
+		err := json.Unmarshal([]byte(val.(string)), &cfg)
+		if err != nil {
+			return nil, fmt.Errorf("configuration_data expected to be a valid JSON Object. %s", err.Error())
+		}
+		body.SetConfigurationData(cfg)
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		body.SetPointcutData(newApimPolicyClientIdEnfPointcutDataBody(val.([]interface{})))
+		body.SetPointcutData(newApimPolicyCustomPointcutDataBody(val.([]interface{})))
 	}
 	if val, ok := d.GetOk("asset_group_id"); ok {
 		body.SetGroupId(val.(string))
@@ -419,16 +422,18 @@ func newApimPolicyClientIdEnfBody(d *schema.ResourceData) *apim_policy.ApimPolic
 	if val, ok := d.GetOk("asset_version"); ok {
 		body.SetAssetVersion(val.(string))
 	}
-	return body
+	return body, nil
 }
 
-func newApimPolicyClientIdEnfPatchBody(d *schema.ResourceData) map[string]interface{} {
+func newApimPolicyCustomPatchBody(d *schema.ResourceData) (map[string]interface{}, error) {
 	body := make(map[string]interface{})
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
-		data := newApimPolicyClientIdEnfCfg(cfg)
-		body["configurationData"] = data
+		var cfg map[string]interface{}
+		err := json.Unmarshal([]byte(val.(string)), &cfg)
+		if err != nil {
+			return nil, fmt.Errorf("configuration_data expected to be a valid JSON Object. %s", err.Error())
+		}
+		body["configurationData"] = cfg
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
 		collection := newApimPolicyClientIdEnfPointcutDataBody(val.([]interface{}))
@@ -450,23 +455,10 @@ func newApimPolicyClientIdEnfPatchBody(d *schema.ResourceData) map[string]interf
 	if val, ok := d.GetOk("asset_version"); ok {
 		body["assetVersion"] = val
 	}
-	return body
+	return body, nil
 }
 
-func newApimPolicyClientIdEnfCfg(input map[string]interface{}) map[string]interface{} {
-	body := make(map[string]interface{})
-	mode := input["credentials_origin_has_http_basic_authentication_header"].(string)
-	body["credentialsOriginHasHttpBasicAuthenticationHeader"] = mode
-	if mode == "httpBasicAuthenticationHeader" {
-		body["clientIdExpression"] = "#[attributes.headers['client_id']]"
-	} else {
-		body["clientIdExpression"] = input["client_id_expression"]
-		body["clientSecretExpression"] = input["client_secret_expression"]
-	}
-	return body
-}
-
-func newApimPolicyClientIdEnfPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
+func newApimPolicyCustomPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
 	slice := make([]apim_policy.PointcutDataItem, len(collection))
 	for i, item := range collection {
 		data := item.(map[string]interface{})
@@ -483,23 +475,7 @@ func newApimPolicyClientIdEnfPointcutDataBody(collection []interface{}) []apim_p
 	return slice
 }
 
-func validateClientIdEnfCfg(d *schema.ResourceDiff) error {
-	c := d.Get("configuration_data")
-	l := c.([]interface{})
-	cfg := l[0].(map[string]interface{})
-	mode := cfg["credentials_origin_has_http_basic_authentication_header"].(string)
-
-	if _, ok := cfg["client_id_expression"]; !ok && mode == "customExpression" {
-		return fmt.Errorf("client_id_expression is required in \"customExpression\" mode")
-	}
-
-	if _, ok := cfg["client_secret_expression"]; !ok && mode == "customExpression" {
-		return fmt.Errorf("client_secret_expression is required in \"customExpression\" mode")
-	}
-	return nil
-}
-
-func decomposeApimPolicyClientIdEnfId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeApimPolicyCustomId(d *schema.ResourceData) (string, string, string, string) {
 	s := DecomposeResourceId(d.Id())
 	return s[0], s[1], s[2], s[3]
 }
