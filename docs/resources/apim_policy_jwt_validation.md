@@ -3,12 +3,12 @@
 page_title: "anypoint_apim_policy_jwt_validation Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  Create and Manage an API Manager Instance Policy of type jwt-validation.
+  Create and manage an API Policy of type jwt-validation.
 ---
 
 # anypoint_apim_policy_jwt_validation (Resource)
 
-Create and Manage an API Manager Instance Policy of type jwt-validation.
+Create and manage an API Policy of type jwt-validation.
 
 ## Example Usage
 

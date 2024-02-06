@@ -3,12 +3,12 @@
 page_title: "anypoint_apim_policy_client_id_enforcement Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  Create and Manage an API Manager Instance Policy of type client-id-enforcement.
+  Create and manage an API Policy of type client-id-enforcement.
 ---
 
 # anypoint_apim_policy_client_id_enforcement (Resource)
 
-Create and Manage an API Manager Instance Policy of type client-id-enforcement.
+Create and manage an API Policy of type client-id-enforcement.
 
 ## Example Usage
 
