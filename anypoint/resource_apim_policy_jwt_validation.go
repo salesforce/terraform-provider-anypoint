@@ -22,7 +22,7 @@ func resourceApimInstancePolicyJwtValidation() *schema.Resource {
 		UpdateContext: resourceApimInstancePolicyJwtValidationUpdate,
 		DeleteContext: resourceApimInstancePolicyJwtValidationDelete,
 		Description: `
-		Create and Manage an API Manager Instance Policy of type jwt-validation.
+		Create and manage an API Policy of type jwt-validation.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -425,6 +425,7 @@ func resourceApimInstancePolicyJwtValidationRead(ctx context.Context, d *schema.
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -473,6 +474,7 @@ func resourceApimInstancePolicyJwtValidationUpdate(ctx context.Context, d *schem
 		if err != nil {
 			var details string
 			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
 				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
@@ -513,6 +515,7 @@ func resourceApimInstancePolicyJwtValidationDelete(ctx context.Context, d *schem
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -544,6 +547,7 @@ func enableApimInstancePolicyJwtValidation(ctx context.Context, d *schema.Resour
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -572,6 +576,7 @@ func disableApimInstancePolicyJwtValidation(ctx context.Context, d *schema.Resou
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
 			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
@@ -631,8 +636,6 @@ func newApimPolicyJwtValidationPatchBody(d *schema.ResourceData) map[string]inte
 	if val, ok := d.GetOk("configuration_data"); ok {
 		l := val.([]interface{})
 		cfg := l[0].(map[string]interface{})
-		// set := val.(*schema.Set)
-		// cfg := set.List()[0].(map[string]interface{})
 		data := newApimPolicyJwtValidationCfg(cfg)
 		body["configurationData"] = data
 	}
@@ -691,8 +694,6 @@ func validateJwtValidationCfg(d *schema.ResourceDiff) error {
 	c := d.Get("configuration_data")
 	l := c.([]interface{})
 	cfg := l[0].(map[string]interface{})
-	// set := c.(*schema.Set)
-	// cfg := set.List()[0].(map[string]interface{})
 	jwt_origin := cfg["jwt_origin"].(string)
 	if _, ok := cfg["jwt_expression"]; !ok && jwt_origin == "customExpression" {
 		return fmt.Errorf("attribute jwt_expression is required in \"customExpression\" mode")

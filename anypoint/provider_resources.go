@@ -26,6 +26,7 @@ var RESOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_apim_mule4":                            resourceApimMule4(),
 	"anypoint_apim_policy_client_id_enforcement":     resourceApimInstancePolicyClientIdEnf(),
 	"anypoint_apim_policy_jwt_validation":            resourceApimInstancePolicyJwtValidation(),
+	"anypoint_apim_policy_custom":                    resourceApimInstancePolicyCustom(),
 	"anypoint_secretgroup":                           resourceSecretGroup(),
 	"anypoint_secretgroup_keystore":                  resourceSecretGroupKeystore(),
 	"anypoint_secretgroup_truststore":                resourceSecretGroupTruststore(),

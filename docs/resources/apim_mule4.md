@@ -3,12 +3,12 @@
 page_title: "anypoint_apim_mule4 Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  Create an API Manager Instance of type Mule4.
+  Create and manage an API Manager Instance of type Mule4.
 ---
 
 # anypoint_apim_mule4 (Resource)
 
-Create an API Manager Instance of type Mule4.
+Create and manage an API Manager Instance of type Mule4.
 
 
 
