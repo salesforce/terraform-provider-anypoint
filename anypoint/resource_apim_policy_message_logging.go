@@ -3,25 +3,23 @@ package anypoint
 import (
 	"context"
 	"io"
-	"maps"
 	"regexp"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/iancoleman/strcase"
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim_policy"
 )
 
-func resourceApimInstancePolicyRateLimiting() *schema.Resource {
+func resourceApimInstancePolicyMessageLogging() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceApimInstancePolicyRateLimitingCreate,
-		ReadContext:   resourceApimInstancePolicyRateLimitingRead,
-		UpdateContext: resourceApimInstancePolicyRateLimitingUpdate,
-		DeleteContext: resourceApimInstancePolicyRateLimitingDelete,
+		CreateContext: resourceApimInstancePolicyMessageLoggingCreate,
+		ReadContext:   resourceApimInstancePolicyMessageLoggingRead,
+		UpdateContext: resourceApimInstancePolicyMessageLoggingUpdate,
+		DeleteContext: resourceApimInstancePolicyMessageLoggingDelete,
 		Description: `
-		Create and manage an API Policy of type rate limiting.
+		Create and manage an API Policy of type message-logging.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -70,53 +68,70 @@ func resourceApimInstancePolicyRateLimiting() *schema.Resource {
 				Description: "The policy configuration data",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key_selector": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-							Description: `
-							For each identifier value, the set of Limits defined in the policy will be enforced independently. 
-							I.e.: #[attributes.queryParams['identifier']].
-							`,
-							ValidateDiagFunc: validation.ToDiagFunc(
-								validation.StringMatch(
-									regexp.MustCompile(`^\s*#\[.+\]\s*$`),
-									"field value should be a dataweave expression",
-								),
-							),
-						},
-						"rate_limits": {
+						"logging_configuration": {
 							Type:        schema.TypeList,
 							Required:    true,
-							Description: "Pairs of maximum quota allowed and time window.",
+							Description: "The list of logging configurations",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"maximum_requests": {
-										Type:             schema.TypeInt,
-										Required:         true,
-										Description:      "Number of Requests",
-										ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The configuration name",
 									},
-									"time_period_in_milliseconds": {
-										Type:             schema.TypeInt,
-										Required:         true,
-										Description:      "Time Period in milliseconds",
-										ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+									"message": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "DataWeave Expression for extracting information from the message to log. e.g. #[attributes.headers['id']]",
+										ValidateDiagFunc: validation.ToDiagFunc(
+											validation.StringMatch(
+												regexp.MustCompile(`^\s*#\[.+\]\s*$`),
+												"field value should be a dataweave expression",
+											),
+										),
+									},
+									"conditional": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "DataWeave Expression to filter which messages to log. e.g. #[attributes.headers['id']==1]",
+										ValidateDiagFunc: validation.ToDiagFunc(
+											validation.StringMatch(
+												regexp.MustCompile(`^\s*#\[.+\]\s*$`),
+												"field value should be a dataweave expression",
+											),
+										),
+									},
+									"category": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Prefix in the log sentence.",
+									},
+									"level": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "INFO",
+										Description: "Logging level, possible values: INFO, WARN, ERROR or DEBUG",
+										ValidateDiagFunc: validation.ToDiagFunc(
+											validation.StringInSlice(
+												[]string{"INFO", "WARN", "ERROR", "DEBUG"},
+												false,
+											),
+										),
+									},
+									"first_section": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     true,
+										Description: "Log before calling the API",
+									},
+									"second_section": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+										Description: "Logging after calling the API",
 									},
 								},
 							},
-						},
-						"expose_headers": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "Defines if headers should be exposed in the response to the client. These headers are: x-ratelimit-remaining, x-ratelimit-limit and x-ratelimit-reset.",
-						},
-						"clusterizable": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     true,
-							Description: "When using interconnected runtimes with this flag enabled, quota will be shared among all nodes.",
 						},
 					},
 				},
@@ -146,7 +161,6 @@ func resourceApimInstancePolicyRateLimiting() *schema.Resource {
 						"method_regex": {
 							Type:        schema.TypeSet,
 							Required:    true,
-							MinItems:    1,
 							Description: "The list of HTTP methods",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -177,14 +191,14 @@ func resourceApimInstancePolicyRateLimiting() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     "rate-limiting",
+				Default:     "message-logging",
 				Description: "The policy template id in anypoint exchange. Don't change unless mulesoft has renamed the policy asset id.",
 			},
 			"asset_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     "1.4.0",
+				Default:     "2.0.1",
 				Description: "the policy template version in anypoint exchange.",
 			},
 		},
@@ -194,7 +208,7 @@ func resourceApimInstancePolicyRateLimiting() *schema.Resource {
 	}
 }
 
-func resourceApimInstancePolicyRateLimitingCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -202,7 +216,7 @@ func resourceApimInstancePolicyRateLimitingCreate(ctx context.Context, d *schema
 	apimid := d.Get("apim_id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//prepare body
-	body := newApimPolicyRateLimitingBody(d)
+	body := newApimPolicyMessageLoggingBody(d)
 	//perform request
 	res, httpr, err := pco.apimpolicyclient.DefaultApi.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
 	if err != nil {
@@ -216,7 +230,7 @@ func resourceApimInstancePolicyRateLimitingCreate(ctx context.Context, d *schema
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create policy rate limiting for api " + apimid,
+			Summary:  "Unable to create policy message logging for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -224,18 +238,18 @@ func resourceApimInstancePolicyRateLimitingCreate(ctx context.Context, d *schema
 	defer httpr.Body.Close()
 	id := res.GetId()
 	d.SetId(strconv.Itoa(int(id)))
-	diags = append(diags, resourceApimInstancePolicyRateLimitingRead(ctx, d, m)...)
-	// in case disabled
+	diags = append(diags, resourceApimInstancePolicyMessageLoggingRead(ctx, d, m)...)
+	//in case disabled
 	disabled := d.Get("disabled").(bool)
 	if disabled {
-		diags = append(diags, disableApimInstancePolicyRateLimiting(ctx, d, m)...)
-		diags = append(diags, resourceApimInstancePolicyRateLimitingRead(ctx, d, m)...)
+		diags = append(diags, disableApimInstancePolicyMessageLogging(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyMessageLoggingRead(ctx, d, m)...)
 	}
 
 	return diags
 }
 
-func resourceApimInstancePolicyRateLimitingRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -243,7 +257,7 @@ func resourceApimInstancePolicyRateLimitingRead(ctx context.Context, d *schema.R
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, apimid, id = decomposeApimPolicyRateLimitingId(d)
+		orgid, envid, apimid, id = decomposeApimPolicyMessageLoggingId(d)
 	}
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//perform request
@@ -259,7 +273,7 @@ func resourceApimInstancePolicyRateLimitingRead(ctx context.Context, d *schema.R
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to read policy rate limiting " + id + " for api " + apimid,
+			Summary:  "Unable to read policy message logging " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -267,11 +281,11 @@ func resourceApimInstancePolicyRateLimitingRead(ctx context.Context, d *schema.R
 	defer httpr.Body.Close()
 	// process data
 	data := flattenApimInstancePolicy(res)
-	data["configuration_data"] = []interface{}{flattenApimPolicyRateLimitingCfg(d, res)}
+	data["configuration_data"] = []interface{}{flattenApimPolicyMessageLoggingCfg(d, res)}
 	if err := setApimInstancePolicyAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set api policy rate limiting details attributes",
+			Summary:  "Unable to set api policy message logging details attributes",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -283,7 +297,7 @@ func resourceApimInstancePolicyRateLimitingRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceApimInstancePolicyRateLimitingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	//detect change
 	if d.HasChanges("configuration_data", "pointcut_data") {
@@ -294,7 +308,7 @@ func resourceApimInstancePolicyRateLimitingUpdate(ctx context.Context, d *schema
 		id := d.Get("id").(string)
 		authctx := getApimPolicyAuthCtx(ctx, &pco)
 		//prepare body
-		body := newApimPolicyRateLimitingPatchBody(d)
+		body := newApimPolicyMessageLoggingPatchBody(d)
 		//perform request
 		_, httpr, err := pco.apimpolicyclient.DefaultApi.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
 		if err != nil {
@@ -308,28 +322,28 @@ func resourceApimInstancePolicyRateLimitingUpdate(ctx context.Context, d *schema
 			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to update policy rate limiting for api " + apimid,
+				Summary:  "Unable to update policy message logging for api " + apimid,
 				Detail:   details,
 			})
 			return diags
 		}
 		defer httpr.Body.Close()
-		diags = append(diags, resourceApimInstancePolicyRateLimitingRead(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyMessageLoggingRead(ctx, d, m)...)
 	}
 	if d.HasChange("disabled") {
 		disabled := d.Get("disabled").(bool)
 		if disabled {
-			diags = append(diags, disableApimInstancePolicyRateLimiting(ctx, d, m)...)
+			diags = append(diags, disableApimInstancePolicyMessageLogging(ctx, d, m)...)
 		} else {
-			diags = append(diags, enableApimInstancePolicyRateLimiting(ctx, d, m)...)
+			diags = append(diags, enableApimInstancePolicyMessageLogging(ctx, d, m)...)
 		}
-		diags = append(diags, resourceApimInstancePolicyRateLimitingRead(ctx, d, m)...)
+		diags = append(diags, resourceApimInstancePolicyMessageLoggingRead(ctx, d, m)...)
 	}
 
 	return diags
 }
 
-func resourceApimInstancePolicyRateLimitingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -349,7 +363,7 @@ func resourceApimInstancePolicyRateLimitingDelete(ctx context.Context, d *schema
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to delete policy rate limiting " + id + " for api " + apimid,
+			Summary:  "Unable to delete policy message logging " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -361,7 +375,7 @@ func resourceApimInstancePolicyRateLimitingDelete(ctx context.Context, d *schema
 	return diags
 }
 
-func enableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func enableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -381,7 +395,7 @@ func enableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.Resourc
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to enable policy rate limiting " + id + " for api " + apimid,
+			Summary:  "Unable to enable policy message logging " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -390,7 +404,7 @@ func enableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func disableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -410,7 +424,7 @@ func disableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.Resour
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to disable policy rate limiting " + id + " for api " + apimid,
+			Summary:  "Unable to disable policy message logging " + id + " for api " + apimid,
 			Detail:   details,
 		})
 		return diags
@@ -419,43 +433,42 @@ func disableApimInstancePolicyRateLimiting(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenApimPolicyRateLimitingCfg(d *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]interface{} {
+func flattenApimPolicyMessageLoggingCfg(d *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]interface{} {
 	data := make(map[string]interface{})
 	cfg := policy.GetConfigurationData()
-	for k, v := range cfg {
-		k_snake := strcase.ToSnake(k)
-		if k_snake == "rate_limits" {
-			l := v.([]interface{})
-			r := make([]interface{}, len(l)) //result
-			for i, item := range l {
-				item_map := item.(map[string]interface{})
-				d := make(map[string]interface{})
-				for key, val := range item_map {
-					d[strcase.ToSnake(key)] = val
-				}
-				r[i] = d
-			}
-			data[k_snake] = r
-		} else {
-			data[k_snake] = v
+	logging_cfg := cfg["loggingConfiguration"].([]interface{})
+	lcfg_result := make([]map[string]interface{}, len(logging_cfg))
+	for i, item := range logging_cfg {
+		lcfg := item.(map[string]interface{})
+		item_data := lcfg["itemData"].(map[string]interface{})
+		c := make(map[string]interface{})
+		c["name"] = lcfg["itemName"]
+		c["message"] = item_data["message"]
+		if val, ok := item_data["conditional"]; ok {
+			c["conditional"] = val
 		}
+		if val, ok := item_data["category"]; ok {
+			c["category"] = val
+		}
+		c["level"] = item_data["level"]
+		c["first_section"] = item_data["firstSection"]
+		c["second_section"] = item_data["secondSection"]
+		lcfg_result[i] = c
 	}
-	l := d.Get("configuration_data").([]interface{})
-	dst := l[0].(map[string]interface{})
-	maps.Copy(dst, data)
-	return dst
+	data["logging_configuration"] = lcfg_result
+	return data
 }
 
-func newApimPolicyRateLimitingBody(d *schema.ResourceData) *apim_policy.ApimPolicyBody {
-	body := apim_policy.NewApimPolicyBodyWithDefaults()
+func newApimPolicyMessageLoggingBody(d *schema.ResourceData) *apim_policy.ApimPolicyBody {
+	body := apim_policy.NewApimPolicyBody()
 	if val, ok := d.GetOk("configuration_data"); ok {
 		l := val.([]interface{})
 		cfg := l[0].(map[string]interface{})
-		data := newApimPolicyRateLimitingCfg(cfg)
+		data := newApimPolicyMessageLoggingCfg(cfg)
 		body.SetConfigurationData(data)
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		body.SetPointcutData(newApimPolicyRateLimitingPointcutDataBody(val.([]interface{})))
+		body.SetPointcutData(newApimPolicyMessageLoggingPointcutDataBody(val.([]interface{})))
 	}
 	if val, ok := d.GetOk("asset_group_id"); ok {
 		body.SetGroupId(val.(string))
@@ -469,16 +482,16 @@ func newApimPolicyRateLimitingBody(d *schema.ResourceData) *apim_policy.ApimPoli
 	return body
 }
 
-func newApimPolicyRateLimitingPatchBody(d *schema.ResourceData) map[string]interface{} {
+func newApimPolicyMessageLoggingPatchBody(d *schema.ResourceData) map[string]interface{} {
 	body := make(map[string]interface{})
 	if val, ok := d.GetOk("configuration_data"); ok {
 		l := val.([]interface{})
 		cfg := l[0].(map[string]interface{})
-		data := newApimPolicyRateLimitingCfg(cfg)
+		data := newApimPolicyMessageLoggingCfg(cfg)
 		body["configurationData"] = data
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		collection := newApimPolicyRateLimitingPointcutDataBody(val.([]interface{}))
+		collection := newApimPolicyClientIdEnfPointcutDataBody(val.([]interface{}))
 		slice := make([]map[string]interface{}, len(collection))
 		for i, item := range collection {
 			m, _ := item.ToMap()
@@ -500,29 +513,35 @@ func newApimPolicyRateLimitingPatchBody(d *schema.ResourceData) map[string]inter
 	return body
 }
 
-func newApimPolicyRateLimitingCfg(input map[string]interface{}) map[string]interface{} {
+func newApimPolicyMessageLoggingCfg(input map[string]interface{}) map[string]interface{} {
 	body := make(map[string]interface{})
-	for k, val := range input {
-		if k == "rate_limits" {
-			rt := val.([]interface{})
-			result := make([]map[string]interface{}, len(rt))
-			for i, rtv := range rt {
-				rtv_map := rtv.(map[string]interface{})
-				d := make(map[string]interface{})
-				for rtk, rtval := range rtv_map {
-					d[strcase.ToLowerCamel(rtk)] = rtval
-				}
-				result[i] = d
-			}
-			body[strcase.ToLowerCamel(k)] = result
-			continue
+	logging_cfg := input["logging_configuration"].([]interface{})
+	lcfg := make([]map[string]interface{}, len(logging_cfg))
+	for i, item := range logging_cfg {
+		cfg := item.(map[string]interface{})
+		//item data configuration
+		d := make(map[string]interface{})
+		d["message"] = cfg["message"]
+		if val, ok := cfg["conditional"]; ok && val != nil && val.(string) != "" {
+			d["conditional"] = val
 		}
-		body[strcase.ToLowerCamel(k)] = val
+		if val, ok := cfg["category"]; ok && val != nil && val.(string) != "" {
+			d["category"] = val
+		}
+		d["level"] = cfg["level"]
+		d["firstSection"] = cfg["first_section"]
+		d["secondSection"] = cfg["second_section"]
+		//item
+		c := make(map[string]interface{})
+		c["itemName"] = cfg["name"]
+		c["itemData"] = d
+		lcfg[i] = c
 	}
+	body["loggingConfiguration"] = lcfg
 	return body
 }
 
-func newApimPolicyRateLimitingPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
+func newApimPolicyMessageLoggingPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
 	slice := make([]apim_policy.PointcutDataItem, len(collection))
 	for i, item := range collection {
 		data := item.(map[string]interface{})
@@ -539,7 +558,7 @@ func newApimPolicyRateLimitingPointcutDataBody(collection []interface{}) []apim_
 	return slice
 }
 
-func decomposeApimPolicyRateLimitingId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeApimPolicyMessageLoggingId(d *schema.ResourceData) (string, string, string, string) {
 	s := DecomposeResourceId(d.Id())
 	return s[0], s[1], s[2], s[3]
 }
