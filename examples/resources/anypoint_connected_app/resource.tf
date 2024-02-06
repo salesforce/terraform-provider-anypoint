@@ -11,7 +11,7 @@ resource "anypoint_connected_app" "my_conn_app_its_own_behalf" {
         scope = "aeh_admin"
         org_id = var.org_id
     }
-    
+
     scope {
         scope = "read:audit_logs"
         org_id = var.org_id
@@ -38,7 +38,7 @@ resource "anypoint_connected_app" "my_conn_app_behalf_of_user" {
         "password",
         "urn:ietf:params:oauth:grant-type:jwt-bearer"
     ]
-    
+
     audience = "everyone"
     client_uri = "https://mysite.com"
     redirect_uris = [

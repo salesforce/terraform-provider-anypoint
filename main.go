@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 
-	"github.com/mulesoft-consulting/terraform-provider-anypoint/anypoint"
+	"github.com/mulesoft-anypoint/terraform-provider-anypoint/anypoint"
 )
 
 func main() {

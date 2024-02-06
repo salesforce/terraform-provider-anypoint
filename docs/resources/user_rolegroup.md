@@ -40,10 +40,22 @@ resource "anypoint_user_rolegroup" "user_rolegroup" {
 - `description` (String) The description of the role-group
 - `editable` (Boolean) Whether the role-group is editable
 - `external_names` (List of String) List of external names of the role-group
-- `id` (String) The unique id of this user-rolegroup resource composed by `org_id`_`user_id`_`rolegroup_id`
+- `id` (String) The unique id of this user-rolegroup resource composed by {org_id}/{user_id}/{rolegroup_id}
 - `name` (String) The name of the role-group.
 - `role_group_id` (String) The role-group id.
 - `updated_at` (String) The time when the user assignment to the role-group was updated.
 - `user_role_group_id` (String) The unique if of the user assignment to the role-group
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{USER_ID}/{ROLE_GROUP_ID}
+
+terraform import \
+  -var-file params.tfvars.json \                                            #variables file
+  anypoint_user_rolegroup.user_rolegroup \                                  #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/18f23771-c78a-4be2-af8f-1bae66f43942/00dc3850-1e83-4b3b-918b-86aa646e0daf    #resource ID
+```

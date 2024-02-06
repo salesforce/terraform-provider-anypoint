@@ -24,7 +24,7 @@ Depending on the `role`, some roles are environment scoped others are business g
 resource "anypoint_team_roles" "roles" {
   org_id = var.root_org
   team_id = anypoint_team.team.id
-  
+
   # you can check the role data-source to get roles dynamically
   roles {
     role_id = "42ea6892-f95c-4d1b-ab48-687b1f6632fc"    # Access Controls Admin
@@ -47,7 +47,7 @@ resource "anypoint_team_roles" "roles" {
 
 ### Read-Only
 
-- `id` (String) The unique id of this team roles composed by `org_id`_`team_id`_roles
+- `id` (String) The unique id of this team roles composed by {org_id}/{team_id}
 - `last_updated` (String) The last time this resource has been updated locally.
 - `total` (Number) The total number of roles within the team
 
@@ -63,4 +63,16 @@ Read-Only:
 
 - `name` (String) The role name
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{TEAM_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_team_roles.roles \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/99c41e16-1075-40ae-8c8b-d722a8256f81    #resource ID
+```

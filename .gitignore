@@ -72,3 +72,7 @@ release.sh
 
 #binary file
 terraform-provider-anypoint
+
+**/.secret
+
+**/dist
