@@ -3,14 +3,14 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/mulesoft-consulting/anypoint-client-go/team"
+	"github.com/mulesoft-anypoint/anypoint-client-go/team"
 )
 
 func dataSourceTeam() *schema.Resource {
@@ -79,13 +79,13 @@ func dataSourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
-
 	//request roles
 	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGet(authctx, orgid, teamid).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -145,7 +145,7 @@ func flattenTeamData(team *team.Team) map[string]interface{} {
 }
 
 /*
- Copies the given team instance into the given Source data
+Copies the given team instance into the given Source data
 */
 func setTeamAttributesToResourceData(d *schema.ResourceData, team map[string]interface{}) error {
 	attributes := getTeamAttributes()

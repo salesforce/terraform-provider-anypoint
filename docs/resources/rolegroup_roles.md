@@ -43,12 +43,9 @@ resource "anypoint_rolegroup_roles" "rg_roles" {
 - `role_group_id` (String) The role-group id
 - `roles` (Block List, Min: 1) List of roles in the role group (see [below for nested schema](#nestedblock--roles))
 
-### Optional
-
-- `id` (String) The unique id of this rolegroup-roles resource composed by `org_id`_`role_group_id`
-
 ### Read-Only
 
+- `id` (String) The unique id of this rolegroup-roles resource composed by {org_id}/{role_group_id}
 - `total` (Number) Total number of roles attributed to the role group
 
 <a id="nestedblock--roles"></a>
@@ -69,4 +66,16 @@ Read-Only:
 - `role_group_assignment_id` (String)
 - `role_group_id` (String)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{ROLE_GROUP_ID}
+
+terraform import \
+  -var-file params.tfvars.json \                  #variables file
+  anypoint_rolegroup_roles.rg_roles \             #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/de32fc9d-6b25-4d6f-bd5e-cac32272b2f7    #resource ID
+```

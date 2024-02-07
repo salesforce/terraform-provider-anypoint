@@ -95,4 +95,16 @@ Optional:
 - `require_encrypted_saml_assertions` (Boolean) True if the encryption of saml assertions requirement is enabled
 - `sp_initiated_sso_enabled` (Boolean) True if the Service Provider initiated SSO enabled
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{IDP_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_idp_saml.example1 \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/452a2081-5bde-4fb9-9a8b-54d180ee2358    #resource ID
+```

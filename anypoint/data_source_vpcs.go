@@ -2,14 +2,14 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	vpc "github.com/mulesoft-consulting/anypoint-client-go/vpc"
+	vpc "github.com/mulesoft-anypoint/anypoint-client-go/vpc"
 )
 
 func dataSourceVPCs() *schema.Resource {
@@ -147,14 +147,13 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	authctx := getVPCAuthCtx(ctx, &pco)
-
 	//request vpcs
 	res, httpr, err := pco.vpcclient.DefaultApi.OrganizationsOrgIdVpcsGet(authctx, orgid).Execute()
-
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -167,7 +166,6 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diags
 	}
 	defer httpr.Body.Close()
-
 	//process data
 	data := res.GetData()
 	vpcs := flattenVPCsData(&data)

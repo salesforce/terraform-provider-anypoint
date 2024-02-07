@@ -2,13 +2,13 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mulesoft-consulting/anypoint-client-go/rolegroup"
+	"github.com/mulesoft-anypoint/anypoint-client-go/rolegroup"
 )
 
 func dataSourceRoleGroups() *schema.Resource {
@@ -96,12 +96,13 @@ func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m int
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	authctx := getRoleGroupAuthCtx(ctx, &pco)
+	//perform request
 	res, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsGet(authctx, orgid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -113,6 +114,7 @@ func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m int
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	data := res.GetData()
 	rolegroups := flattenRoleGroupsData(&data)

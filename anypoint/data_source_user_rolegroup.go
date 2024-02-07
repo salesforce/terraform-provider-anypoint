@@ -3,13 +3,11 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"strconv"
-	"time"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mulesoft-consulting/anypoint-client-go/user_rolegroups"
+	"github.com/mulesoft-anypoint/anypoint-client-go/user_rolegroups"
 )
 
 func dataSourceUserRolegroup() *schema.Resource {
@@ -22,6 +20,11 @@ func dataSourceUserRolegroup() *schema.Resource {
 		Reads the ` + "`" + `user` + "`" + ` related ` + "`" + `rolegroup` + "`" + ` in the business group.
 		`,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The role-group id.",
+			},
 			"org_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -31,11 +34,6 @@ func dataSourceUserRolegroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The user id.",
-			},
-			"rolegroup_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The role-group id.",
 			},
 			"role_group_id": {
 				Type:        schema.TypeString,
@@ -92,14 +90,12 @@ func dataSourceUserRolegroup() *schema.Resource {
 func dataSourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	userid := d.Get("user_id").(string)
-	rolegroupid := d.Get("rolegroup_id").(string)
-
+	rolegroupid := d.Id()
 	rg, errDiags := searchUserRolegroup(ctx, d, m)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
 	}
-
 	//process data
 	rolegroup := flattenUserRolegroupData(rg)
 	//save in data source schema
@@ -111,28 +107,29 @@ func dataSourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m 
 		})
 		return diags
 	}
-
-	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
-
 	return diags
 }
 
 /*
-  Searches for the rolegroup in the list of results that has the same id as the one given by the user (rolegroup_id)
+Searches for the rolegroup in the list of results that has the same id as the one given by the user
 */
 func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interface{}) (*user_rolegroups.Rolegroup, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Get("user_id").(string)
 	orgid := d.Get("org_id").(string)
-	rolegroupid := d.Get("rolegroup_id").(string)
+	rolegroupid := d.Id()
+	if isComposedResourceId(rolegroupid) {
+		orgid, userid, rolegroupid = decomposeUserRolegroupId(d)
+	} else if isComposedResourceId(rolegroupid, "_") { // retro-compatibility with versions < 1.6.x
+		orgid, userid, rolegroupid = decomposeUserRolegroupId(d, "_")
+	}
 	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
-
+	// params
 	limit := 50
 	offset := 0
 	count := 0
 	end := false
-
 	for !end {
 		req := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsGet(authctx, orgid, userid)
 		req = req.Limit(int32(limit))
@@ -140,8 +137,9 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 		res, httpr, err := req.Execute()
 		if err != nil {
 			var details string
-			if httpr != nil {
-				b, _ := ioutil.ReadAll(httpr.Body)
+			if httpr != nil && httpr.StatusCode >= 400 {
+				defer httpr.Body.Close()
+				b, _ := io.ReadAll(httpr.Body)
 				details = string(b)
 			} else {
 				details = err.Error()
@@ -153,6 +151,8 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 			})
 			return nil, diags
 		}
+		defer httpr.Body.Close()
+		//parse result
 		data := res.GetData()
 		for _, rg := range data {
 			if rg.GetRoleGroupId() == rolegroupid {
@@ -168,11 +168,12 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 			offset += limit
 		}
 	}
+
 	return nil, diags
 }
 
 /*
- Copies the given user rolegroup instance into the given Source data
+Copies the given user rolegroup instance into the given Source data
 */
 func setUserRolegroupAttributesToResourceData(d *schema.ResourceData, rg map[string]interface{}) error {
 	attributes := getUserRolegroupAttributes()
@@ -192,4 +193,9 @@ func getUserRolegroupAttributes() []string {
 		"updated_at", "context_params", "user_role_group_id",
 	}
 	return attributes[:]
+}
+
+func decomposeUserRolegroupId(d *schema.ResourceData, separator ...string) (string, string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1], s[2]
 }

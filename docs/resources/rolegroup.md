@@ -43,4 +43,16 @@ resource "anypoint_rolegroup" "rg" {
 - `role_group_id` (String) The role-group generated id
 - `updated_at` (String) The role-group update date
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{ROLE_GROUP_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_rolegroup.rg \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/de32fc9d-6b25-4d6f-bd5e-cac32272b2f7    #resource ID
+```

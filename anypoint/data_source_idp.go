@@ -3,11 +3,11 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mulesoft-consulting/anypoint-client-go/idp"
+	"github.com/mulesoft-anypoint/anypoint-client-go/idp"
 )
 
 func dataSourceIDP() *schema.Resource {
@@ -191,14 +191,13 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 	idpid := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
 	authctx := getIDPAuthCtx(ctx, &pco)
-
-	//request idp
+	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -210,6 +209,7 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	idpinstance := flattenIDPData(&res)
 	//save in data source schema
