@@ -35,10 +35,10 @@ Run the following command to build the provider
 go build -o terraform-provider-anypoint
 ```
 
-**N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/mulesoft-consulting`
+**N.B:** As of Go 1.13 make sure that your `GOPRIVATE` environment variable includes `github.com/salesforce`
 
 ```bash
-go env -w GOPRIVATE=github.com/mulesoft-consulting
+go env -w GOPRIVATE=github.com/salesforce
 ```
 
 ## Test sample configuration
