@@ -264,7 +264,9 @@ func resourceApimInstancePolicyJwtValidation() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "List of strings with claims",
-							Elem:        schema.TypeString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"mandatory_custom_claims": {
 							Type:     schema.TypeList,
