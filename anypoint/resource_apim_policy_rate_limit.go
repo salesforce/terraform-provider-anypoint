@@ -441,6 +441,9 @@ func flattenApimPolicyRateLimitingCfg(d *schema.ResourceData, policy *apim_polic
 		}
 	}
 	l := d.Get("configuration_data").([]interface{})
+	if len(l) == 0 {
+		return data
+	}
 	dst := l[0].(map[string]interface{})
 	maps.Copy(dst, data)
 	return dst
