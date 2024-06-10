@@ -296,11 +296,35 @@ func equalTeamRole(old, new interface{}) bool {
 func equalTeamRoleContextParams(old, new interface{}) bool {
 	old_cparams := old.(map[string]interface{})
 	new_cparams := new.(map[string]interface{})
+
 	for k := range old_cparams {
-		if old_cparams[k].(string) != new_cparams[k].(string) {
+		oldVal, oldOk := old_cparams[k].(string)
+		newVal, newOk := new_cparams[k].(string)
+
+		if !oldOk && !newOk {
+			// Both values are not strings. Check if both are actually nil.
+			if old_cparams[k] != nil || new_cparams[k] != nil {
+				return false // One is nil and the other is some non-nil non-string
+			}
+			// Both are nil, treat as equal, continue checking next key
+		} else if oldOk && newOk {
+			// Both values are strings, compare them
+			if oldVal != newVal {
+				return false
+			}
+		} else {
+			// One is a string and the other is either nil or some other non-string type
 			return false
 		}
 	}
+
+	// Also check for any keys in new_cparams that are not in old_cparams
+	for k := range new_cparams {
+		if _, exists := old_cparams[k]; !exists {
+			return false
+		}
+	}
+
 	return true
 }
 

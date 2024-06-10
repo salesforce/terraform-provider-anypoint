@@ -209,7 +209,7 @@ func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 
-	d.SetId(vpcid)
+	d.SetId(vpnid)
 
 	return diags
 }

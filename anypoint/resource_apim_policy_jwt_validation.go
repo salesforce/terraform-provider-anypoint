@@ -138,6 +138,20 @@ func resourceApimInstancePolicyJwtValidation() *schema.Resource {
 								),
 							),
 						},
+						"custom_key_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "#[authentication.properties['key_to_your_public_pem_certificate']]",
+							Description: `
+							Data weave expression with custom key.
+							`,
+							ValidateDiagFunc: validation.ToDiagFunc(
+								validation.StringMatch(
+									regexp.MustCompile(`^\s*#\[.+\]\s*$`),
+									"field value should be a dataweave expression",
+								),
+							),
+						},
 						"jwt_key_origin": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -245,6 +259,14 @@ func resourceApimInstancePolicyJwtValidation() *schema.Resource {
 							Optional:    true,
 							Default:     false,
 							Description: "The JWT will be valid only if all DataWeave expressions defined in custom claims are.",
+						},
+						"claims_to_headers": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "List of strings with claims",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"mandatory_custom_claims": {
 							Type:     schema.TypeList,
@@ -601,6 +623,9 @@ func flattenApimPolicyJwtValidationCfg(d *schema.ResourceData, policy *apim_poli
 		data[k_snake] = v
 	}
 	l := d.Get("configuration_data").([]interface{})
+	if len(l) == 0 {
+		return data
+	}
 	dst := l[0].(map[string]interface{})
 	maps.Copy(dst, data)
 	return dst
@@ -728,6 +753,7 @@ func getApimPolicyJwtValidationCfgAttributes() []string {
 		"text_key", "skip_client_id_validation", "client_id_expression", "validate_aud_claim",
 		"mandatory_aud_claim", "supported_audiences", "mandatory_exp_claim", "mandatory_nbf_claim",
 		"validate_custom_claim", "mandatory_custom_claims", "non_mandatory_custom_claims",
+		"custom_key_expression", "claims_to_headers",
 	}
 }
 
