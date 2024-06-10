@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net/http"
 	"sort"
 	"strings"
 
@@ -233,8 +234,17 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 		orgid, connappid = decomposeConnectedAppId(d)
 	}
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
-	// perform request
-	res, httpr, err := pco.connectedappclient.DefaultApi.GetConnectedApp(authctx, orgid, connappid).Execute()
+	//execute request
+	var res *connected_app.ConnectedAppRespExt
+	var httpr *http.Response
+	var err error
+	// perform request depending on if org_id exists or not
+	if len(orgid) > 0 {
+		res, httpr, err = pco.connectedappclient.DefaultApi.GetConnectedApp(authctx, orgid, connappid).Execute()
+	} else {
+		// NOTE: Ensuring backwards compatibility
+		res, httpr, err = pco.connectedappclient.DefaultApi.GetConnectedAppByIdOnly(authctx, connappid).Execute()
+	}
 	if err != nil {
 		var details string
 		if httpr != nil && httpr.StatusCode >= 400 {
@@ -254,10 +264,11 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 	defer httpr.Body.Close()
 	//process data
 	connappinstance := flattenConnectedAppData(res)
+	orgid = res.GetOrgId() // NOTE: Ensuring backwards compatibility
 	// Is it a "on behalf of user" connected apps?
 	if granttypes := connappinstance["grant_types"]; granttypes != nil && StringInSlice(granttypes.([]string), "client_credentials", true) {
 		// Yes, then load the scopes using connapps/{connapp_id}/scopes
-		if scopes, error := readScopesByConnectedAppId(authctx, orgid, connappid, m); error != nil {
+		if scopes, err := readScopesByConnectedAppId(authctx, orgid, connappid, m); err != nil {
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to read connected app " + connappid + " scopes",
