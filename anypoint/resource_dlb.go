@@ -834,7 +834,7 @@ func equalDLBAllowList(old, new interface{}) bool {
 }
 
 // returns true if the DLB key elements have been changed
-func isDLBChanged(ctx context.Context, d *schema.ResourceData, m interface{}) bool {
+func isDLBChanged(_ context.Context, d *schema.ResourceData, _ interface{}) bool {
 	watchAttrs := getDLBPatchWatchAttributes()
 
 	for _, attr := range watchAttrs {

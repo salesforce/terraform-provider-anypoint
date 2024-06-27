@@ -235,7 +235,7 @@ func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m
 /**
  * Generates body object for creating rolegroup roles
  */
-func newRolegroupRolesPostBody(org_id string, rolegroup_id string, d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
+func newRolegroupRolesPostBody(org_id string, _ string, d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	roles := d.Get("roles").([]interface{})
 

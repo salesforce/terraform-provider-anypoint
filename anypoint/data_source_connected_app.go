@@ -163,7 +163,7 @@ func dataSourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m i
 	// Is it a "on behalf of user" connected apps?
 	if granttypes := connappinstance["grant_types"]; granttypes != nil && StringInSlice(granttypes.([]string), "client_credentials", true) {
 		// Yes, then load the scopes using connapps/{connapp_id}/scopes
-		if scopes, error := readScopesByConnectedAppId(authctx, orgid, connappid, m); error != nil {
+		if scopes, err := readScopesByConnectedAppId(authctx, orgid, connappid, m); err != nil {
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to read connected-app " + connappid + " scopes",
