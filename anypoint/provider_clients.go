@@ -15,6 +15,7 @@ import (
 	org "github.com/mulesoft-anypoint/anypoint-client-go/org"
 	role "github.com/mulesoft-anypoint/anypoint-client-go/role"
 	rolegroup "github.com/mulesoft-anypoint/anypoint-client-go/rolegroup"
+	rtf "github.com/mulesoft-anypoint/anypoint-client-go/rtf"
 	secretgroup "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup"
 	secretgroup_certificate "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate"
 	secretgroup_crl_distributor_configs "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs"
@@ -62,6 +63,7 @@ type ProviderConfOutput struct {
 	sgcertificateclient     *secretgroup_certificate.APIClient
 	sgtlscontextclient      *secretgroup_tlscontext.APIClient
 	sgcrldistribcfgsclient  *secretgroup_crl_distributor_configs.APIClient
+	rtfclient               *rtf.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -94,6 +96,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgcertificatecfg := secretgroup_certificate.NewConfiguration()
 	sgtlscontextcfg := secretgroup_tlscontext.NewConfiguration()
 	sgcrldistribcfgs_cfg := secretgroup_crl_distributor_configs.NewConfiguration()
+	rtf_cfg := rtf.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -123,6 +126,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgcertificateclient := secretgroup_certificate.NewAPIClient(sgcertificatecfg)
 	sgtlscontextclient := secretgroup_tlscontext.NewAPIClient(sgtlscontextcfg)
 	sgcrldistribcfgsclient := secretgroup_crl_distributor_configs.NewAPIClient(sgcrldistribcfgs_cfg)
+	rtfclient := rtf.NewAPIClient(rtf_cfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -155,5 +159,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		sgcertificateclient:     sgcertificateclient,
 		sgtlscontextclient:      sgtlscontextclient,
 		sgcrldistribcfgsclient:  sgcrldistribcfgsclient,
+		rtfclient:               rtfclient,
 	}
 }

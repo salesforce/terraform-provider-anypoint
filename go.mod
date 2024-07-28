@@ -34,6 +34,8 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/user_rolegroups v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/vpc v0.6.0
 	github.com/mulesoft-anypoint/anypoint-client-go/vpn v0.1.0
+	github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/application_manager v0.0.1
 )
 
 require (
@@ -78,3 +80,6 @@ require (
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
+
+replace github.com/mulesoft-anypoint/anypoint-client-go/rtf => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/rtf
+replace github.com/mulesoft-anypoint/anypoint-client-go/application_manager => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/application_manager
