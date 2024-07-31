@@ -33,7 +33,6 @@ func dataSourceFabricsHelmRepoProps() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "The user to authenticated to the image registry",
 				Computed:    true,
-				Sensitive:   true,
 			},
 			"rtf_image_registry_password": {
 				Type:        schema.TypeString,

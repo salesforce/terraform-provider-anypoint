@@ -534,10 +534,10 @@ func setFabricsResourceData(d *schema.ResourceData, data map[string]interface{})
 
 func getFabricsAttributes() []string {
 	attributes := [...]string{
-		"id", "org_id", "name", "region", "vendor", "vendor_metadata", "version",
+		"name", "region", "vendor", "vendor_metadata", "version",
 		"status", "desired_version", "available_upgrade_version", "created_at",
-		"nodes", "seconds_since_heartbeat", "kubernetes_version", "namespace",
-		"license_expiry_date", "is_managed", "is_helm_managed", "app_scoped_log_forwarding",
+		"upgrade", "nodes", "activation_data", "seconds_since_heartbeat", "kubernetes_version",
+		"namespace", "license_expiry_date", "is_managed", "is_helm_managed", "app_scoped_log_forwarding",
 		"cluster_configuration_level", "features", "ingress",
 	}
 	return attributes[:]
