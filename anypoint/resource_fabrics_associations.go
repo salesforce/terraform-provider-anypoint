@@ -16,6 +16,7 @@ func resourceFabricsAssociations() *schema.Resource {
 		DeleteContext: resourceFabricsAssociationsDelete,
 		Description: `
 		Manages ` + "`" + `Runtime Fabrics` + "`" + ` Environment associations.
+		NOTE: The fabrics will be associated with all sandbox environments in every available org when this resource is deleted.
 		`,
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
@@ -40,15 +41,6 @@ func resourceFabricsAssociations() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "The unique id of the fabrics instance in the platform.",
-			},
-			"is_production": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-				Description: `
-				If activated, the fabrics will be associated with all production environments in every available org if the resource is deleted. Otherwise, sandbox environments will be used.
-				`,
 			},
 			"associations": {
 				Type:        schema.TypeSet,
@@ -157,8 +149,9 @@ func resourceFabricsAssociationsRead(ctx context.Context, d *schema.ResourceData
 		})
 		return diags
 	}
-	d.SetId(fabricsid)
+	d.SetId(ComposeResourceId([]string{orgid, fabricsid}))
 	d.Set("org_id", orgid)
+	d.Set("fabrics_id", fabricsid)
 	return diags
 }
 
@@ -217,13 +210,9 @@ func prepareFabricsAssociationsPostBody(d *schema.ResourceData) *rtf.FabricsAsso
 }
 
 func prepareFabricsAssociationsDeleteBody(d *schema.ResourceData) *rtf.FabricsAssociationsPostBody {
-	is_production := d.Get("is_production").(bool)
 	body := rtf.NewFabricsAssociationsPostBody()
 	env := "sandbox"
 	org := "all"
-	if is_production {
-		env = "production"
-	}
 	associations := []rtf.FabricsAssociationsPostBodyAssociationsInner{
 		{
 			Environment:    &env,

@@ -7,6 +7,7 @@ import (
 	apim "github.com/mulesoft-anypoint/anypoint-client-go/apim"
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim_policy"
 	apim_upstream "github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream"
+	application_manager "github.com/mulesoft-anypoint/anypoint-client-go/application_manager"
 	connected_app "github.com/mulesoft-anypoint/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-anypoint/anypoint-client-go/dlb"
 	env "github.com/mulesoft-anypoint/anypoint-client-go/env"
@@ -64,6 +65,7 @@ type ProviderConfOutput struct {
 	sgtlscontextclient      *secretgroup_tlscontext.APIClient
 	sgcrldistribcfgsclient  *secretgroup_crl_distributor_configs.APIClient
 	rtfclient               *rtf.APIClient
+	appmanagerclient        *application_manager.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -97,6 +99,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgtlscontextcfg := secretgroup_tlscontext.NewConfiguration()
 	sgcrldistribcfgs_cfg := secretgroup_crl_distributor_configs.NewConfiguration()
 	rtf_cfg := rtf.NewConfiguration()
+	appmanager_cfg := application_manager.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -127,6 +130,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgtlscontextclient := secretgroup_tlscontext.NewAPIClient(sgtlscontextcfg)
 	sgcrldistribcfgsclient := secretgroup_crl_distributor_configs.NewAPIClient(sgcrldistribcfgs_cfg)
 	rtfclient := rtf.NewAPIClient(rtf_cfg)
+	appmanagerclient := application_manager.NewAPIClient(appmanager_cfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -160,5 +164,6 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		sgtlscontextclient:      sgtlscontextclient,
 		sgcrldistribcfgsclient:  sgcrldistribcfgsclient,
 		rtfclient:               rtfclient,
+		appmanagerclient:        appmanagerclient,
 	}
 }
