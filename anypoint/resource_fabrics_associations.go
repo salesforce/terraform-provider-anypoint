@@ -211,7 +211,7 @@ func prepareFabricsAssociationsPostBody(d *schema.ResourceData) *rtf.FabricsAsso
 	return body
 }
 
-func prepareFabricsAssociationsDeleteBody(d *schema.ResourceData) *rtf.FabricsAssociationsPostBody {
+func prepareFabricsAssociationsDeleteBody(_ *schema.ResourceData) *rtf.FabricsAssociationsPostBody {
 	body := rtf.NewFabricsAssociationsPostBody()
 	env := "sandbox"
 	org := "all"
@@ -245,7 +245,7 @@ func equalFabricsAssociations(old, new interface{}) bool {
 	for i, val := range old_list {
 		o := val.(map[string]interface{})
 		n := new_list[i].(map[string]interface{})
-		if n["org_id"].(string) != o["org_id"].(string) || n["env_id"].(string) != o["org_id"].(string) {
+		if n["org_id"].(string) != o["org_id"].(string) || n["env_id"].(string) != o["env_id"].(string) {
 			return false
 		}
 	}
