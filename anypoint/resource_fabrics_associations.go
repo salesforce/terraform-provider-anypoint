@@ -61,11 +61,13 @@ func resourceFabricsAssociations() *schema.Resource {
 						"org_id": {
 							Type:        schema.TypeString,
 							Required:    true,
+							ForceNew:    true,
 							Description: "The organization id to associate with fabrics.",
 						},
 						"env_id": {
 							Type:        schema.TypeString,
 							Required:    true,
+							ForceNew:    true,
 							Description: "The environment to associate with fabrics.",
 						},
 					},
@@ -113,10 +115,10 @@ func resourceFabricsAssociationsCreate(ctx context.Context, d *schema.ResourceDa
 func resourceFabricsAssociationsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	fabricsid := d.Id()
+	fabricsid := d.Get("fabrics_id").(string)
 	orgid := d.Get("org_id").(string)
 	authctx := getFabricsAuthCtx(ctx, &pco)
-	if isComposedResourceId(fabricsid) {
+	if isComposedResourceId(d.Id()) {
 		orgid, fabricsid = decomposeFabricsAssociationsId(d)
 	}
 	//perform request
@@ -158,7 +160,7 @@ func resourceFabricsAssociationsRead(ctx context.Context, d *schema.ResourceData
 func resourceFabricsAssociationsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	fabricsid := d.Id()
+	fabricsid := d.Get("fabrics_id").(string)
 	orgid := d.Get("org_id").(string)
 	authctx := getFabricsAuthCtx(ctx, &pco)
 	body := prepareFabricsAssociationsDeleteBody(d)
@@ -190,13 +192,13 @@ func resourceFabricsAssociationsDelete(ctx context.Context, d *schema.ResourceDa
 
 func prepareFabricsAssociationsPostBody(d *schema.ResourceData) *rtf.FabricsAssociationsPostBody {
 	body := rtf.NewFabricsAssociationsPostBody()
-	associations := d.Get("associations").([]interface{})
+	associations := d.Get("associations").(*schema.Set)
 
-	if len(associations) == 0 {
+	if associations.Len() == 0 {
 		return nil
 	}
-	res := make([]rtf.FabricsAssociationsPostBodyAssociationsInner, len(associations))
-	for i, association := range associations {
+	res := make([]rtf.FabricsAssociationsPostBodyAssociationsInner, associations.Len())
+	for i, association := range associations.List() {
 		parsedAssoc := association.(map[string]interface{})
 		inner := rtf.NewFabricsAssociationsPostBodyAssociationsInner()
 		inner.SetOrganizationId(parsedAssoc["org_id"].(string))
