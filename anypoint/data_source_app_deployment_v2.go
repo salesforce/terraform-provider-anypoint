@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	application_manager "github.com/mulesoft-anypoint/anypoint-client-go/application_manager"
+	application_manager_v2 "github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 )
 
 var ReplicasReadOnlyDefinition = &schema.Resource{
@@ -522,11 +522,12 @@ var TargetReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-func dataSourceDeployment() *schema.Resource {
+func dataSourceAppDeploymentV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFabricsHealthRead,
+		ReadContext: dataSourceAppDeploymentV2Read,
 		Description: `
 		Reads a specific ` + "`" + `Deployment` + "`" + `.
+		This only works for Cloudhub V2 and Runtime Fabrics Apps.
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -596,13 +597,13 @@ func dataSourceDeployment() *schema.Resource {
 	}
 }
 
-func dataSourceAppDeploymentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Get("id").(string)
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
-	authctx := getAppDeploymentAuthCtx(ctx, &pco)
+	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	//execut request
 	res, httpr, err := pco.appmanagerclient.DefaultApi.GetDeploymentById(authctx, orgid, envid, id).Execute()
 	if err != nil {
@@ -636,7 +637,7 @@ func dataSourceAppDeploymentRead(ctx context.Context, d *schema.ResourceData, m 
 	return diags
 }
 
-func flattenAppDeployment(deployment *application_manager.Deployment) map[string]interface{} {
+func flattenAppDeployment(deployment *application_manager_v2.Deployment) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := deployment.GetNameOk(); ok {
 		item["name"] = *val
@@ -662,7 +663,7 @@ func flattenAppDeployment(deployment *application_manager.Deployment) map[string
 	return item
 }
 
-func flattenAppDeploymentReplicas(replicas []application_manager.Replicas) []interface{} {
+func flattenAppDeploymentReplicas(replicas []application_manager_v2.Replicas) []interface{} {
 	if len(replicas) > 0 {
 		res := make([]interface{}, len(replicas))
 		for i, replica := range replicas {
@@ -673,7 +674,7 @@ func flattenAppDeploymentReplicas(replicas []application_manager.Replicas) []int
 	return make([]interface{}, 0)
 }
 
-func flattenAppDeploymentReplica(replica *application_manager.Replicas) map[string]interface{} {
+func flattenAppDeploymentReplica(replica *application_manager_v2.Replicas) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := replica.GetIdOk(); ok {
 		item["id"] = *val
@@ -693,7 +694,7 @@ func flattenAppDeploymentReplica(replica *application_manager.Replicas) map[stri
 	return item
 }
 
-func flattenAppDeploymentApplication(application *application_manager.Application) map[string]interface{} {
+func flattenAppDeploymentApplication(application *application_manager_v2.Application) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := application.GetStatusOk(); ok {
 		item["status"] = *val
@@ -710,7 +711,7 @@ func flattenAppDeploymentApplication(application *application_manager.Applicatio
 	return item
 }
 
-func flattenAppDeploymentRef(ref *application_manager.Ref) map[string]interface{} {
+func flattenAppDeploymentRef(ref *application_manager_v2.Ref) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := ref.GetGroupIdOk(); ok {
 		item["group_id"] = *val
@@ -727,7 +728,7 @@ func flattenAppDeploymentRef(ref *application_manager.Ref) map[string]interface{
 	return item
 }
 
-func flattenAppDeploymentConfig(config *application_manager.AppConfiguration) map[string]interface{} {
+func flattenAppDeploymentConfig(config *application_manager_v2.AppConfiguration) map[string]interface{} {
 	item := make(map[string]interface{})
 	if srv, ok := config.GetMuleAgentApplicationPropertiesServiceOk(); ok {
 		item["mule_agent_app_props_service"] = []interface{}{flattenAppDeploymentConfigMAAPS(srv)}
@@ -741,7 +742,7 @@ func flattenAppDeploymentConfig(config *application_manager.AppConfiguration) ma
 	return item
 }
 
-func flattenAppDeploymentConfigMAAPS(service *application_manager.MuleAgentAppPropService) map[string]interface{} {
+func flattenAppDeploymentConfigMAAPS(service *application_manager_v2.MuleAgentAppPropService) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := service.GetApplicationNameOk(); ok {
 		item["application_name"] = *val
@@ -755,7 +756,7 @@ func flattenAppDeploymentConfigMAAPS(service *application_manager.MuleAgentAppPr
 	return item
 }
 
-func flattenAppDeploymentConfigMALS(service *application_manager.MuleAgentLoggingService) map[string]interface{} {
+func flattenAppDeploymentConfigMALS(service *application_manager_v2.MuleAgentLoggingService) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := service.GetArtifactNameOk(); ok {
 		item["artifact_name"] = *val
@@ -777,7 +778,7 @@ func flattenAppDeploymentConfigMALS(service *application_manager.MuleAgentLoggin
 	return item
 }
 
-func flattenAppDeploymentConfigMASS(service *application_manager.MuleAgentSchedulingService) map[string]interface{} {
+func flattenAppDeploymentConfigMASS(service *application_manager_v2.MuleAgentSchedulingService) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := service.GetApplicationNameOk(); ok {
 		item["application_name"] = *val
@@ -845,7 +846,7 @@ func getAppDeploymentAttributes() []string {
 /*
  * Returns authentication context (includes authorization header)
  */
-func getAppDeploymentAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
-	tmp := context.WithValue(ctx, application_manager.ContextAccessToken, pco.access_token)
-	return context.WithValue(tmp, application_manager.ContextServerIndex, pco.server_index)
+func getAppDeploymentV2AuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
+	tmp := context.WithValue(ctx, application_manager_v2.ContextAccessToken, pco.access_token)
+	return context.WithValue(tmp, application_manager_v2.ContextServerIndex, pco.server_index)
 }

@@ -57,4 +57,6 @@ var DATASOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_fabrics_associations":                  dataSourceFabricsAssociations(),
 	"anypoint_fabrics_helm_repo":                     dataSourceFabricsHelmRepoProps(),
 	"anypoint_fabrics_health":                        dataSourceFabricsHealth(),
+	"anypoint_app_deployment_v2":                     dataSourceDeploymentV2(),
+	"anypoint_app_deployments_v2":                    dataSourceAppDeploymentsV2(),
 }

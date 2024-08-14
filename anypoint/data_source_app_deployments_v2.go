@@ -9,14 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/mulesoft-anypoint/anypoint-client-go/application_manager"
+	"github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 )
 
-func dataSourceAppDeployments() *schema.Resource {
+func dataSourceAppDeploymentsV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAppDeploymentsRead,
+		ReadContext: dataSourceAppDeploymentsV2Read,
 		Description: `
 		Reads ` + "`" + `Deployments` + "`" + ` from the runtime manager for a given organization and environment.
+		This only works for Cloudhub V2 and Runtime Fabrics Apps.
 		`,
 		Schema: map[string]*schema.Schema{
 			"org_id": {
@@ -144,13 +145,13 @@ func dataSourceAppDeployments() *schema.Resource {
 	}
 }
 
-func dataSourceAppDeploymentsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAppDeploymentsV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
-	authctx := getAppDeploymentAuthCtx(ctx, &pco)
+	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	//prepare request
 	req := pco.appmanagerclient.DefaultApi.GetAllDeployments(authctx, orgid, envid)
 	req, errDiags := parseAppDeploymentSearchOpts(req, searchOpts)
@@ -204,7 +205,7 @@ func dataSourceAppDeploymentsRead(ctx context.Context, d *schema.ResourceData, m
 Parses the api manager search options in order to check if the required search parameters are set correctly.
 Appends the parameters to the given request
 */
-func parseAppDeploymentSearchOpts(req application_manager.DefaultApiGetAllDeploymentsRequest, params *schema.Set) (application_manager.DefaultApiGetAllDeploymentsRequest, diag.Diagnostics) {
+func parseAppDeploymentSearchOpts(req application_manager_v2.DefaultApiGetAllDeploymentsRequest, params *schema.Set) (application_manager_v2.DefaultApiGetAllDeploymentsRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if params.Len() == 0 {
 		return req, diags
@@ -227,7 +228,7 @@ func parseAppDeploymentSearchOpts(req application_manager.DefaultApiGetAllDeploy
 	return req, diags
 }
 
-func flattenDeploymentItemsResult(items []application_manager.DeploymentItem) []interface{} {
+func flattenDeploymentItemsResult(items []application_manager_v2.DeploymentItem) []interface{} {
 	if len(items) > 0 {
 		res := make([]interface{}, len(items))
 		for i, item := range items {
@@ -238,7 +239,7 @@ func flattenDeploymentItemsResult(items []application_manager.DeploymentItem) []
 	return make([]interface{}, 0)
 }
 
-func flattenDeploymentItemResult(data *application_manager.DeploymentItem) map[string]interface{} {
+func flattenDeploymentItemResult(data *application_manager_v2.DeploymentItem) map[string]interface{} {
 	item := make(map[string]interface{})
 	if data == nil {
 		return item
