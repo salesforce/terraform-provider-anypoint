@@ -625,7 +625,7 @@ func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, 
 	defer httpr.Body.Close()
 	//process data
 	data := flattenAppDeployment(res)
-	if err := setApimInstanceDetailsAttributesToResourceData(d, data); err != nil {
+	if err := setAppDeploymentV2AttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set API Manager instance details attributes",
@@ -821,8 +821,8 @@ func flattenAppDeploymentConfigMASS(service *application_manager_v2.MuleAgentSch
 	return item
 }
 
-func setAppDeploymentAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
-	attributes := getAppDeploymentAttributes()
+func setAppDeploymentV2AttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+	attributes := getAppDeploymentV2Attributes()
 	if data != nil {
 		for _, attr := range attributes {
 			if val, ok := data[attr]; ok {
@@ -835,7 +835,7 @@ func setAppDeploymentAttributesToResourceData(d *schema.ResourceData, data map[s
 	return nil
 }
 
-func getAppDeploymentAttributes() []string {
+func getAppDeploymentV2Attributes() []string {
 	attributes := [...]string{
 		"name", "creation_date", "last_modified_date", "desired_version",
 		"replicas", "status", "application", "target", "last_successful_version",
