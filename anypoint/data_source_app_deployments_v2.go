@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 )
 
@@ -96,7 +95,7 @@ func dataSourceAppDeploymentsV2() *schema.Resource {
 						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Description: `Data of the mule app replicas
+							Description: `Status of the mule app, which may be one of:
 							- PARTIALLY_STARTED
 							- DEPLOYMENT_FAILED
 							- STARTING
@@ -115,13 +114,13 @@ func dataSourceAppDeploymentsV2() *schema.Resource {
 						"application_status": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The status of the application.",
-							ValidateDiagFunc: validation.ToDiagFunc(
-								validation.StringInSlice(
-									[]string{"RUNNING", "NOT_RUNNING"},
-									false,
-								),
-							),
+							Description: "More simplistic status that can be either RUNNING or NOT_RUNNING",
+							// ValidateDiagFunc: validation.ToDiagFunc(
+							// 	validation.StringInSlice(
+							// 		[]string{"RUNNING", "NOT_RUNNING"},
+							// 		false,
+							// 	),
+							// ),
 						},
 						"current_runtime_version": {
 							Type:        schema.TypeString,
@@ -179,8 +178,8 @@ func dataSourceAppDeploymentsV2Read(ctx context.Context, d *schema.ResourceData,
 	}
 	defer httpr.Body.Close()
 	//process data
-	assets := flattenDeploymentItemsResult(res.GetItems())
-	if err := d.Set("assets", assets); err != nil {
+	deployments := flattenAppDeploymentV2ItemsResult(res.GetItems())
+	if err := d.Set("deployments", deployments); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set deployment items for org " + orgid + " and env " + envid,
@@ -228,18 +227,18 @@ func parseAppDeploymentSearchOpts(req application_manager_v2.DefaultApiGetAllDep
 	return req, diags
 }
 
-func flattenDeploymentItemsResult(items []application_manager_v2.DeploymentItem) []interface{} {
+func flattenAppDeploymentV2ItemsResult(items []application_manager_v2.DeploymentItem) []interface{} {
 	if len(items) > 0 {
 		res := make([]interface{}, len(items))
 		for i, item := range items {
-			res[i] = flattenDeploymentItemResult(&item)
+			res[i] = flattenAppDeploymentV2ItemResult(&item)
 		}
 		return res
 	}
 	return make([]interface{}, 0)
 }
 
-func flattenDeploymentItemResult(data *application_manager_v2.DeploymentItem) map[string]interface{} {
+func flattenAppDeploymentV2ItemResult(data *application_manager_v2.DeploymentItem) map[string]interface{} {
 	item := make(map[string]interface{})
 	if data == nil {
 		return item

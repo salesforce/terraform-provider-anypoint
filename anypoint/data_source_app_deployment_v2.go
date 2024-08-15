@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	application_manager_v2 "github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 )
 
@@ -15,27 +14,27 @@ var ReplicasReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"id": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 			Description: "The unique id of the mule app replica.",
 		},
 		"state": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 			Description: "The current state of the replica.",
 		},
 		"deployment_location": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 			Description: "The node id in which the replica is deployed.",
 		},
 		"current_deployment_version": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 			Description: "The version deployed in the replica.",
 		},
 		"reason": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 			Description: "In case of an error, it should provide information about the root cause.",
 		},
 	},
@@ -96,15 +95,18 @@ var ApplicationConfigLoggingReadOnlyDefinition = &schema.Resource{
 		"scope_logging_configurations": {
 			Type:        schema.TypeList,
 			Description: "Additional log levels and categories to include in logs.",
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"scope": {
 						Type:        schema.TypeString,
 						Description: "The logging package scope",
+						Computed:    true,
 					},
 					"log_level": {
 						Type:        schema.TypeString,
 						Description: "The application log level: INFO / DEBUG / WARNING / ERROR / FATAL",
+						Computed:    true,
 						// ValidateDiagFunc: validation.ToDiagFunc(
 						// 	validation.StringInSlice([]string{"INFO", "DEBUG", "WARNING", "ERROR", "FATAL"}, false),
 						// ),
@@ -136,6 +138,7 @@ var ApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
 					"type": {
 						Type:        schema.TypeString,
 						Description: "The scheduler type",
+						Computed:    true,
 					},
 					"flow_name": {
 						Type:        schema.TypeString,
@@ -151,12 +154,12 @@ var ApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
 						Type:        schema.TypeString,
 						Description: "The scheduler's time unit.",
 						Computed:    true,
-						ValidateDiagFunc: validation.ToDiagFunc(
-							validation.StringInSlice(
-								[]string{"NANOSECONDS", "MICROSECONDS", "MILLISECONDS", "SECONDS", "MINUTES", "HOURS", "DAYS"},
-								false,
-							),
-						),
+						// ValidateDiagFunc: validation.ToDiagFunc(
+						// 	validation.StringInSlice(
+						// 		[]string{"NANOSECONDS", "MICROSECONDS", "MILLISECONDS", "SECONDS", "MINUTES", "HOURS", "DAYS"},
+						// 		false,
+						// 	),
+						// ),
 					},
 					"frequency": {
 						Type:        schema.TypeString,
@@ -190,16 +193,19 @@ var ApplicationConfigReadOnlyDefinition = &schema.Resource{
 			Type:        schema.TypeList,
 			Description: "The mule app properties",
 			Elem:        ApplicationConfigPropsReadOnlyDefinition,
+			Computed:    true,
 		},
 		"mule_agent_logging_service": {
 			Type:        schema.TypeList,
 			Description: "The mule app logging props",
 			Elem:        ApplicationConfigLoggingReadOnlyDefinition,
+			Computed:    true,
 		},
 		"mule_agent_scheduling_service": {
 			Type:        schema.TypeList,
 			Description: "The mule app scheduling",
 			Elem:        ApplicationConfigSchedulingReadOnlyDefinition,
+			Computed:    true,
 		},
 	},
 }
@@ -275,6 +281,7 @@ var TargetDeploymentSettingsHttpReadOnlyDefinition = &schema.Resource{
 		"inbound_unique_id": {
 			Type:        schema.TypeString,
 			Description: "The inbound unique id",
+			Computed:    true,
 		},
 	},
 }
@@ -467,6 +474,7 @@ var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 		"anypoint_monitoring_scope": {
 			Type:        schema.TypeString,
 			Description: "The anypoint moniroting scope",
+			Computed:    true,
 		},
 		"sidecars": {
 			Type:        schema.TypeList,
@@ -513,6 +521,7 @@ var TargetReadOnlyDefinition = &schema.Resource{
 			Type:        schema.TypeList,
 			Description: "The settings of the target for the deployment to perform.",
 			Elem:        TargetDeploymentSettingsReadOnlyDefinition,
+			Computed:    true,
 		},
 		"replicas": {
 			Type:        schema.TypeInt,
@@ -628,7 +637,7 @@ func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, 
 	if err := setAppDeploymentV2AttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set API Manager instance details attributes",
+			Summary:  "Unable to set App Deployment details attributes",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -657,9 +666,16 @@ func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[s
 	if val, ok := deployment.GetStatusOk(); ok {
 		item["status"] = *val
 	}
-	if val, ok := deployment.GetApplicationOk(); ok {
-		item["application"] = flattenAppDeploymentV2Application(val)
+	if application, ok := deployment.GetApplicationOk(); ok {
+		item["application"] = []interface{}{flattenAppDeploymentV2Application(application)}
 	}
+	if target, ok := deployment.GetTargetOk(); ok {
+		item["target"] = []interface{}{flattenAppDeploymentV2Target(target)}
+	}
+	if val, ok := deployment.GetLastSuccessfulVersionOk(); ok {
+		item["last_successful_version"] = *val
+	}
+
 	return item
 }
 
@@ -707,6 +723,26 @@ func flattenAppDeploymentV2Application(application *application_manager_v2.Appli
 	}
 	if config, ok := application.GetConfigurationOk(); ok {
 		item["configuration"] = []interface{}{flattenAppDeploymentV2Config(config)}
+	}
+	if val, ok := application.GetVCoresOk(); ok {
+		item["vcores"] = *val
+	}
+	return item
+}
+
+func flattenAppDeploymentV2Target(target *application_manager_v2.Target) map[string]interface{} {
+	item := make(map[string]interface{})
+	if val, ok := target.GetProviderOk(); ok {
+		item["provider"] = *val
+	}
+	if val, ok := target.GetTargetIdOk(); ok {
+		item["target_id"] = *val
+	}
+	if deployment_settings, ok := target.GetDeploymentSettingsOk(); ok {
+		item["deployment_settings"] = []interface{}{flattenAppDeploymentV2TargetDeplSett(deployment_settings)}
+	}
+	if val, ok := target.GetReplicasOk(); ok {
+		item["replicas"] = *val
 	}
 	return item
 }
@@ -817,6 +853,174 @@ func flattenAppDeploymentV2ConfigMASS(service *application_manager_v2.MuleAgentS
 			res[i] = d
 		}
 		item["schedulers"] = res
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manager_v2.DeploymentSettings) map[string]interface{} {
+	item := make(map[string]interface{})
+	if val, ok := deployment_settings.GetClusteredOk(); ok {
+		item["clustered"] = *val
+	}
+	if val, ok := deployment_settings.GetEnforceDeployingReplicasAcrossNodesOk(); ok {
+		item["enforce_deploying_replicas_across_nodes"] = *val
+	}
+	if http, ok := deployment_settings.GetHttpOk(); ok {
+		item["http"] = []interface{}{flattenAppDeploymentV2TargetDeplSettHttp(http)}
+	}
+	if jvm, ok := deployment_settings.GetJvmOk(); ok {
+		if val, ok := jvm.GetArgsOk(); ok {
+			item["jvm_args"] = *val
+		}
+	}
+	if runtime, ok := deployment_settings.GetRuntimeOk(); ok {
+		item["runtime"] = []interface{}{flattenAppDeploymentV2TargetDeplSettRuntime(runtime)}
+	}
+	if autoscaling, ok := deployment_settings.GetAutoscalingOk(); ok {
+		item["autoscaling"] = []interface{}{flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling)}
+	}
+	if val, ok := deployment_settings.GetUpdateStrategyOk(); ok {
+		item["update_strategy"] = *val
+	}
+	if resources, ok := deployment_settings.GetResourcesOk(); ok {
+		item["resources"] = []interface{}{flattenAppDeploymentV2TargetDeplSettResources(resources)}
+	}
+	if val, ok := deployment_settings.GetLastMileSecurityOk(); ok {
+		item["last_mile_security"] = *val
+	}
+	if val, ok := deployment_settings.GetDisableAmLogForwardingOk(); ok {
+		item["disable_am_log_forwarding"] = *val
+	}
+	if val, ok := deployment_settings.GetPersistentObjectStoreOk(); ok {
+		item["persistent_object_store"] = *val
+	}
+	if val, ok := deployment_settings.GetAnypointMonitoringScopeOk(); ok {
+		item["anypoint_monitoring_scope"] = *val
+	}
+	if sidecars, ok := deployment_settings.GetSidecarsOk(); ok {
+		item["sidecars"] = []interface{}{flattenAppDeploymentV2TargetDeplSettSidecars(sidecars)}
+	}
+	if val, ok := deployment_settings.GetForwardSslSessionOk(); ok {
+		item["forward_ssl_session"] = *val
+	}
+	if val, ok := deployment_settings.GetDisableExternalLogForwardingOk(); ok {
+		item["disable_external_log_forwarding"] = *val
+	}
+	if val, ok := deployment_settings.GetTracingEnabledOk(); ok {
+		item["tracing_enabled"] = *val
+	}
+	if val, ok := deployment_settings.GetGenerateDefaultPublicUrlOk(); ok {
+		item["generate_default_public_url"] = *val
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSettHttp(http *application_manager_v2.Http) map[string]interface{} {
+	item := make(map[string]interface{})
+	if inbound, ok := http.GetInboundOk(); ok {
+		if val, ok := inbound.GetPublicUrlOk(); ok {
+			item["inbound_public_url"] = *val
+		}
+		if val, ok := inbound.GetPathRewriteOk(); ok {
+			item["inbound_path_rewrite"] = *val
+		}
+		if val, ok := inbound.GetLastMileSecurityOk(); ok {
+			item["inbound_last_mile_security"] = *val
+		}
+		if val, ok := inbound.GetForwardSslSessionOk(); ok {
+			item["inbound_forward_ssl_session"] = *val
+		}
+		if val, ok := inbound.GetInternalUrlOk(); ok {
+			item["inbound_internal_url"] = *val
+		}
+		if val, ok := inbound.GetUniqueIdOk(); ok {
+			item["inbound_unique_id"] = *val
+		}
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSettRuntime(runtime *application_manager_v2.Runtime) map[string]interface{} {
+	item := make(map[string]interface{})
+	if val, ok := runtime.GetVersionOk(); ok {
+		item["version"] = *val
+	}
+	if val, ok := runtime.GetReleaseChannelOk(); ok {
+		item["release_channel"] = *val
+	}
+	if val, ok := runtime.GetJavaOk(); ok {
+		item["java"] = *val
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling *application_manager_v2.Autoscaling) map[string]interface{} {
+	item := make(map[string]interface{})
+	if val, ok := autoscaling.GetEnabledOk(); ok {
+		item["enabled"] = *val
+	}
+	if val, ok := autoscaling.GetMinReplicasOk(); ok {
+		item["min_replicas"] = *val
+	}
+	if val, ok := autoscaling.GetMaxReplicasOk(); ok {
+		item["max_replicas"] = *val
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSettResources(resources *application_manager_v2.Resources) map[string]interface{} {
+	item := make(map[string]interface{})
+	if cpu, ok := resources.GetCpuOk(); ok {
+		if val, ok := cpu.GetLimitOk(); ok {
+			item["cpu_limit"] = *val
+		}
+		if val, ok := cpu.GetReservedOk(); ok {
+			item["cpu_reserved"] = *val
+		}
+	}
+	if memory, ok := resources.GetMemoryOk(); ok {
+		if val, ok := memory.GetLimitOk(); ok {
+			item["memory_limit"] = *val
+		}
+		if val, ok := memory.GetReservedOk(); ok {
+			item["memory_reserved"] = *val
+		}
+	}
+	if storage, ok := resources.GetStorageOk(); ok {
+		if val, ok := storage.GetLimitOk(); ok {
+			item["storage_limit"] = *val
+		}
+		if val, ok := storage.GetReservedOk(); ok {
+			item["storage_reserved"] = *val
+		}
+	}
+	return item
+}
+
+func flattenAppDeploymentV2TargetDeplSettSidecars(sidecars *application_manager_v2.Sidecars) map[string]interface{} {
+	item := make(map[string]interface{})
+	if anypoint_monitoring, ok := sidecars.GetAnypointMonitoringOk(); ok {
+		if val, ok := anypoint_monitoring.GetImageOk(); ok {
+			item["anypoint_monitoring_image"] = *val
+		}
+		if resources, ok := anypoint_monitoring.GetResourcesOk(); ok {
+			if cpu, ok := resources.GetCpuOk(); ok {
+				if val, ok := cpu.GetLimitOk(); ok {
+					item["anypoint_monitoring_resources_cpu_limit"] = *val
+				}
+				if val, ok := cpu.GetReservedOk(); ok {
+					item["anypoint_monitoring_resources_cpu_reserved"] = *val
+				}
+			}
+			if memory, ok := resources.GetMemoryOk(); ok {
+				if val, ok := memory.GetLimitOk(); ok {
+					item["anypoint_monitoring_resources_memory_limit"] = *val
+				}
+				if val, ok := memory.GetReservedOk(); ok {
+					item["anypoint_monitoring_resources_memory_reserved"] = *val
+				}
+			}
+		}
 	}
 	return item
 }
