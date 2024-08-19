@@ -82,6 +82,15 @@ func StringInSlice(expected []string, v string, ignoreCase bool) bool {
 	return false
 }
 
+func FloatInSlice(expected []float64, v float64) bool {
+	for _, e := range expected {
+		if e == v {
+			return true
+		}
+	}
+	return false
+}
+
 // Uses sha1 to calculate digest of the given source string
 func CalcSha1Digest(source string) string {
 	hasher := sha1.New()

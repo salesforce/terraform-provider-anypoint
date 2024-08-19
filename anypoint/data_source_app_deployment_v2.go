@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,7 +41,7 @@ var ReplicasReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var ApplicationRefReadOnlyDefinition = &schema.Resource{
+var DeplApplicationRefReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"group_id": {
 			Type:        schema.TypeString,
@@ -65,7 +66,7 @@ var ApplicationRefReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var ApplicationConfigPropsReadOnlyDefinition = &schema.Resource{
+var DeplApplicationConfigPropsReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"application_name": {
 			Type:        schema.TypeString,
@@ -85,7 +86,7 @@ var ApplicationConfigPropsReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var ApplicationConfigLoggingReadOnlyDefinition = &schema.Resource{
+var DeplApplicationConfigLoggingReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"artifact_name": {
 			Type:        schema.TypeString,
@@ -107,9 +108,6 @@ var ApplicationConfigLoggingReadOnlyDefinition = &schema.Resource{
 						Type:        schema.TypeString,
 						Description: "The application log level: INFO / DEBUG / WARNING / ERROR / FATAL",
 						Computed:    true,
-						// ValidateDiagFunc: validation.ToDiagFunc(
-						// 	validation.StringInSlice([]string{"INFO", "DEBUG", "WARNING", "ERROR", "FATAL"}, false),
-						// ),
 					},
 				},
 			},
@@ -117,7 +115,7 @@ var ApplicationConfigLoggingReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var ApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
+var DeplApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"application_name": {
 			Type:        schema.TypeString,
@@ -154,12 +152,6 @@ var ApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
 						Type:        schema.TypeString,
 						Description: "The scheduler's time unit.",
 						Computed:    true,
-						// ValidateDiagFunc: validation.ToDiagFunc(
-						// 	validation.StringInSlice(
-						// 		[]string{"NANOSECONDS", "MICROSECONDS", "MILLISECONDS", "SECONDS", "MINUTES", "HOURS", "DAYS"},
-						// 		false,
-						// 	),
-						// ),
 					},
 					"frequency": {
 						Type:        schema.TypeString,
@@ -187,30 +179,30 @@ var ApplicationConfigSchedulingReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var ApplicationConfigReadOnlyDefinition = &schema.Resource{
+var DeplApplicationConfigReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"mule_agent_app_props_service": {
 			Type:        schema.TypeList,
 			Description: "The mule app properties",
-			Elem:        ApplicationConfigPropsReadOnlyDefinition,
+			Elem:        DeplApplicationConfigPropsReadOnlyDefinition,
 			Computed:    true,
 		},
 		"mule_agent_logging_service": {
 			Type:        schema.TypeList,
 			Description: "The mule app logging props",
-			Elem:        ApplicationConfigLoggingReadOnlyDefinition,
+			Elem:        DeplApplicationConfigLoggingReadOnlyDefinition,
 			Computed:    true,
 		},
 		"mule_agent_scheduling_service": {
 			Type:        schema.TypeList,
 			Description: "The mule app scheduling",
-			Elem:        ApplicationConfigSchedulingReadOnlyDefinition,
+			Elem:        DeplApplicationConfigSchedulingReadOnlyDefinition,
 			Computed:    true,
 		},
 	},
 }
 
-var ApplicationReadOnlyDefinition = &schema.Resource{
+var DeplApplicationReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"status": {
 			Type:        schema.TypeString,
@@ -221,37 +213,33 @@ var ApplicationReadOnlyDefinition = &schema.Resource{
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "The desired state of the application.",
-			// ValidateDiagFunc: validation.ToDiagFunc(
-			// 	validation.StringInSlice(
-			// 		[]string{
-			// 			"PARTIALLY_STARTED", "DEPLOYMENT_FAILED", "STARTING", "STARTED", "STOPPING",
-			// 			"STOPPED", "UNDEPLOYING", "UNDEPLOYED", "UPDATED", "APPLIED", "APPLYING", "FAILED", "DELETED",
-			// 		},
-			// 		false,
-			// 	),
-			// ),
 		},
 		"ref": {
 			Type:        schema.TypeList,
 			Computed:    true,
 			Description: "The desired state of the application.",
-			Elem:        ApplicationRefReadOnlyDefinition,
+			Elem:        DeplApplicationRefReadOnlyDefinition,
 		},
 		"configuration": {
 			Type:        schema.TypeList,
 			Computed:    true,
 			Description: "The configuration of the application.",
-			Elem:        ApplicationConfigReadOnlyDefinition,
+			Elem:        DeplApplicationConfigReadOnlyDefinition,
 		},
 		"vcores": {
 			Type:        schema.TypeFloat,
 			Computed:    true,
 			Description: "The allocated virtual cores.",
 		},
+		"object_store_v2_enabled": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether object store v2 is enabled.",
+		},
 	},
 }
 
-var TargetDeploymentSettingsHttpReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeplSettHttpReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"inbound_public_url": {
 			Type:        schema.TypeString,
@@ -286,7 +274,7 @@ var TargetDeploymentSettingsHttpReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var TargetDeploymentSettingsRuntimeReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeplSettRuntimeReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"version": {
 			Type: schema.TypeString,
@@ -297,6 +285,7 @@ var TargetDeploymentSettingsRuntimeReadOnlyDefinition = &schema.Resource{
 				- or only a base version (i.e. "4.6.0").
 			Defaults to the latest image version.
 			This field has precedence over the legacy 'target.deploymentSettings.runtimeVersion'
+			Learn more about Mule runtime release notes [here](https://docs.mulesoft.com/release-notes/runtime-fabric/runtime-fabric-runtimes-release-notes)
 			`,
 			Computed: true,
 		},
@@ -308,7 +297,7 @@ var TargetDeploymentSettingsRuntimeReadOnlyDefinition = &schema.Resource{
 				- "EDGE"
 				- "LEGACY".
 			Defaults to "EDGE". This field has precedence over the legacy 'target.deploymentSettings.runtimeReleaseChannel'.
-			Learn more on release channels at https://docs.mulesoft.com/release-notes/mule-runtime/lts-edge-release-cadence.
+			Learn more on release channels [here](https://docs.mulesoft.com/release-notes/mule-runtime/lts-edge-release-cadence).
 			`,
 			Computed: true,
 		},
@@ -319,14 +308,14 @@ var TargetDeploymentSettingsRuntimeReadOnlyDefinition = &schema.Resource{
 				- "8"
 				- "17"
 			Defaults to "8".
-			Learn more about Java support at https://docs.mulesoft.com/general/java-support.
+			Learn more about Java support [here](https://docs.mulesoft.com/general/java-support).
 			`,
 			Computed: true,
 		},
 	},
 }
 
-var TargetDeploymentSettingsAutoscalingReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeplSettAutoscalingReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"enabled": {
 			Type:        schema.TypeBool,
@@ -346,7 +335,7 @@ var TargetDeploymentSettingsAutoscalingReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var TargetDeploymentSettingsResourcesReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeplSettResourcesReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"cpu_limit": {
 			Type:        schema.TypeString,
@@ -381,7 +370,7 @@ var TargetDeploymentSettingsResourcesReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var TargetDeploymentSettingsSidecarsReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeplSettSidecarsReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"anypoint_monitoring_image": {
 			Type:     schema.TypeString,
@@ -406,7 +395,7 @@ var TargetDeploymentSettingsSidecarsReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
+var DeplTargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"clustered": {
 			Type:        schema.TypeBool,
@@ -422,7 +411,7 @@ var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 			Type:        schema.TypeList,
 			Description: "The details about http inbound or outbound configuration",
 			Computed:    true,
-			Elem:        TargetDeploymentSettingsHttpReadOnlyDefinition,
+			Elem:        DeplTargetDeplSettHttpReadOnlyDefinition,
 		},
 		"jvm_args": {
 			Type:        schema.TypeString,
@@ -433,27 +422,27 @@ var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 			Type:        schema.TypeList,
 			Description: "The Mule app runtime version info.",
 			Computed:    true,
-			Elem:        TargetDeploymentSettingsRuntimeReadOnlyDefinition,
+			Elem:        DeplTargetDeplSettRuntimeReadOnlyDefinition,
 		},
 		"autoscaling": {
 			Type: schema.TypeList,
 			Description: `
 			Use this object to provide CPU Based Horizontal Autoscaling configuration on deployment and redeployment operations. This object is optional.
 			If Autoscaling is disabled and the fields "minReplicas" and "maxReplicas" are provided, they must match the value of "target.replicas" field.
-			Learn more about Autoscaling at https://docs.mulesoft.com/cloudhub-2/ch2-configure-horizontal-autoscaling.
+			Learn more about Autoscaling [here](https://docs.mulesoft.com/cloudhub-2/ch2-configure-horizontal-autoscaling).
 			`,
 			Computed: true,
-			Elem:     TargetDeploymentSettingsAutoscalingReadOnlyDefinition,
+			Elem:     DeplTargetDeplSettAutoscalingReadOnlyDefinition,
 		},
 		"update_strategy": {
 			Type:        schema.TypeString,
-			Description: "The mule app update strategy: rolling or replace",
+			Description: "The mule app update strategy: rolling or recreate",
 			Computed:    true,
 		},
 		"resources": {
 			Type:        schema.TypeList,
 			Description: "The mule app allocated resources",
-			Elem:        TargetDeploymentSettingsResourcesReadOnlyDefinition,
+			Elem:        DeplTargetDeplSettResourcesReadOnlyDefinition,
 			Computed:    true,
 		},
 		"last_mile_security": {
@@ -479,7 +468,7 @@ var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 		"sidecars": {
 			Type:        schema.TypeList,
 			Description: "The mule app sidecars.",
-			Elem:        TargetDeploymentSettingsSidecarsReadOnlyDefinition,
+			Elem:        DeplTargetDeplSettSidecarsReadOnlyDefinition,
 			Computed:    true,
 		},
 		"forward_ssl_session": {
@@ -505,7 +494,7 @@ var TargetDeploymentSettingsReadOnlyDefinition = &schema.Resource{
 	},
 }
 
-var TargetReadOnlyDefinition = &schema.Resource{
+var DeplTargetReadOnlyDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"provider": {
 			Type:        schema.TypeString,
@@ -520,7 +509,7 @@ var TargetReadOnlyDefinition = &schema.Resource{
 		"deployment_settings": {
 			Type:        schema.TypeList,
 			Description: "The settings of the target for the deployment to perform.",
-			Elem:        TargetDeploymentSettingsReadOnlyDefinition,
+			Elem:        DeplTargetDeploymentSettingsReadOnlyDefinition,
 			Computed:    true,
 		},
 		"replicas": {
@@ -589,13 +578,13 @@ func dataSourceAppDeploymentV2() *schema.Resource {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "The details of the application to deploy",
-				Elem:        ApplicationReadOnlyDefinition,
+				Elem:        DeplApplicationReadOnlyDefinition,
 			},
 			"target": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "The details of the target to perform the deployment on.",
-				Elem:        TargetReadOnlyDefinition,
+				Elem:        DeplTargetReadOnlyDefinition,
 			},
 			"last_successful_version": {
 				Type:        schema.TypeString,
@@ -672,7 +661,7 @@ func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[s
 	if target, ok := deployment.GetTargetOk(); ok {
 		item["target"] = []interface{}{flattenAppDeploymentV2Target(target)}
 	}
-	if val, ok := deployment.GetLastSuccessfulVersionOk(); ok {
+	if val, ok := deployment.GetLastSuccessfulVersionOk(); ok && val != nil {
 		item["last_successful_version"] = *val
 	}
 
@@ -726,6 +715,10 @@ func flattenAppDeploymentV2Application(application *application_manager_v2.Appli
 	}
 	if val, ok := application.GetVCoresOk(); ok {
 		item["vcores"] = *val
+	}
+	if integrations, ok := application.GetIntegrationsOk(); ok {
+		data := flattenAppDeploymentV2Integrations(integrations)
+		maps.Copy(item, data)
 	}
 	return item
 }
@@ -1025,6 +1018,17 @@ func flattenAppDeploymentV2TargetDeplSettSidecars(sidecars *application_manager_
 	return item
 }
 
+func flattenAppDeploymentV2Integrations(integrations *application_manager_v2.ApplicationIntegrations) map[string]interface{} {
+	item := make(map[string]interface{})
+	if services, ok := integrations.GetServicesOk(); ok {
+		if object_store_v2, ok := services.GetObjectStoreV2Ok(); ok {
+			item["object_store_v2_enabled"] = object_store_v2.GetEnabled()
+		}
+	}
+	return item
+}
+
+// Set Attributes
 func setAppDeploymentV2AttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
 	attributes := getAppDeploymentV2Attributes()
 	if data != nil {
