@@ -668,17 +668,18 @@ func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[s
 	return item
 }
 
+// Flattens the replicas array. Only includes replicas with id in the final result.
 func flattenAppDeploymentV2Replicas(replicas []application_manager_v2.Replicas) []interface{} {
-	if len(replicas) > 0 {
-		res := make([]interface{}, len(replicas))
-		for i, replica := range replicas {
-			res[i] = flattenAppDeploymentV2Replica(&replica)
+	res := make([]interface{}, 0)
+	for _, replica := range replicas {
+		if replica.HasId() {
+			res = append(res, flattenAppDeploymentV2Replica(&replica))
 		}
-		return res
 	}
-	return make([]interface{}, 0)
+	return res
 }
 
+// maps a replica object
 func flattenAppDeploymentV2Replica(replica *application_manager_v2.Replicas) map[string]interface{} {
 	item := make(map[string]interface{})
 	if val, ok := replica.GetIdOk(); ok {
@@ -714,7 +715,7 @@ func flattenAppDeploymentV2Application(application *application_manager_v2.Appli
 		item["configuration"] = []interface{}{flattenAppDeploymentV2Config(config)}
 	}
 	if val, ok := application.GetVCoresOk(); ok {
-		item["vcores"] = *val
+		item["vcores"] = RoundFloat64(float64(*val), 1) // Insures that the value would be 0.1 and not 0.10000000149011612 for example
 	}
 	if integrations, ok := application.GetIntegrationsOk(); ok {
 		data := flattenAppDeploymentV2Integrations(integrations)

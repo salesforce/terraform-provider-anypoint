@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"reflect"
 	"sort"
 	"strconv"
@@ -89,6 +90,21 @@ func FloatInSlice(expected []float64, v float64) bool {
 		}
 	}
 	return false
+}
+
+// rounds a float32 value to the specified number of decimal places.
+func RoundFloat32(val float32, precision int) float32 {
+	// Convert float32 to float64 for precision in operations
+	return float32(RoundFloat64(float64(val), precision))
+}
+
+// rounds a float64 value to the specified number of decimal places.
+func RoundFloat64(val float64, precision int) float64 {
+	// Convert float32 to float64 for precision in operations
+	p := math.Pow10(precision)
+	rounded := math.Round(val*p) / p
+	// Convert back to float32
+	return rounded
 }
 
 // Uses sha1 to calculate digest of the given source string

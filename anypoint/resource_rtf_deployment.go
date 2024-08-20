@@ -2,17 +2,15 @@ package anypoint
 
 import (
 	"context"
-	"fmt"
 	"io"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	application_manager_v2 "github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 )
 
-var DeplApplicationConfigLoggingC2SSDefinition = &schema.Resource{
+var DeplApplicationConfigLoggingRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"artifact_name": {
 			Type:        schema.TypeString,
@@ -44,7 +42,7 @@ var DeplApplicationConfigLoggingC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplApplicationConfigPropsC2SSDefinition = &schema.Resource{
+var DeplApplicationConfigPropsRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"application_name": {
 			Type:        schema.TypeString,
@@ -66,20 +64,20 @@ var DeplApplicationConfigPropsC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplApplicationConfigC2SSDefinition = &schema.Resource{
+var DeplApplicationConfigRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"mule_agent_app_props_service": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Description: "The mule app properties",
-			Elem:        DeplApplicationConfigPropsC2SSDefinition,
+			Elem:        DeplApplicationConfigPropsRTFDefinition,
 			Required:    true,
 		},
 		"mule_agent_logging_service": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Description: "The mule app logging props",
-			Elem:        DeplApplicationConfigLoggingC2SSDefinition,
+			Elem:        DeplApplicationConfigLoggingRTFDefinition,
 			Optional:    true,
 		},
 		"mule_agent_scheduling_service": {
@@ -91,7 +89,7 @@ var DeplApplicationConfigC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplApplicationRefC2SSDefinition = &schema.Resource{
+var DeplApplicationRefRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"group_id": {
 			Type:        schema.TypeString,
@@ -119,7 +117,7 @@ var DeplApplicationRefC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplApplicationC2SSDefinition = &schema.Resource{
+var DeplApplicationRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"status": {
 			Type:        schema.TypeString,
@@ -146,20 +144,19 @@ var DeplApplicationC2SSDefinition = &schema.Resource{
 			MaxItems:    1,
 			Required:    true,
 			Description: "The desired state of the application.",
-			Elem:        DeplApplicationRefC2SSDefinition,
+			Elem:        DeplApplicationRefRTFDefinition,
 		},
 		"configuration": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Required:    true,
 			Description: "The configuration of the application.",
-			Elem:        DeplApplicationConfigC2SSDefinition,
+			Elem:        DeplApplicationConfigRTFDefinition,
 		},
 		"vcores": {
-			Type:             schema.TypeFloat,
-			Required:         true,
-			Description:      "The allocated virtual cores. Acceptable Values are: 0.1 / 0.2 / 0.5 / 1 / 1.5 / 2 / 2.5 / 3 / 3.5 / 4",
-			ValidateDiagFunc: VCoresValidatorDiag,
+			Type:        schema.TypeFloat,
+			Description: "The allocated virtual cores.",
+			Computed:    true,
 		},
 		"object_store_v2_enabled": {
 			Type:        schema.TypeBool,
@@ -170,7 +167,7 @@ var DeplApplicationC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplTargetDeplSettHttpC2SSDefinition = &schema.Resource{
+var DeplTargetDeplSettHttpRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"inbound_public_url": {
 			Type:        schema.TypeString,
@@ -191,7 +188,8 @@ var DeplTargetDeplSettHttpC2SSDefinition = &schema.Resource{
 		"inbound_forward_ssl_session": {
 			Type:        schema.TypeBool,
 			Description: "Whether to forward the ssl session. This option is disabled for shared-space.",
-			Computed:    true,
+			Optional:    true,
+			Default:     false,
 		},
 		"inbound_internal_url": {
 			Type:        schema.TypeString,
@@ -206,7 +204,7 @@ var DeplTargetDeplSettHttpC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplTargetDeplSettRuntimeC2SSDefinition = &schema.Resource{
+var DeplTargetDeplSettRuntimeRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"version": {
 			Type: schema.TypeString,
@@ -255,7 +253,42 @@ var DeplTargetDeplSettRuntimeC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplTargetDeplSettAutoscalingC2SSDefinition = &schema.Resource{
+var DeplTargetDeplSettResourcesRTFDefinition = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"cpu_limit": {
+			Type:        schema.TypeString,
+			Description: "The CPU limit",
+			Required:    true,
+		},
+		"cpu_reserved": {
+			Type:        schema.TypeString,
+			Description: "The CPU reserved",
+			Required:    true,
+		},
+		"memory_limit": {
+			Type:        schema.TypeString,
+			Description: "The memory limit",
+			Required:    true,
+		},
+		"memory_reserved": {
+			Type:        schema.TypeString,
+			Description: "The memory reserved",
+			Required:    true,
+		},
+		"storage_limit": {
+			Type:        schema.TypeString,
+			Description: "The storage limit",
+			Computed:    true,
+		},
+		"storage_reserved": {
+			Type:        schema.TypeString,
+			Description: "The storage reserved",
+			Computed:    true,
+		},
+	},
+}
+
+var DeplTargetDeplSettAutoscalingRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"enabled": {
 			Type:        schema.TypeBool,
@@ -279,7 +312,7 @@ var DeplTargetDeplSettAutoscalingC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
+var DeplTargetDeploymentSettingsRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"clustered": {
 			Type:        schema.TypeBool,
@@ -287,11 +320,12 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			Optional:    true,
 			Default:     false,
 		},
-		// "enforce_deploying_replicas_across_nodes": {
-		// 	Type:        schema.TypeBool,
-		// 	Description: "If true, forces the deployment of replicas across the RTF cluster. This option only available for Runtime Fabrics.",
-		// 	Computed:    true,
-		// },
+		"enforce_deploying_replicas_across_nodes": {
+			Type:        schema.TypeBool,
+			Description: "If true, forces the deployment of replicas across the RTF cluster. This option only available for Runtime Fabrics.",
+			Optional:    true,
+			Default:     false,
+		},
 		"http": {
 			Type:        schema.TypeList,
 			Description: "The details about http inbound or outbound configuration",
@@ -300,9 +334,10 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			DefaultFunc: func() (interface{}, error) {
 				dict := make(map[string]interface{})
 				dict["inbound_last_mile_security"] = false
+				dict["inbound_forward_ssl_session"] = false
 				return []interface{}{dict}, nil
 			},
-			Elem: DeplTargetDeplSettHttpC2SSDefinition,
+			Elem: DeplTargetDeplSettHttpRTFDefinition,
 		},
 		"jvm_args": {
 			Type:        schema.TypeString,
@@ -315,7 +350,7 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			Description: "The Mule app runtime version info.",
 			Optional:    true,
 			MaxItems:    1,
-			Elem:        DeplTargetDeplSettRuntimeC2SSDefinition,
+			Elem:        DeplTargetDeplSettRuntimeRTFDefinition,
 		},
 		"autoscaling": {
 			Type: schema.TypeList,
@@ -331,7 +366,7 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 				dict["enabled"] = false
 				return []interface{}{dict}, nil
 			},
-			Elem: DeplTargetDeplSettAutoscalingC2SSDefinition,
+			Elem: DeplTargetDeplSettAutoscalingRTFDefinition,
 		},
 		"update_strategy": {
 			Type:        schema.TypeString,
@@ -344,9 +379,9 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 		},
 		"resources": {
 			Type:        schema.TypeList,
-			Description: "The mule app allocated resources",
-			Elem:        DeplTargetDeplSettResourcesReadOnlyDefinition,
-			Computed:    true,
+			Description: "The mule app allocated resources.",
+			Elem:        DeplTargetDeplSettResourcesRTFDefinition,
+			Required:    true,
 		},
 		"disable_am_log_forwarding": {
 			Type:        schema.TypeBool,
@@ -391,7 +426,7 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 	},
 }
 
-var DeplTargetC2SSDefinition = &schema.Resource{
+var DeplTargetRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"provider": {
 			Type:        schema.TypeString,
@@ -404,32 +439,17 @@ var DeplTargetC2SSDefinition = &schema.Resource{
 			),
 		},
 		"target_id": {
-			Type: schema.TypeString,
-			Description: `The unique identifier of the target within Cloudhub 2.0.
-			Checkout the [documentation](https://docs.mulesoft.com/cloudhub-2/ch2-architecture#regions-and-dns-records) for more info
-			`,
-			Required: true,
-			ForceNew: true,
-			ValidateDiagFunc: validation.ToDiagFunc(
-				validation.StringInSlice(
-					[]string{
-						"cloudhub-us-east-1", "cloudhub-us-east-2",
-						"cloudhub-us-west-1", "cloudhub-us-west-2",
-						"cloudhub-ca-central-1", "cloudhub-sa-east-1",
-						"cloudhub-ap-southeast-1", "cloudhub-ap-southeast-2",
-						"cloudhub-ap-northeast-1", "cloudhub-eu-west-1",
-						"cloudhub-eu-central-1", "cloudhub-eu-west-2",
-					},
-					false,
-				),
-			),
+			Type:        schema.TypeString,
+			Description: "The unique identifier of the Runtime Fabrics target.",
+			Required:    true,
+			ForceNew:    true,
 		},
 		"deployment_settings": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Description: "The settings of the target for the deployment to perform.",
 			Required:    true,
-			Elem:        DeplTargetDeploymentSettingsC2SSDefinition,
+			Elem:        DeplTargetDeploymentSettingsRTFDefinition,
 		},
 		"replicas": {
 			Type:        schema.TypeInt,
@@ -440,14 +460,14 @@ var DeplTargetC2SSDefinition = &schema.Resource{
 	},
 }
 
-func resourceCloudhub2SharedSpaceDeployment() *schema.Resource {
+func resourceRTFDeployment() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCloudhub2SharedSpaceDeploymentCreate,
-		ReadContext:   resourceCloudhub2SharedSpaceDeploymentRead,
-		UpdateContext: resourceCloudhub2SharedSpaceDeploymentUpdate,
-		DeleteContext: resourceCloudhub2SharedSpaceDeploymentDelete,
+		CreateContext: resourceRTFDeploymentCreate,
+		ReadContext:   resourceRTFDeploymentRead,
+		UpdateContext: resourceRTFDeploymentUpdate,
+		DeleteContext: resourceRTFDeploymentDelete,
 		Description: `
-		Creates and manages a ` + "`" + `deployment` + "`" + ` of a mule app on Cloudhub v2 Shared-Space only.
+		Creates and manages a ` + "`" + `deployment` + "`" + ` of a mule app on Runtime Fabrics only.
 		`,
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -504,14 +524,14 @@ func resourceCloudhub2SharedSpaceDeployment() *schema.Resource {
 				MaxItems:    1,
 				Required:    true,
 				Description: "The details of the application to deploy",
-				Elem:        DeplApplicationC2SSDefinition,
+				Elem:        DeplApplicationRTFDefinition,
 			},
 			"target": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Required:    true,
 				Description: "The details of the target to perform the deployment on.",
-				Elem:        DeplTargetC2SSDefinition,
+				Elem:        DeplTargetRTFDefinition,
 			},
 			"last_successful_version": {
 				Type:        schema.TypeString,
@@ -525,14 +545,14 @@ func resourceCloudhub2SharedSpaceDeployment() *schema.Resource {
 	}
 }
 
-func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	name := d.Get("name").(string)
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
-	body := newCloudhub2SharedSpaceDeploymentBody(d)
+	body := newRTFDeploymentBody(d)
 	//Execute post deployment
 	res, httpr, err := pco.appmanagerclient.DefaultApi.PostDeployment(authctx, orgid, envid).DeploymentRequestBody(*body).Execute()
 	if err != nil {
@@ -546,24 +566,24 @@ func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create " + name + " deployment for cloudhub 2.0 shared-space.",
+			Summary:  "Unable to create " + name + " deployment for runtime fabrics.",
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
 	d.SetId(res.GetId())
-	return resourceCloudhub2SharedSpaceDeploymentRead(ctx, d, m)
+	return resourceRTFDeploymentRead(ctx, d, m)
 }
 
-func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, id = decomposeCloudhub2SharedSpaceDeploymentId(d)
+		orgid, envid, id = decomposeRTFDeploymentId(d)
 	}
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	//perform request
@@ -579,7 +599,7 @@ func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.R
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to read cloudhub2 deployment " + id + " on shared-space.",
+			Summary:  "Unable to read runtime fabrics deployment " + id + ".",
 			Detail:   details,
 		})
 		return diags
@@ -604,9 +624,9 @@ func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if !d.HasChanges(getCloudhub2SharedSpaceDeploymentUpdatableAttributes()...) {
+	if !d.HasChanges(getRTFDeploymentUpdatableAttributes()...) {
 		return diags
 	}
 	pco := m.(ProviderConfOutput)
@@ -615,7 +635,7 @@ func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema
 	envid := d.Get("env_id").(string)
 	name := d.Get("name").(string)
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
-	body := newCloudhub2SharedSpaceDeploymentBody(d)
+	body := newRTFDeploymentBody(d)
 	_, httpr, err := pco.appmanagerclient.DefaultApi.PatchDeployment(authctx, orgid, envid, id).DeploymentRequestBody(*body).Execute()
 	if err != nil {
 		var details string
@@ -628,16 +648,16 @@ func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to update deployment " + name + " on cloudhub 2.0 shared-space.",
+			Summary:  "Unable to update deployment " + name + " on runtime fabrics.",
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
-	return resourceCloudhub2SharedSpaceDeploymentRead(ctx, d, m)
+	return resourceRTFDeploymentRead(ctx, d, m)
 }
 
-func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
@@ -670,16 +690,16 @@ func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema
 }
 
 // Prepares Deployment Post Body out of resource data input
-func newCloudhub2SharedSpaceDeploymentBody(d *schema.ResourceData) *application_manager_v2.DeploymentRequestBody {
+func newRTFDeploymentBody(d *schema.ResourceData) *application_manager_v2.DeploymentRequestBody {
 	body := application_manager_v2.NewDeploymentRequestBody()
 	// -- Parsing Application
 	app_list_d := d.Get("application").([]interface{})
 	app_d := app_list_d[0].(map[string]interface{})
-	application := newCloudhub2SharedSpaceDeploymentApplication(app_d)
+	application := newRTFDeploymentApplication(app_d)
 	// -- Parsing Target
 	target_list_d := d.Get("target").([]interface{})
 	target_d := target_list_d[0].(map[string]interface{})
-	target := newCloudhub2SharedSpaceDeploymentTarget(target_d)
+	target := newRTFDeploymentTarget(target_d)
 	//Set Body Data
 	body.SetName(d.Get("name").(string))
 	body.SetApplication(*application)
@@ -689,17 +709,15 @@ func newCloudhub2SharedSpaceDeploymentBody(d *schema.ResourceData) *application_
 }
 
 // Prepares Application object out of map input
-func newCloudhub2SharedSpaceDeploymentApplication(app_d map[string]interface{}) *application_manager_v2.Application {
+func newRTFDeploymentApplication(app_d map[string]interface{}) *application_manager_v2.Application {
 	ref_list_d := app_d["ref"].([]interface{})
 	ref_d := ref_list_d[0].(map[string]interface{})
 	// Ref
-	ref := newCloudhub2SharedSpaceDeploymentRef(ref_d)
+	ref := newRTFDeploymentRef(ref_d)
 	//Parse Configuration
 	configuration_list_d := app_d["configuration"].([]interface{})
 	configuration_d := configuration_list_d[0].(map[string]interface{})
-	configuration := newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d)
-	//VCores
-	vcores_d := app_d["vcores"].(float64)
+	configuration := newRTFDeploymentConfiguration(configuration_d)
 	//Object Store V2
 	object_store_v2_enabled_d := app_d["object_store_v2_enabled"].(bool)
 	//Application Integration
@@ -715,16 +733,15 @@ func newCloudhub2SharedSpaceDeploymentApplication(app_d map[string]interface{}) 
 	application.SetConfiguration(*configuration)
 	application.SetIntegrations(*integrations)
 	application.SetRef(*ref)
-	application.SetVCores(float32(vcores_d))
 
 	return application
 }
 
 // Prepares Target object out of map input
-func newCloudhub2SharedSpaceDeploymentTarget(target_d map[string]interface{}) *application_manager_v2.Target {
+func newRTFDeploymentTarget(target_d map[string]interface{}) *application_manager_v2.Target {
 	deployment_settings_list_d := target_d["deployment_settings"].([]interface{})
 	deployment_settings_d := deployment_settings_list_d[0].(map[string]interface{})
-	deployment_settings := newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d)
+	deployment_settings := newRTFDeploymentDeploymentSettings(deployment_settings_d)
 	//Prepare Target data
 	target := application_manager_v2.NewTarget()
 	target.SetProvider(target_d["provider"].(string))
@@ -736,7 +753,7 @@ func newCloudhub2SharedSpaceDeploymentTarget(target_d map[string]interface{}) *a
 }
 
 // Prepares Ref Object out of map input
-func newCloudhub2SharedSpaceDeploymentRef(ref_d map[string]interface{}) *application_manager_v2.Ref {
+func newRTFDeploymentRef(ref_d map[string]interface{}) *application_manager_v2.Ref {
 	ref := application_manager_v2.NewRef()
 	ref.SetGroupId(ref_d["group_id"].(string))
 	ref.SetArtifactId(ref_d["artifact_id"].(string))
@@ -746,7 +763,7 @@ func newCloudhub2SharedSpaceDeploymentRef(ref_d map[string]interface{}) *applica
 }
 
 // Prepares Application Configuration Object out of map input
-func newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d map[string]interface{}) *application_manager_v2.AppConfiguration {
+func newRTFDeploymentConfiguration(configuration_d map[string]interface{}) *application_manager_v2.AppConfiguration {
 	//Mule Agent App Properties Service
 	mule_agent_app_props_service_list_d := configuration_d["mule_agent_app_props_service"].([]interface{})
 	mule_agent_app_props_service_d := mule_agent_app_props_service_list_d[0].(map[string]interface{})
@@ -778,18 +795,21 @@ func newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d map[string]i
 }
 
 // Prepares DeploymentSettings object out of map input
-func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d map[string]interface{}) *application_manager_v2.DeploymentSettings {
+func newRTFDeploymentDeploymentSettings(deployment_settings_d map[string]interface{}) *application_manager_v2.DeploymentSettings {
 	//http
-	http := newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d)
+	http := newRTFDeploymentHttp(deployment_settings_d)
 	//runtime
-	runtime := newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d)
+	runtime := newRTFDeploymentRuntime(deployment_settings_d)
 	//autoscaling
-	autoscaling := newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d)
+	autoscaling := newRTFDeploymentAutoscaling(deployment_settings_d)
+	//resources
+	resources := newRTFDeploymentResources(deployment_settings_d)
 	//Prepare JVM Args data
 	jvm := application_manager_v2.NewJvm()
 	jvm.SetArgs(deployment_settings_d["jvm_args"].(string))
 	deployment_settings := application_manager_v2.NewDeploymentSettings()
 	deployment_settings.SetClustered(deployment_settings_d["clustered"].(bool))
+	deployment_settings.SetEnforceDeployingReplicasAcrossNodes(deployment_settings_d["enforce_deploying_replicas_across_nodes"].(bool))
 	deployment_settings.SetHttp(*http)
 	deployment_settings.SetJvm(*jvm)
 	deployment_settings.SetUpdateStrategy(deployment_settings_d["update_strategy"].(string))
@@ -799,12 +819,13 @@ func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d m
 	deployment_settings.SetGenerateDefaultPublicUrl(deployment_settings_d["generate_default_public_url"].(bool))
 	deployment_settings.SetRuntime(*runtime)
 	deployment_settings.SetAutoscaling(*autoscaling)
+	deployment_settings.SetResources(*resources)
 
 	return deployment_settings
 }
 
 // Prepares Runtime object out of map input
-func newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d map[string]interface{}) *application_manager_v2.Runtime {
+func newRTFDeploymentRuntime(deployment_settings_d map[string]interface{}) *application_manager_v2.Runtime {
 	runtime := application_manager_v2.NewRuntime()
 	if val, ok := deployment_settings_d["runtime"]; ok {
 		runtime_list_d := val.([]interface{})
@@ -817,19 +838,20 @@ func newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d map[string]i
 }
 
 // Prepares Http object out of map input
-func newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d map[string]interface{}) *application_manager_v2.Http {
+func newRTFDeploymentHttp(deployment_settings_d map[string]interface{}) *application_manager_v2.Http {
 	http_inbound := application_manager_v2.NewHttpInbound()
 	http := application_manager_v2.NewHttp()
 	if val, ok := deployment_settings_d["http"]; ok {
 		http_list_d := val.([]interface{})
 		http_d := http_list_d[0].(map[string]interface{})
 		http_inbound.SetLastMileSecurity(http_d["inbound_last_mile_security"].(bool))
+		http_inbound.SetForwardSslSession(http_d["inbound_forward_ssl_session"].(bool))
 		http.SetInbound(*http_inbound)
 	}
 	return http
 }
 
-func newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *application_manager_v2.Autoscaling {
+func newRTFDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *application_manager_v2.Autoscaling {
 	autoscaling := application_manager_v2.NewAutoscaling()
 	if val, ok := deployment_settings_d["autoscaling"]; ok {
 		autoscaling_list_d := val.([]interface{})
@@ -841,26 +863,29 @@ func newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d map[stri
 	return autoscaling
 }
 
-func VCoresValidatorDiag(v interface{}, p cty.Path) diag.Diagnostics {
-	value := v.(float64)
-	var diags diag.Diagnostics
-	if !FloatInSlice([]float64{0.1, 0.2, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}, value) {
-		diag := diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "wrong vcores value",
-			Detail:   fmt.Sprintf("%f is not a valid vcores value.", value),
-		}
-		diags = append(diags, diag)
+func newRTFDeploymentResources(deployment_settings_d map[string]interface{}) *application_manager_v2.Resources {
+	resources := application_manager_v2.NewResources()
+	if val, ok := deployment_settings_d["resources"]; ok {
+		resources_list_d := val.([]interface{})
+		resources_d := resources_list_d[0].(map[string]interface{})
+		cpu := application_manager_v2.NewResourcesCpu()
+		cpu.SetLimit(resources_d["cpu_limit"].(string))
+		cpu.SetReserved(resources_d["cpu_reserved"].(string))
+		memory := application_manager_v2.NewResourcesMemory()
+		memory.SetLimit(resources_d["memory_limit"].(string))
+		memory.SetReserved(resources_d["memory_reserved"].(string))
+		resources.SetCpu(*cpu)
+		resources.SetMemory(*memory)
 	}
-	return diags
+	return resources
 }
 
-func decomposeCloudhub2SharedSpaceDeploymentId(d *schema.ResourceData) (string, string, string) {
+func decomposeRTFDeploymentId(d *schema.ResourceData) (string, string, string) {
 	s := DecomposeResourceId(d.Id())
 	return s[0], s[1], s[2]
 }
 
-func getCloudhub2SharedSpaceDeploymentUpdatableAttributes() []string {
+func getRTFDeploymentUpdatableAttributes() []string {
 	attributes := [...]string{"application", "target"}
 	return attributes[:]
 }
