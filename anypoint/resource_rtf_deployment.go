@@ -379,6 +379,7 @@ var DeplTargetDeploymentSettingsRTFDefinition = &schema.Resource{
 		},
 		"resources": {
 			Type:        schema.TypeList,
+			MaxItems:    1,
 			Description: "The mule app allocated resources.",
 			Elem:        DeplTargetDeplSettResourcesRTFDefinition,
 			Required:    true,
@@ -829,10 +830,13 @@ func newRTFDeploymentRuntime(deployment_settings_d map[string]interface{}) *appl
 	runtime := application_manager_v2.NewRuntime()
 	if val, ok := deployment_settings_d["runtime"]; ok {
 		runtime_list_d := val.([]interface{})
-		runtime_d := runtime_list_d[0].(map[string]interface{})
-		runtime.SetVersion(runtime_d["version"].(string))
-		runtime.SetReleaseChannel(runtime_d["release_channel"].(string))
-		runtime.SetJava(runtime_d["java"].(string))
+		if len(runtime_list_d) > 0 {
+			runtime_d := runtime_list_d[0].(map[string]interface{})
+			runtime.SetVersion(runtime_d["version"].(string))
+			runtime.SetReleaseChannel(runtime_d["release_channel"].(string))
+			runtime.SetJava(runtime_d["java"].(string))
+		}
+
 	}
 	return runtime
 }
@@ -843,10 +847,12 @@ func newRTFDeploymentHttp(deployment_settings_d map[string]interface{}) *applica
 	http := application_manager_v2.NewHttp()
 	if val, ok := deployment_settings_d["http"]; ok {
 		http_list_d := val.([]interface{})
-		http_d := http_list_d[0].(map[string]interface{})
-		http_inbound.SetLastMileSecurity(http_d["inbound_last_mile_security"].(bool))
-		http_inbound.SetForwardSslSession(http_d["inbound_forward_ssl_session"].(bool))
-		http.SetInbound(*http_inbound)
+		if len(http_list_d) > 0 {
+			http_d := http_list_d[0].(map[string]interface{})
+			http_inbound.SetLastMileSecurity(http_d["inbound_last_mile_security"].(bool))
+			http_inbound.SetForwardSslSession(http_d["inbound_forward_ssl_session"].(bool))
+			http.SetInbound(*http_inbound)
+		}
 	}
 	return http
 }
@@ -855,10 +861,12 @@ func newRTFDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *
 	autoscaling := application_manager_v2.NewAutoscaling()
 	if val, ok := deployment_settings_d["autoscaling"]; ok {
 		autoscaling_list_d := val.([]interface{})
-		autoscaling_d := autoscaling_list_d[0].(map[string]interface{})
-		autoscaling.SetEnabled(autoscaling_d["enabled"].(bool))
-		autoscaling.SetMinReplicas(int32(autoscaling_d["min_replicas"].(int)))
-		autoscaling.SetMaxReplicas(int32(autoscaling_d["max_replicas"].(int)))
+		if len(autoscaling_list_d) > 0 {
+			autoscaling_d := autoscaling_list_d[0].(map[string]interface{})
+			autoscaling.SetEnabled(autoscaling_d["enabled"].(bool))
+			autoscaling.SetMinReplicas(int32(autoscaling_d["min_replicas"].(int)))
+			autoscaling.SetMaxReplicas(int32(autoscaling_d["max_replicas"].(int)))
+		}
 	}
 	return autoscaling
 }
@@ -867,15 +875,17 @@ func newRTFDeploymentResources(deployment_settings_d map[string]interface{}) *ap
 	resources := application_manager_v2.NewResources()
 	if val, ok := deployment_settings_d["resources"]; ok {
 		resources_list_d := val.([]interface{})
-		resources_d := resources_list_d[0].(map[string]interface{})
-		cpu := application_manager_v2.NewResourcesCpu()
-		cpu.SetLimit(resources_d["cpu_limit"].(string))
-		cpu.SetReserved(resources_d["cpu_reserved"].(string))
-		memory := application_manager_v2.NewResourcesMemory()
-		memory.SetLimit(resources_d["memory_limit"].(string))
-		memory.SetReserved(resources_d["memory_reserved"].(string))
-		resources.SetCpu(*cpu)
-		resources.SetMemory(*memory)
+		if len(resources_list_d) > 0 {
+			resources_d := resources_list_d[0].(map[string]interface{})
+			cpu := application_manager_v2.NewResourcesCpu()
+			cpu.SetLimit(resources_d["cpu_limit"].(string))
+			cpu.SetReserved(resources_d["cpu_reserved"].(string))
+			memory := application_manager_v2.NewResourcesMemory()
+			memory.SetLimit(resources_d["memory_limit"].(string))
+			memory.SetReserved(resources_d["memory_reserved"].(string))
+			resources.SetCpu(*cpu)
+			resources.SetMemory(*memory)
+		}
 	}
 	return resources
 }
