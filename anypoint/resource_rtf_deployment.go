@@ -170,13 +170,17 @@ var DeplApplicationRTFDefinition = &schema.Resource{
 var DeplTargetDeplSettHttpRTFDefinition = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"inbound_public_url": {
-			Type:        schema.TypeString,
-			Description: "The inbound public url. Setting the public url is disabled for shared-space.",
-			Computed:    true,
+			Type: schema.TypeString,
+			Description: `The ingress url(s).
+			If you need to use multiple ingress urls, separete them with commas.
+			example: http://example.mulesoft.terraform.net/(.+)
+			`,
+			Optional: true,
+			Default:  "",
 		},
 		"inbound_path_rewrite": {
 			Type:        schema.TypeString,
-			Description: "The inbound path rewrite. This option is disabled for shared-space.",
+			Description: "The inbound path rewrite. This option is only available for Cloudhub 2.0 with private spaces",
 			Computed:    true,
 		},
 		"inbound_last_mile_security": {
@@ -187,7 +191,7 @@ var DeplTargetDeplSettHttpRTFDefinition = &schema.Resource{
 		},
 		"inbound_forward_ssl_session": {
 			Type:        schema.TypeBool,
-			Description: "Whether to forward the ssl session. This option is disabled for shared-space.",
+			Description: "Whether to forward the ssl session.",
 			Optional:    true,
 			Default:     false,
 		},
