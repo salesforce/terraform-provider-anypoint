@@ -21,7 +21,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0
-	github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs v0.1.0
@@ -80,7 +80,3 @@ require (
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
-
-replace github.com/mulesoft-anypoint/anypoint-client-go/rtf => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/rtf
-
-replace github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2 => /Users/souf/Workspaces/CAT/Anypoint-Devops-Collective/anypoint-automation-client-generator/dist/application_manager_v2
