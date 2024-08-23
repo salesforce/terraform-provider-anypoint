@@ -3,6 +3,7 @@ package anypoint
 import (
 	"context"
 	"io"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -263,21 +264,45 @@ var DeplTargetDeplSettResourcesRTFDefinition = &schema.Resource{
 			Type:        schema.TypeString,
 			Description: "The CPU limit",
 			Required:    true,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.StringMatch(
+					regexp.MustCompile(`^\d+m$`),
+					"field value should be a valid cpu representation. ex: 100m (= 0.1 vcores).",
+				),
+			),
 		},
 		"cpu_reserved": {
 			Type:        schema.TypeString,
-			Description: "The CPU reserved",
+			Description: "The CPU reserved.",
 			Required:    true,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.StringMatch(
+					regexp.MustCompile(`^\d+m$`),
+					"field value should be a valid cpu representation. ex: 100m (= 0.1 vcores).",
+				),
+			),
 		},
 		"memory_limit": {
 			Type:        schema.TypeString,
 			Description: "The memory limit",
 			Required:    true,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.StringMatch(
+					regexp.MustCompile(`^\d+Mi$`),
+					"field value should be a valid memory representation. ex: 1000Mi (= 1Gb).",
+				),
+			),
 		},
 		"memory_reserved": {
 			Type:        schema.TypeString,
-			Description: "The memory reserved",
+			Description: "The memory reserved.",
 			Required:    true,
+			ValidateDiagFunc: validation.ToDiagFunc(
+				validation.StringMatch(
+					regexp.MustCompile(`^\d+Mi$`),
+					"field value should be a valid memory representation. ex: 1000Mi (= 1Gb).",
+				),
+			),
 		},
 		"storage_limit": {
 			Type:        schema.TypeString,
