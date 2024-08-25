@@ -159,6 +159,11 @@ var DeplApplicationRTFDefinition = &schema.Resource{
 			Description: "The allocated virtual cores.",
 			Computed:    true,
 		},
+		"object_store_v2_enabled": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether object store v2 is enabled. Only for Cloudhub.",
+		},
 	},
 }
 
@@ -745,17 +750,17 @@ func newRTFDeploymentApplication(app_d map[string]interface{}) *application_mana
 	//Object Store V2
 	// object_store_v2_enabled_d := app_d["object_store_v2_enabled"].(bool)
 	//Application Integration
-	integrations := application_manager_v2.NewApplicationIntegrations()
-	object_store_v2 := application_manager_v2.NewObjectStoreV2()
+	// integrations := application_manager_v2.NewApplicationIntegrations()
+	// object_store_v2 := application_manager_v2.NewObjectStoreV2()
 	// object_store_v2.SetEnabled(object_store_v2_enabled_d)
-	services := application_manager_v2.NewServices()
-	services.SetObjectStoreV2(*object_store_v2)
-	integrations.SetServices(*services)
+	// services := application_manager_v2.NewServices()
+	// services.SetObjectStoreV2(*object_store_v2)
+	// integrations.SetServices(*services)
 	//Application
 	application := application_manager_v2.NewApplication()
 	application.SetDesiredState(app_d["desired_state"].(string))
 	application.SetConfiguration(*configuration)
-	application.SetIntegrations(*integrations)
+	// application.SetIntegrations(*integrations)
 	application.SetRef(*ref)
 
 	return application

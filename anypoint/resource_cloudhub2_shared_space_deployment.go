@@ -354,6 +354,11 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			Optional:    true,
 			Default:     false,
 		},
+		"persistent_object_store": {
+			Type:        schema.TypeBool,
+			Description: "Whether persistent object store is enabled. Only for RTF",
+			Computed:    true,
+		},
 		"anypoint_monitoring_scope": {
 			Type:        schema.TypeString,
 			Description: "The anypoint moniroting scope",
@@ -788,6 +793,7 @@ func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d m
 	deployment_settings.SetJvm(*jvm)
 	deployment_settings.SetUpdateStrategy(deployment_settings_d["update_strategy"].(string))
 	deployment_settings.SetDisableAmLogForwarding(deployment_settings_d["disable_am_log_forwarding"].(bool))
+	// deployment_settings.SetPersistentObjectStore(deployment_settings_d["persistent_object_store"].(bool))
 	deployment_settings.SetDisableExternalLogForwarding(deployment_settings_d["disable_external_log_forwarding"].(bool))
 	deployment_settings.SetGenerateDefaultPublicUrl(deployment_settings_d["generate_default_public_url"].(bool))
 	deployment_settings.SetRuntime(*runtime)
