@@ -40,4 +40,6 @@ var RESOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_secretgroup_crldistrib_cfgs":           resourceSecretGroupCrlDistribCfgs(),
 	"anypoint_fabrics":                               resourceFabrics(),
 	"anypoint_fabrics_associations":                  resourceFabricsAssociations(),
+	"anypoint_cloudhub2_shared_space_deployment":     resourceCloudhub2SharedSpaceDeployment(),
+	"anypoint_rtf_deployment":                        resourceRTFDeployment(),
 }
