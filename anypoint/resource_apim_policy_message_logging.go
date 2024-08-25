@@ -433,7 +433,7 @@ func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func flattenApimPolicyMessageLoggingCfg(d *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]interface{} {
+func flattenApimPolicyMessageLoggingCfg(_ *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]interface{} {
 	data := make(map[string]interface{})
 	cfg := policy.GetConfigurationData()
 	logging_cfg := cfg["loggingConfiguration"].([]interface{})

@@ -207,6 +207,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1 h1:ilSNrRBIBp
 github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1/go.mod h1:aCSab2+icg00k8ur845GuxfR9MiS2KPEYumO86pauik=
 github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1 h1:EAn805cAB8REdbuOVzER/n8F7t8yXMLfJIfyGq94qQ0=
 github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1/go.mod h1:RC9wgWhUwqB4ZKWZYE9R/NfFz1yCoss9bJDdTDPYQhI=
+github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2 v0.1.0 h1:NDuGf1JJZlBdJ4Av9YDSZgiZGtJGXPjzwBha4qMtUFM=
+github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2 v0.1.0/go.mod h1:aUuFZxGl5fO6FIB9KdO+wE+TrljdcHcjpxMqHlWJ21g=
 github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0 h1:9CmX/n8KHR0DpK0WBYt4kO8youq2TYZ8r3XLqmRtJFY=
 github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0/go.mod h1:V5QUMbu/p3eKOCwjpkhEH4uYDEg3f0/u9H8PLz1R060=
 github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.1.1 h1:435i7VpcaUIxQzWkvfEDSfGGoqYvGA0L5Ri7ZBOWybk=
@@ -225,6 +227,8 @@ github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0 h1:q5TddUXaFrY7Vs/7A
 github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0/go.mod h1:igRAIoG0Zo+SVoxRwGxxeAQEgUiz1efQ+n1JfeFV/b0=
 github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0 h1:1TzIdYGZpvaA8/6v7RM+c2ryWhcMhL2ZK/uLe1neypk=
 github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0/go.mod h1:4l1nfYhuDY+FUqCfMRVO9/lEkMqvXb6w0ZCX11ZUSyA=
+github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.1.0 h1:UurvOXBdHB/WVb9twcs1K6RDL3xzu0HEicg/zIwEXzs=
+github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.1.0/go.mod h1:yJb5G+9TBG0x+dsOmyq4b/8/vIyfrlj/EkWH7Xi/v28=
 github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0 h1:KsQJV6GeenYvdJp/oz+45fdzReSH0bqQIuMepHCxG/8=
 github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0/go.mod h1:KxUtpYEcBqgnWJiyWdTOHF5DJ4jaoSBE7qNBCYsPKb4=
 github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0 h1:P1R+zk7588zo/IuvkR8lbwrMAvwtZBSWzta1WvgCL40=

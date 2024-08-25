@@ -162,7 +162,7 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to find team member " + userid + " for team " + teamid,
-			Detail:   err.Error(),
+			Detail:   "Team Member Not Found",
 		})
 		return diags
 	}

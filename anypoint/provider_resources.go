@@ -38,4 +38,6 @@ var RESOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_secretgroup_tlscontext_mule":           resourceSecretGroupTlsContextMule(),
 	"anypoint_secretgroup_tlscontext_securityfabric": resourceSecretGroupTlsContextSF(),
 	"anypoint_secretgroup_crldistrib_cfgs":           resourceSecretGroupCrlDistribCfgs(),
+	"anypoint_fabrics":                               resourceFabrics(),
+	"anypoint_fabrics_associations":                  resourceFabricsAssociations(),
 }
