@@ -743,11 +743,11 @@ func newRTFDeploymentApplication(app_d map[string]interface{}) *application_mana
 	configuration_d := configuration_list_d[0].(map[string]interface{})
 	configuration := newRTFDeploymentConfiguration(configuration_d)
 	//Object Store V2
-	object_store_v2_enabled_d := app_d["object_store_v2_enabled"].(bool)
+	// object_store_v2_enabled_d := app_d["object_store_v2_enabled"].(bool)
 	//Application Integration
 	integrations := application_manager_v2.NewApplicationIntegrations()
 	object_store_v2 := application_manager_v2.NewObjectStoreV2()
-	object_store_v2.SetEnabled(object_store_v2_enabled_d)
+	// object_store_v2.SetEnabled(object_store_v2_enabled_d)
 	services := application_manager_v2.NewServices()
 	services.SetObjectStoreV2(*object_store_v2)
 	integrations.SetServices(*services)
