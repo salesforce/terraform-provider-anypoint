@@ -36,17 +36,17 @@ resource "anypoint_rtf_deployment" "deployment" {
     deployment_settings {
       clustered = false
       enforce_deploying_replicas_across_nodes = false
+      persistent_object_store = false
+      jvm_args = ""
+      update_strategy = "rolling"
+      disable_am_log_forwarding = false
+      disable_external_log_forwarding = false
+      generate_default_public_url = false
       http {
         inbound_public_url = "http://private.example.net/(.+),http://another.example.net/(.+)"
         inbound_last_mile_security = true
         inbound_forward_ssl_session = false
       }
-      jvm_args = ""
-      update_strategy = "rolling"
-      disable_am_log_forwarding = false
-      persistent_object_store = false
-      disable_external_log_forwarding = false
-      generate_default_public_url = false
       runtime {
         version = "4.7.0:20e-java8"
       }

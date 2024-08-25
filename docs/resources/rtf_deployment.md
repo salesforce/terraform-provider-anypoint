@@ -51,17 +51,17 @@ resource "anypoint_rtf_deployment" "deployment" {
     deployment_settings {
       clustered = false
       enforce_deploying_replicas_across_nodes = false
+      persistent_object_store = false
+      jvm_args = ""
+      update_strategy = "rolling"
+      disable_am_log_forwarding = false
+      disable_external_log_forwarding = false
+      generate_default_public_url = false
       http {
         inbound_public_url = "http://private.example.net/(.+),http://another.example.net/(.+)"
         inbound_last_mile_security = true
         inbound_forward_ssl_session = false
       }
-      jvm_args = ""
-      update_strategy = "rolling"
-      disable_am_log_forwarding = false
-      persistent_object_store = false
-      disable_external_log_forwarding = false
-      generate_default_public_url = false
       runtime {
         version = "4.7.0:20e-java8"
       }
@@ -103,8 +103,8 @@ resource "anypoint_rtf_deployment" "deployment" {
 Required:
 
 - `configuration` (Block List, Min: 1, Max: 1) The configuration of the application. (see [below for nested schema](#nestedblock--application--configuration))
-- `ref` (Block List, Min: 1, Max: 1) The reference to the desired application to be deployed on Runtime Fabrics.
-			The application should be deployed on exchange prior to using this resource. (see [below for nested schema](#nestedblock--application--ref))
+- `ref` (Block List, Min: 1, Max: 1) The reference to the artifact on Exchange that is to be deployed on Runtime Fabrics.
+			Please ensure the application's artifact is deployed on Exchange before using this resource on Runtime Fabrics. (see [below for nested schema](#nestedblock--application--ref))
 
 Optional:
 

@@ -145,8 +145,8 @@ var DeplApplicationRTFDefinition = &schema.Resource{
 			MaxItems: 1,
 			Required: true,
 			Description: `
-			The reference to the desired application to be deployed on Runtime Fabrics.
-			The application should be deployed on exchange prior to using this resource.
+			The reference to the artifact on Exchange that is to be deployed on Runtime Fabrics.
+			Please ensure the application's artifact is deployed on Exchange before using this resource on Runtime Fabrics.
 			`,
 			Elem: DeplApplicationRefRTFDefinition,
 		},
