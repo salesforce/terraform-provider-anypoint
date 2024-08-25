@@ -95,7 +95,8 @@ resource "anypoint_cloudhub2_shared_space_deployment" "deployment" {
 Required:
 
 - `configuration` (Block List, Min: 1, Max: 1) The configuration of the application. (see [below for nested schema](#nestedblock--application--configuration))
-- `ref` (Block List, Min: 1, Max: 1) The desired state of the application. (see [below for nested schema](#nestedblock--application--ref))
+- `ref` (Block List, Min: 1, Max: 1) The reference to the desired application to be deployed on Cloudhub 2.0.
+			The application should be deployed on exchange prior to using this resource. (see [below for nested schema](#nestedblock--application--ref))
 - `vcores` (Number) The allocated virtual cores. Acceptable Values are: 0.1 / 0.2 / 0.5 / 1 / 1.5 / 2 / 2.5 / 3 / 3.5 / 4
 
 Optional:

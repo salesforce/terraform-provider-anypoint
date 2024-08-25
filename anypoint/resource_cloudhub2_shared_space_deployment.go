@@ -142,11 +142,14 @@ var DeplApplicationC2SSDefinition = &schema.Resource{
 			),
 		},
 		"ref": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Required:    true,
-			Description: "The desired state of the application.",
-			Elem:        DeplApplicationRefC2SSDefinition,
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Required: true,
+			Description: `
+			The reference to the desired application to be deployed on Cloudhub 2.0.
+			The application should be deployed on exchange prior to using this resource.
+			`,
+			Elem: DeplApplicationRefC2SSDefinition,
 		},
 		"configuration": {
 			Type:        schema.TypeList,

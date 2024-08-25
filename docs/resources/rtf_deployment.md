@@ -103,7 +103,8 @@ resource "anypoint_rtf_deployment" "deployment" {
 Required:
 
 - `configuration` (Block List, Min: 1, Max: 1) The configuration of the application. (see [below for nested schema](#nestedblock--application--configuration))
-- `ref` (Block List, Min: 1, Max: 1) The desired state of the application. (see [below for nested schema](#nestedblock--application--ref))
+- `ref` (Block List, Min: 1, Max: 1) The reference to the desired application to be deployed on Runtime Fabrics.
+			The application should be deployed on exchange prior to using this resource. (see [below for nested schema](#nestedblock--application--ref))
 
 Optional:
 

@@ -141,11 +141,14 @@ var DeplApplicationRTFDefinition = &schema.Resource{
 			),
 		},
 		"ref": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Required:    true,
-			Description: "The desired state of the application.",
-			Elem:        DeplApplicationRefRTFDefinition,
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Required: true,
+			Description: `
+			The reference to the desired application to be deployed on Runtime Fabrics.
+			The application should be deployed on exchange prior to using this resource.
+			`,
+			Elem: DeplApplicationRefRTFDefinition,
 		},
 		"configuration": {
 			Type:        schema.TypeList,

@@ -217,7 +217,7 @@ var DeplApplicationReadOnlyDefinition = &schema.Resource{
 		"ref": {
 			Type:        schema.TypeList,
 			Computed:    true,
-			Description: "The desired state of the application.",
+			Description: "The reference to the deployed artifact on exchange.",
 			Elem:        DeplApplicationRefReadOnlyDefinition,
 		},
 		"configuration": {
