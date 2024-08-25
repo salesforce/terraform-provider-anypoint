@@ -55,7 +55,6 @@ resource "anypoint_cloudhub2_shared_space_deployment" "deployment" {
       jvm_args = ""
       update_strategy = "rolling"
       disable_am_log_forwarding = true
-      persistent_object_store = true
       disable_external_log_forwarding = true
       generate_default_public_url = true
       runtime {
@@ -223,13 +222,13 @@ Optional:
 - `generate_default_public_url` (Boolean) Whether default public url should be generated.
 - `http` (Block List, Max: 1) The details about http inbound or outbound configuration (see [below for nested schema](#nestedblock--target--deployment_settings--http))
 - `jvm_args` (String) The java virtual machine arguments
-- `persistent_object_store` (Boolean) Whether persistent object store is enabled.
 - `runtime` (Block List, Max: 1) The Mule app runtime version info. (see [below for nested schema](#nestedblock--target--deployment_settings--runtime))
 - `update_strategy` (String) The mule app deployment update strategy: rolling or recreate
 
 Read-Only:
 
 - `anypoint_monitoring_scope` (String) The anypoint moniroting scope
+- `persistent_object_store` (Boolean) Whether persistent object store is enabled. Only for RTF
 - `resources` (List of Object) The mule app allocated resources (see [below for nested schema](#nestedatt--target--deployment_settings--resources))
 - `sidecars` (List of Object) The mule app sidecars. (see [below for nested schema](#nestedatt--target--deployment_settings--sidecars))
 - `tracing_enabled` (Boolean) Whether the log tracing is enabled.

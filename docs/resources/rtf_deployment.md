@@ -19,7 +19,6 @@ resource "anypoint_rtf_deployment" "deployment" {
   name   = "your-awesome-app"
   application {
     desired_state = "STARTED"
-    object_store_v2_enabled = true
     ref {
       group_id    = var.root_org
       artifact_id = "your-artifact-id"
@@ -109,10 +108,10 @@ Required:
 Optional:
 
 - `desired_state` (String) The desired state of the application.
-- `object_store_v2_enabled` (Boolean) Whether object store v2 is enabled.
 
 Read-Only:
 
+- `object_store_v2_enabled` (Boolean) Whether object store v2 is enabled. Only for Cloudhub.
 - `status` (String) The status of the application.
 - `vcores` (Number) The allocated virtual cores.
 
