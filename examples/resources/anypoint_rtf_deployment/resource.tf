@@ -4,7 +4,6 @@ resource "anypoint_rtf_deployment" "deployment" {
   name   = "your-awesome-app"
   application {
     desired_state = "STARTED"
-    object_store_v2_enabled = true
     ref {
       group_id    = var.root_org
       artifact_id = "your-artifact-id"

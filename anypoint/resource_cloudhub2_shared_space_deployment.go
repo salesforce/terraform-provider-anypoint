@@ -354,12 +354,6 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			Optional:    true,
 			Default:     false,
 		},
-		"persistent_object_store": {
-			Type:        schema.TypeBool,
-			Description: "Whether persistent object store is enabled.",
-			Optional:    true,
-			Default:     false,
-		},
 		"anypoint_monitoring_scope": {
 			Type:        schema.TypeString,
 			Description: "The anypoint moniroting scope",

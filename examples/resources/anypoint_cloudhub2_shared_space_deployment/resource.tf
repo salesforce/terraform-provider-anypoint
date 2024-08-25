@@ -40,7 +40,6 @@ resource "anypoint_cloudhub2_shared_space_deployment" "deployment" {
       jvm_args = ""
       update_strategy = "rolling"
       disable_am_log_forwarding = true
-      persistent_object_store = true
       disable_external_log_forwarding = true
       generate_default_public_url = true
       runtime {

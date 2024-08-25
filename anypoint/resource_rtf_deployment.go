@@ -159,12 +159,6 @@ var DeplApplicationRTFDefinition = &schema.Resource{
 			Description: "The allocated virtual cores.",
 			Computed:    true,
 		},
-		"object_store_v2_enabled": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether object store v2 is enabled.",
-		},
 	},
 }
 
