@@ -3,12 +3,12 @@
 page_title: "anypoint_roles Data Source - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  Reads all `roles` availabble.
+  Reads all `roles` available.
 ---
 
 # anypoint_roles (Data Source)
 
-Reads all `roles` availabble.
+Reads all `roles` available.
 
 ## Example Usage
 
