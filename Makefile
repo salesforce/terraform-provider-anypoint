@@ -3,7 +3,7 @@ HOSTNAME=anypoint.mulesoft.com
 NAMESPACE=automation
 NAME=anypoint
 BINARY=terraform-provider-${NAME}
-VERSION=1.6.1-SNAPSHOT
+VERSION=1.7.1-SNAPSHOT
 OS_ARCH=darwin_amd64
 
 default: install
