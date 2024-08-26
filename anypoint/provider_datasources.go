@@ -52,4 +52,11 @@ var DATASOURCES_MAP = map[string]*schema.Resource{
 	"anypoint_secretgroup_crldistrib_cfgs":           dataSourceSecretGroupCrlDistribCfgs(),
 	"anypoint_exchange_policy_templates":             dataSourceExchangePolicyTemplates(),
 	"anypoint_exchange_policy_template":              dataSourceExchangePolicyTemplate(),
+	"anypoint_fabrics_list":                          dataSourceFabricsCollection(),
+	"anypoint_fabrics":                               dataSourceFabrics(),
+	"anypoint_fabrics_associations":                  dataSourceFabricsAssociations(),
+	"anypoint_fabrics_helm_repo":                     dataSourceFabricsHelmRepoProps(),
+	"anypoint_fabrics_health":                        dataSourceFabricsHealth(),
+	"anypoint_app_deployment_v2":                     dataSourceAppDeploymentV2(),
+	"anypoint_app_deployments_v2":                    dataSourceAppDeploymentsV2(),
 }

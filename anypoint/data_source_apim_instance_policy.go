@@ -205,7 +205,7 @@ func flattenApimInstancePolicyAudit(audit *apim_policy.Audit) map[string]interfa
 		}
 	}
 	if updated, ok := audit.GetUpdatedOk(); ok && updated != nil {
-		if val, ok := updated.GetDateOk(); ok && updated != nil {
+		if val, ok := updated.GetDateOk(); ok {
 			result["updated"] = val
 		}
 	}

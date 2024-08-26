@@ -11,6 +11,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/apim v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2 v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
@@ -20,6 +21,7 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0
+	github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs v0.1.0
@@ -43,7 +45,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
