@@ -748,7 +748,7 @@ func flattenApimAudit(audit *apim.Audit) map[string]interface{} {
 		}
 	}
 	if updated, ok := audit.GetUpdatedOk(); ok && updated != nil {
-		if val, ok := updated.GetDateOk(); ok && updated != nil {
+		if val, ok := updated.GetDateOk(); ok {
 			result["updated"] = *val
 		}
 	}

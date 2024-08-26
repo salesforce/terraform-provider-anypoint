@@ -96,7 +96,9 @@ Required:
 
 Optional:
 
+- `claims_to_headers` (List of String) List of strings with claims
 - `client_id_expression` (String) Expression to obtain the Client ID from the request in order to validate it.
+- `custom_key_expression` (String) Data weave expression with custom key.
 - `jwks_service_connection_timeout` (Number) Timeout specification, in milliseconds, when reaching the JWKS service. Default value is 10 seconds.
 - `jwks_service_time_to_live` (Number) The amount of time, in minutes, that the JWKS will be considered valid. Once the JWKS has expired, it will have to be retrieved again.
 							Default value is 1 hour. Ignore this field if the JWT Signing Method was set to None.

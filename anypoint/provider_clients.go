@@ -7,6 +7,7 @@ import (
 	apim "github.com/mulesoft-anypoint/anypoint-client-go/apim"
 	"github.com/mulesoft-anypoint/anypoint-client-go/apim_policy"
 	apim_upstream "github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream"
+	application_manager_v2 "github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2"
 	connected_app "github.com/mulesoft-anypoint/anypoint-client-go/connected_app"
 	dlb "github.com/mulesoft-anypoint/anypoint-client-go/dlb"
 	env "github.com/mulesoft-anypoint/anypoint-client-go/env"
@@ -15,6 +16,7 @@ import (
 	org "github.com/mulesoft-anypoint/anypoint-client-go/org"
 	role "github.com/mulesoft-anypoint/anypoint-client-go/role"
 	rolegroup "github.com/mulesoft-anypoint/anypoint-client-go/rolegroup"
+	rtf "github.com/mulesoft-anypoint/anypoint-client-go/rtf"
 	secretgroup "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup"
 	secretgroup_certificate "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_certificate"
 	secretgroup_crl_distributor_configs "github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_crl_distributor_configs"
@@ -62,6 +64,8 @@ type ProviderConfOutput struct {
 	sgcertificateclient     *secretgroup_certificate.APIClient
 	sgtlscontextclient      *secretgroup_tlscontext.APIClient
 	sgcrldistribcfgsclient  *secretgroup_crl_distributor_configs.APIClient
+	rtfclient               *rtf.APIClient
+	appmanagerclient        *application_manager_v2.APIClient
 }
 
 func newProviderConfOutput(access_token string, server_index int) ProviderConfOutput {
@@ -94,6 +98,8 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgcertificatecfg := secretgroup_certificate.NewConfiguration()
 	sgtlscontextcfg := secretgroup_tlscontext.NewConfiguration()
 	sgcrldistribcfgs_cfg := secretgroup_crl_distributor_configs.NewConfiguration()
+	rtf_cfg := rtf.NewConfiguration()
+	appmanager_cfg := application_manager_v2.NewConfiguration()
 
 	vpcclient := vpc.NewAPIClient(vpccfg)
 	vpnclient := vpn.NewAPIClient(vpncfg)
@@ -123,6 +129,8 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 	sgcertificateclient := secretgroup_certificate.NewAPIClient(sgcertificatecfg)
 	sgtlscontextclient := secretgroup_tlscontext.NewAPIClient(sgtlscontextcfg)
 	sgcrldistribcfgsclient := secretgroup_crl_distributor_configs.NewAPIClient(sgcrldistribcfgs_cfg)
+	rtfclient := rtf.NewAPIClient(rtf_cfg)
+	appmanagerclient := application_manager_v2.NewAPIClient(appmanager_cfg)
 
 	return ProviderConfOutput{
 		access_token:            access_token,
@@ -155,5 +163,7 @@ func newProviderConfOutput(access_token string, server_index int) ProviderConfOu
 		sgcertificateclient:     sgcertificateclient,
 		sgtlscontextclient:      sgtlscontextclient,
 		sgcrldistribcfgsclient:  sgcrldistribcfgsclient,
+		rtfclient:               rtfclient,
+		appmanagerclient:        appmanagerclient,
 	}
 }

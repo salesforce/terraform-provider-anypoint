@@ -15,7 +15,7 @@ func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceRolesRead,
 		Description: `
-		Reads all ` + "`" + `roles` + "`" + ` availabble.
+		Reads all ` + "`" + `roles` + "`" + ` available.
 		`,
 		Schema: map[string]*schema.Schema{
 			"params": {
