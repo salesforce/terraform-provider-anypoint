@@ -2,13 +2,12 @@ package anypoint
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"sort"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	team_roles "github.com/mulesoft-consulting/anypoint-client-go/team_roles"
+	team_roles "github.com/mulesoft-anypoint/anypoint-client-go/team_roles"
 )
 
 const BG_VIEWER_ROLE = "833ab9ca-0c72-45ba-9764-1df83240db57"
@@ -34,7 +33,7 @@ Depending on the ` + "`" + `role` + "`" + `, some roles are environment scoped o
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The unique id of this team roles composed by `org_id`_`team_id`_roles",
+				Description: "The unique id of this team roles composed by {org_id}/{team_id}",
 			},
 			"team_id": {
 				Type:        schema.TypeString,
@@ -84,59 +83,62 @@ Depending on the ` + "`" + `role` + "`" + `, some roles are environment scoped o
 				Computed:    true,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
 func resourceTeamRolesCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
 	body := newTeamRolesPostBody(d)
-
 	//request user creation
 	httpr, err := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesPost(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create team roles ",
+			Summary:  "Unable to create team " + teamid + " roles ",
 			Detail:   details,
 		})
 		return diags
 	}
 	defer httpr.Body.Close()
+	d.SetId(ComposeResourceId([]string{orgid, teamid}))
 
-	d.SetId(orgid + "_" + teamid + "_roles")
-
-	resourceTeamRolesRead(ctx, d, m)
-
-	return diags
+	return resourceTeamRolesRead(ctx, d, m)
 }
 
 func resourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
 	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
+	if isComposedResourceId(id) {
+		orgid, teamid = decomposeTeamRolesId(d)
+	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
+		orgid, teamid = decomposeTeamRolesId(d, "_")
+	}
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
-	//request roles
+	//perform request
 	res, httpr, err := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesGet(authctx, orgid, teamid).Limit(500).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -149,8 +151,7 @@ func resourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 	defer httpr.Body.Close()
-
-	//process data
+	//process result
 	roles := flattenTeamRolesData(res.Data)
 	//save in data source schema
 	if err := d.Set("roles", roles); err != nil {
@@ -161,7 +162,6 @@ func resourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m interf
 		})
 		return diags
 	}
-
 	if err := d.Set("total", res.GetTotal()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -171,6 +171,10 @@ func resourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 
+	d.Set("org_id", orgid)
+	d.Set("team_id", teamid)
+	d.SetId(ComposeResourceId([]string{orgid, teamid}))
+
 	return diags
 }
 
@@ -178,19 +182,18 @@ func resourceTeamRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
-	id := d.Id()
-	split := strings.Split(id, "_")
-	orgid := split[0]
-	teamid := split[1]
+	orgid := d.Get("org_id").(string)
+	teamid := d.Get("team_id").(string)
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
-
+	//prepare request body
 	body := newTeamRolesDeleteBody(d)
-
+	//perform requeset
 	httpr, err := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesDelete(authctx, orgid, teamid).RequestBody(body).Execute()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
@@ -206,7 +209,6 @@ func resourceTeamRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 	// d.SetId("") is automatically called assuming delete returns no errors, but
 	// it is added here for explicitness.
 	d.SetId("")
-
 	return diags
 }
 
@@ -294,11 +296,35 @@ func equalTeamRole(old, new interface{}) bool {
 func equalTeamRoleContextParams(old, new interface{}) bool {
 	old_cparams := old.(map[string]interface{})
 	new_cparams := new.(map[string]interface{})
+
 	for k := range old_cparams {
-		if old_cparams[k].(string) != new_cparams[k].(string) {
+		oldVal, oldOk := old_cparams[k].(string)
+		newVal, newOk := new_cparams[k].(string)
+
+		if !oldOk && !newOk {
+			// Both values are not strings. Check if both are actually nil.
+			if old_cparams[k] != nil || new_cparams[k] != nil {
+				return false // One is nil and the other is some non-nil non-string
+			}
+			// Both are nil, treat as equal, continue checking next key
+		} else if oldOk && newOk {
+			// Both values are strings, compare them
+			if oldVal != newVal {
+				return false
+			}
+		} else {
+			// One is a string and the other is either nil or some other non-string type
 			return false
 		}
 	}
+
+	// Also check for any keys in new_cparams that are not in old_cparams
+	for k := range new_cparams {
+		if _, exists := old_cparams[k]; !exists {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -326,7 +352,7 @@ func sortMapListRoles(roles []interface{}) {
 		sortAttrD := "envId"
 		i_context := i_elem[sortAttrB].(map[string]interface{})
 		j_context := j_elem[sortAttrB].(map[string]interface{})
-		if i_context[sortAttrC].(string) != j_context[sortAttrC].(string) {
+		if i_context[sortAttrC] != nil && j_context[sortAttrC] != nil && i_context[sortAttrC].(string) != j_context[sortAttrC].(string) {
 			return i_context[sortAttrC].(string) < j_context[sortAttrC].(string)
 		}
 		if i_context[sortAttrD] != nil && j_context[sortAttrD] != nil && i_context[sortAttrD].(string) != j_context[sortAttrD].(string) {
@@ -343,4 +369,9 @@ func sortMapListRoles(roles []interface{}) {
 func getTeamRolesAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Context {
 	tmp := context.WithValue(ctx, team_roles.ContextAccessToken, pco.access_token)
 	return context.WithValue(tmp, team_roles.ContextServerIndex, pco.server_index)
+}
+
+func decomposeTeamRolesId(d *schema.ResourceData, separator ...string) (string, string) {
+	s := DecomposeResourceId(d.Id(), separator...)
+	return s[0], s[1]
 }

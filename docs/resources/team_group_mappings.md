@@ -50,7 +50,7 @@ resource "anypoint_team_group_mappings" "team_gmap" {
 
 ### Read-Only
 
-- `id` (String) The unique id of this group mappings composed by `org_id`_`team_id`_groupmappings
+- `id` (String) The unique id of this group mappings composed by {org_id}/{team_id}/groupmappings
 - `total` (Number) The total number of group-mappings
 
 <a id="nestedblock--groupmappings"></a>
@@ -65,4 +65,16 @@ Optional:
 
 - `provider_id` (String) The id of the identity provider in anypoint platform.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{TEAM_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_team_group_mappings.team_gmap \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/99c41e16-1075-40ae-8c8b-d722a8256f81    #resource ID
+```

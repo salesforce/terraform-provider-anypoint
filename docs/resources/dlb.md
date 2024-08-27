@@ -22,15 +22,20 @@ resource "anypoint_dlb" "dlb" {
   http_mode = "redirect"
   tlsv1 = false
   ssl_endpoints {
-    public_key_label = "tf-public-key-name"
-    public_key = "-----BEGIN CERTIFICATE-----\nMIICpDCCAYwCCQCOpE/9k0ve8zANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls\nb2NhbGhvc3QwHhcNMjEwMzA1MTUyMTM1WhcNMjEwMzA2MTUyMTM1WjAUMRIwEAYD\nVQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDK\n93gvOvMrcyVUvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAx\npaBw8/GTX5qNshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVAC\njJw67Y88St9h8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpB\nuTPbXHRnHJCyr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5j\nl8466kfniqydGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9Hf\nDJQffO+I5y+w6y5cU1l3AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAGS1mTWes3za\nWGlubGf76TiSn8GjIO7jIeVxBeB6rYq6iUFLUfEPCNHSlA0g7JJ40KW/osPc6EEm\nQzptRdhAoRDM5ilRTVMvuoGflw04OqrSUqR26+7aVJ8JcBJWBeP/5kGaMjPhy7oX\ntYPwzK2wXDYLDUCLXefF59NQoHUtytritckT5tP0UYDcRf2upBxn/v9lbF7AVfLZ\nO/vGplnD8Kq4QaFGL26ioh7e/n9TldbDJnspHh389aG6nqOKIgnL785Ggr6914vH\n4AMJa3r9cYpoe9ZdXL6b3aW+9MQo2Th2hDc7Z4CfVzJTZ9mg3ouKxIYGj+B4bj61\nN+MUQ5Q7aCo=\n-----END CERTIFICATE-----"
-    private_key_label = "tf-private-key-name"
-    private_key = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDK93gvOvMrcyVU\nvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAxpaBw8/GTX5qN\nshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVACjJw67Y88St9h\n8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpBuTPbXHRnHJCy\nr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5jl8466kfniqyd\nGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9HfDJQffO+I5y+w\n6y5cU1l3AgMBAAECggEAe0TfZnf8FiiBxLxdZeJG2c6WJXY9B8d96CV4Uz8cJdHU\nbk8Caxt6f8dVRM1T0eOMjIqWLePKlYIcAPDkHdod9iqBYrrx1TjZhHva+mZmdusD\nLvcJm9e0Sc8AdvJCc1VgLZwuio+bTbf/gaLEqawHdpcmef6A1CsrQJdjK3zjD9tn\n45wk+S6lRoCdGvFXk8L/mZPhhktzTRA4GKODKKzfXtMPXpjzj9sY500KwnjBDsNW\nxg7acYA2NbvdZqStGWP3O56gpttH8Ye9JbYCwIFYiPq9KnXJMYYb/k1/qSI4LNPX\nSuv0xmj6QNnRh3sfPHIynd+iKIm0qvqpBl2Chg9UeQKBgQD2peuK8iuvl2P61d5V\nR5RlyjTMKL9f1Pm5Q+vhcD2q2Ubow4iQWUyMwMFHIxvscSDkD8+sneOz85WHfZx9\nOK8oX3MHHDkkWxs6lJBnHBayFHtbuiI0LfJzSGGio672rEmS3A7g8ZDx06QczaD5\nhVhaR1Z7z9PfHW2rBOOJFEjl6wKBgQDSqY6kvYwet4kCdTUTnMuJuZ5u85Yn8jjU\nlZgAsizYwvWWXlUEYIKlosOfc/j1NQejqoVDgsQSFqfHDEG4gnClnEXi5tBg+OhX\n/rolaak+fuJ/dLj0RrkAJGvymDsf6qZoXtV6winO6Y7D5vtcaaWBo3DqaD4+28n3\nM1/m3I47pQKBgBkueWzXKrSjrTZ3zVpBk5oM2fUaF+fN060hjRyYHAOsaTvscq3i\nIBmiuFjt8bTjG+uM3bQO7qd5sAOERIzYU7G4hQLt07utfYsujcupJ3wI8Us9Jq7T\nHhS9CBLVyVAv6NcQlohKwXSfGftC1zOCdLHK5L6BSm1WENNMDXr6UjL/AoGAWKwq\ncMmga2WR9EjluIWtXyGUwNsjf1kD9ueo/dIB8pPN0CeQ3bDKDXJ/qWSljIFv38Jt\nKcenRH3ozW4pU8MEK5GmESZa3BappjCApjLdnILIUCIPoDMMuDScg5b0fDDHLvOM\nJIoKEyBYibl2YKXPlsv3QZPzb34Qe09StNhtvkkCgYEA2tOGGyiqcjG1fDhvdYvf\nbpja2/7OetClQKmjQJRLECRkJmEJk/mpOruyFn9cg/4wPBVi2AqMCqG/KyTzuImT\nY/kqPJ+UmYLBDnxIXzff/6nUjuxTZXgcdtnlaK/xq2HoU3XsCyHjOcaCjIUSLQsx\neb6YXmFBGK62BISiWmm3aPQ=\n-----END PRIVATE KEY-----"
-    verify_client_mode = "off"
+    public_key_label      = "tf-public-key-name"
+    public_key            = "-----BEGIN CERTIFICATE-----\nMIICpDCCAYwCCQCOpE/9k0ve8zANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls\nb2NhbGhvc3QwHhcNMjEwMzA1MTUyMTM1WhcNMjEwMzA2MTUyMTM1WjAUMRIwEAYD\nVQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDK\n93gvOvMrcyVUvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAx\npaBw8/GTX5qNshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVAC\njJw67Y88St9h8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpB\nuTPbXHRnHJCyr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5j\nl8466kfniqydGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9Hf\nDJQffO+I5y+w6y5cU1l3AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAGS1mTWes3za\nWGlubGf76TiSn8GjIO7jIeVxBeB6rYq6iUFLUfEPCNHSlA0g7JJ40KW/osPc6EEm\nQzptRdhAoRDM5ilRTVMvuoGflw04OqrSUqR26+7aVJ8JcBJWBeP/5kGaMjPhy7oX\ntYPwzK2wXDYLDUCLXefF59NQoHUtytritckT5tP0UYDcRf2upBxn/v9lbF7AVfLZ\nO/vGplnD8Kq4QaFGL26ioh7e/n9TldbDJnspHh389aG6nqOKIgnL785Ggr6914vH\n4AMJa3r9cYpoe9ZdXL6b3aW+9MQo2Th2hDc7Z4CfVzJTZ9mg3ouKxIYGj+B4bj61\nN+MUQ5Q7aCo=\n-----END CERTIFICATE-----"
+    private_key_label     = "tf-private-key-name"
+    private_key           = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDK93gvOvMrcyVU\nvPnzC2UtXzHnV+rxW8I6VM+lFASV2FS+oZtiNGCFlbeEEMCImtAxpaBw8/GTX5qN\nshFYNkGkvM4uh2PxYPZXfhOhkO42R6zdL89yTkY7E6nT/HwDUVACjJw67Y88St9h\n8yN5OOU95V3qkCbqfGxpKXnxmzTQt8aDRZQz5juQazVjMo4lIEpBuTPbXHRnHJCy\nr0OBOcGAGBTq2d7z2mFFlE+5w7RIiPNtx5KvG7wfO6KrCwfUGU5jl8466kfniqyd\nGbxH7dsR+daPWAHrTCmZND7AWSiptIVzoJ/Q3QgT/qK8/SmpW9HfDJQffO+I5y+w\n6y5cU1l3AgMBAAECggEAe0TfZnf8FiiBxLxdZeJG2c6WJXY9B8d96CV4Uz8cJdHU\nbk8Caxt6f8dVRM1T0eOMjIqWLePKlYIcAPDkHdod9iqBYrrx1TjZhHva+mZmdusD\nLvcJm9e0Sc8AdvJCc1VgLZwuio+bTbf/gaLEqawHdpcmef6A1CsrQJdjK3zjD9tn\n45wk+S6lRoCdGvFXk8L/mZPhhktzTRA4GKODKKzfXtMPXpjzj9sY500KwnjBDsNW\nxg7acYA2NbvdZqStGWP3O56gpttH8Ye9JbYCwIFYiPq9KnXJMYYb/k1/qSI4LNPX\nSuv0xmj6QNnRh3sfPHIynd+iKIm0qvqpBl2Chg9UeQKBgQD2peuK8iuvl2P61d5V\nR5RlyjTMKL9f1Pm5Q+vhcD2q2Ubow4iQWUyMwMFHIxvscSDkD8+sneOz85WHfZx9\nOK8oX3MHHDkkWxs6lJBnHBayFHtbuiI0LfJzSGGio672rEmS3A7g8ZDx06QczaD5\nhVhaR1Z7z9PfHW2rBOOJFEjl6wKBgQDSqY6kvYwet4kCdTUTnMuJuZ5u85Yn8jjU\nlZgAsizYwvWWXlUEYIKlosOfc/j1NQejqoVDgsQSFqfHDEG4gnClnEXi5tBg+OhX\n/rolaak+fuJ/dLj0RrkAJGvymDsf6qZoXtV6winO6Y7D5vtcaaWBo3DqaD4+28n3\nM1/m3I47pQKBgBkueWzXKrSjrTZ3zVpBk5oM2fUaF+fN060hjRyYHAOsaTvscq3i\nIBmiuFjt8bTjG+uM3bQO7qd5sAOERIzYU7G4hQLt07utfYsujcupJ3wI8Us9Jq7T\nHhS9CBLVyVAv6NcQlohKwXSfGftC1zOCdLHK5L6BSm1WENNMDXr6UjL/AoGAWKwq\ncMmga2WR9EjluIWtXyGUwNsjf1kD9ueo/dIB8pPN0CeQ3bDKDXJ/qWSljIFv38Jt\nKcenRH3ozW4pU8MEK5GmESZa3BappjCApjLdnILIUCIPoDMMuDScg5b0fDDHLvOM\nJIoKEyBYibl2YKXPlsv3QZPzb34Qe09StNhtvkkCgYEA2tOGGyiqcjG1fDhvdYvf\nbpja2/7OetClQKmjQJRLECRkJmEJk/mpOruyFn9cg/4wPBVi2AqMCqG/KyTzuImT\nY/kqPJ+UmYLBDnxIXzff/6nUjuxTZXgcdtnlaK/xq2HoU3XsCyHjOcaCjIUSLQsx\neb6YXmFBGK62BISiWmm3aPQ=\n-----END PRIVATE KEY-----"
+    client_cert_label     = "cert.pem"
+    client_cert           = "-----BEGIN CERTIFICATE-----\nMIIF3TCCA8WgAwIBAgIUBFyq+QHZcCg5hPGYvLFV3ghrgewwDQYJKoZIhvcNAQEL\nBQAwfjELMAkGA1UEBhMCRlIxEjAQBgNVBAgMCUthcm5hdGFrYTESMBAGA1UEBwwJ\nQmVuZ2FsdXJ1MRUwEwYDVQQKDAxHb0xpbnV4Q2xvdWQxDjAMBgNVBAsMBUFkbWlu\nMSAwHgYDVQQDDBd0ZXJyYWZvcm0uYW55cG9pbnQudGVzdDAeFw0yMzA4MjUxNTQ0\nMTdaFw0zMzA4MjIxNTQ0MTdaMH4xCzAJBgNVBAYTAkZSMRIwEAYDVQQIDAlLYXJu\nYXRha2ExEjAQBgNVBAcMCUJlbmdhbHVydTEVMBMGA1UECgwMR29MaW51eENsb3Vk\nMQ4wDAYDVQQLDAVBZG1pbjEgMB4GA1UEAwwXdGVycmFmb3JtLmFueXBvaW50LnRl\nc3QwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDgIn1OUh9QS08squFZ\nGd1Jy7+lyFjMYvKZp+NBAgzvfCN2eTnVeMFgfBtkyD8v0hZirzjtztj0OU0vfna+\nvc8BjMoR4IcKHGt9cIYgv9ahSFL7lgyqtqIMC2LP2ro7Ja7zm+LHl84j7upvoqQE\nxI5q5byT/GGyvcG1hyKdIJUB9I4NgE1ej2VmiYE1uoK/WDVfDCqbM8M8YBkLmGtX\nwl8BmE6eajrtT+rlM4uQv9f29qmCfldrxkcyiHkRcGg3uHFyKD+1XrIbygGmsGb3\n0o00EM7tN+MlhAYELG21bvE8jzcpuF9Ho+uIJRpr2mvEoIUUjKvXu70Nd0EQMJgN\nHVak5Ky1bOaKeUwlHk6ZWTzSnpf2tqxNZXbkTw74p2iRaMDtpB3TNiYHA2gqdLlj\nGFRV1QVy5LR+oRkpqh5DQyKMsb+xj4glxG3okIhaVaKQJqHuvC7oolRgq093pfpt\nUcDvxhY0hM0ATFzs0DSs6rAiPWrgqXQoMRgqzOrBDOO3Efmu8d1W0pFJQ20DOkAQ\nt7EbgsIMqATeQkKLDgtUrWwlvkTHEZziRDzCn78bTKd/o3iUvc/uiCj0pOZX0uqc\nmhXn5vKay2mQsajIROaxowcyDrwM8i706HUZB+AhgobEbSHb2OSm/98XeCuZ5Aqn\nLeEoIvGgQO1NUdqOlhB+RWUbYQIDAQABo1MwUTAdBgNVHQ4EFgQUBtNZbr5gqhhq\n8QOJZJzyUEZtW4EwHwYDVR0jBBgwFoAUBtNZbr5gqhhq8QOJZJzyUEZtW4EwDwYD\nVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEA2Qdbi0veqIBIZIW3PwMY\nD++UxLJHZH1/NzcCTI8UxSBQ3gkSDRXHkZJZXDiMxGhco+QmSnTn3FOvqRV+Son4\nA0usfkKoccSfrNOBQpQZLxCnL3ubek5+E+/BlrgG4gRpc8ITE8NZbFrR7ukKXr2d\nVaMgL4vuSJF88pJiF+s29kkRXax7bVkqa4CrSWcVXL6JxfT3FBChC6D0zi09/r71\nUcZtgfCVbDi87FydwEB4eeFS3DrtjNcCvTWQNUx0PQGqCB8YOdjeZNg3lASzb+Zg\nFvPRiDwlJt6LfUZiOtHqFvdNs1dEBfEetNb5E6R/Ww5IeDjhQcTQ9C0wasGBo9WF\nvAxKNv1m8+vTSApOELRfEOZ4abV0toGIqqGUfZnGcnGnFzsQ2p1yHplRDHH0bMck\nFTw+yVLL5azYQwvINW5nf6R1iS9IzcxpbJpV3CXMLQCdnuzjMu6q/NAfhxOoRIy6\nOwz3YXCjp9twra+XTuYRgCPRflW7vaJTwhi84UGMFmWbkw80yQzOCSGGcO8wsQE+\nfhv/Yhy1fLmRASGtniHeqggMLxz2kkUKp+Ej+Xi9RSAfmkryrXzx2GpIMfQjqdfs\nqOu9FhMBQfOSN9mqldxyglqZ5PJ3Ba2Q+lKMYZdqGYriSc7FvNs0xXReUlADOOWa\nhCke+v31hxedtqeQacOElH0=\n-----END CERTIFICATE-----\n"
+    verify_client_mode    = "off"            # 'on', 'off', 'optional'
+    revocation_list_label = "rootca.crl"
+    revocation_list       = "-----BEGIN X509 CRL-----\nMIIDDzCB+AIBATANBgkqhkiG9w0BAQsFADB+MQswCQYDVQQGEwJGUjESMBAGA1UE\nCAwJS2FybmF0YWthMRIwEAYDVQQHDAlCZW5nYWx1cnUxFTATBgNVBAoMDEdvTGlu\ndXhDbG91ZDEOMAwGA1UECwwFQWRtaW4xIDAeBgNVBAMMF3RlcnJhZm9ybS5hbnlw\nb2ludC50ZXN0Fw0yMzA4MjUxNjA3MzRaFw0yMzA5MjQxNjA3MzRaMBQwEgIBBBcN\nMjMwODI1MTYwNjM0WqAwMC4wHwYDVR0jBBgwFoAUBtNZbr5gqhhq8QOJZJzyUEZt\nW4EwCwYDVR0UBAQCAhAAMA0GCSqGSIb3DQEBCwUAA4ICAQCS1OkLBWTOU0cD4jBf\nEaIOrk/WqtxVTgci5lbeUV8rMZuw2PBHkqT9ZditGsP+aYCz/od5P5tv0W4fu9Ny\nJ/vS3/d4tJGYEZltbZhB00zgm2uRK2l3bYSt1kwOMnpqHzBJsWcjuTG1wGG8RjAr\nHWOCzbyRsi+HfHoB+vtHOsG9MiuDs7SRtCgppN6cteZjscWDTcSnrMI3AwLCHJNa\nG5W96JdZLinJNvvOqxlBfRBbilAgr1x7L1DHYum2WIKbmk/rR4ThhWPU4ceT+QyX\naXWfyuHy/BFSuXdOGa+4Uxf5GvHT8UcqIFT+sS9k7JwO/FLPytnpZdF+IKSnmpDQ\nAAqCMDHZyEi5bKfeWoNmumYCHF3cu5CA0XkS0+Jw4Mn6d/lg1TNQAtbk17XOE/Q3\nvpR3jkCcr0gVEkDXPTMA/pypblipAy7ywxKSD1EAhkCEo0tImHvTCafuY+3AXpKA\nvcMarpFPGVsuZeL4tuzbzt1dT2iHduMMmyJXZcViAbsbQXYG/T0zeF9Nc8IdtjhQ\nPFx2MQPCj8IqkXC3o8ms7UHVGRov1f7akUF+ojvI3vXwzqj7/sKDmzNMwT2NxUwx\nNs0Dhn4L5JGigShWNkfGvhvphDslKhb+LXsxlgQL1aZicgxtDpt/icmtStf3J4kb\nIgjRq7Km94h5AlY4xehiq+29RQ==\n-----END X509 CRL-----\n"
     mappings {
-      input_uri = "{app}/"
-      app_name = "{app}"
-      app_uri = "/" 
+      input_uri         = "{app}/"
+      app_name          = "{app}"
+      app_uri           = "/"
+      upstream_protocol = "ws"              # 'http', 'https', 'ws', 'wss'
     }
   }
 }
@@ -57,10 +62,13 @@ resource "anypoint_dlb" "dlb" {
 - `ip_whitelist` (List of String) CIDR blocks to allow connections from
 - `keep_url_encoding` (Boolean) Whether to keep url encoding for this dlb.
 - `last_updated` (String) The last time this resource has been updated locally.
+- `proxy_read_timeout` (Number) The proxy read timeout
 - `ssl_endpoints` (Block Set) (see [below for nested schema](#nestedblock--ssl_endpoints))
 - `state` (String) The desired state, possible values: 'started', 'stopped' or 'restarted'
+- `static_ips_disabled` (Boolean) Whether to disable static ips for this dlb.
 - `tlsv1` (Boolean) Whether to activate TLS v1 for this dlb.
 - `upstream_tlsv12` (Boolean) Whether to activate TLS v1.2 for this dlb upstream.
+- `workers` (Number) The number of workers for this dlb.
 
 ### Read-Only
 
@@ -70,9 +78,6 @@ resource "anypoint_dlb" "dlb" {
 - `instance_config` (Map of String)
 - `ip_addresses` (List of String) List of static IP addresses for this dlb
 - `ip_addresses_info` (List of Object) List of IP addresses information of this dlb. (see [below for nested schema](#nestedatt--ip_addresses_info))
-- `proxy_read_timeout` (Number) The proxy read timeout
-- `static_ips_disabled` (Boolean) Whether to disable static ips for this dlb.
-- `workers` (Number) The number of workers for this dlb.
 
 <a id="nestedblock--ssl_endpoints"></a>
 ### Nested Schema for `ssl_endpoints`
@@ -84,29 +89,41 @@ Required:
 
 Optional:
 
+- `client_cert` (String, Sensitive) The client certificat of the given endpoint
+- `client_cert_label` (String) The label of the client certificat.
 - `mappings` (Block Set) List of dlb mappings. (see [below for nested schema](#nestedblock--ssl_endpoints--mappings))
 - `private_key_label` (String) The label of the private key.
 - `public_key_label` (String) The label of the public key.
-- `verify_client_mode` (String) Whether to enable client verification or not, possible values: 'off' or 'on'
+- `revocation_list` (String, Sensitive) The revocation list for the given endpoint
+- `revocation_list_label` (String) The label of the revocation list.
+- `verify_client_mode` (String) Whether to enable client verification or not, possible values: 'off' or 'on' or 'optional'
 
 Read-Only:
 
+- `client_cert_cn` (String) The common name of the client's certificate.
+- `client_cert_digest` (String) The client certificate checksum generated by the anypoint platform.
 - `private_key_digest` (String) The private key checksum generated by the anypoint platform.
 - `public_key_cn` (String) The common name of the public key.
 - `public_key_digest` (String) The public key checksum generated by the anypoint platform.
+- `revocation_list_digest` (String) The CRL checksum generated by the anypoint platform.
 
 <a id="nestedblock--ssl_endpoints--mappings"></a>
 ### Nested Schema for `ssl_endpoints.mappings`
 
 Required:
 
-- `app_name` (String)
-- `app_uri` (String)
-- `input_uri` (String)
+- `app_name` (String) The name of the CloudHub application that processes the request: for example, {app}-example
+- `app_uri` (String) The URI string to pass to the app: for example, `/`. The output path cannot contain patterns.
+- `input_uri` (String) The URI that the client requests: for example, `/{app}/`. The input URI is appended to the host header of the load balancer.
 
-Read-Only:
+Optional:
 
-- `upstream_protocol` (String)
+- `upstream_protocol` (String) The protocol on which the application listens:
+											* http (port 8091)
+											* https (port 8092)
+											* ws WebSockets (port 8091)
+											* wss WebSockets over SSL/TLS (8092)
+											By default, the load balancer listens to external requests on HTTPS and communicates internally with your worker over HTTP. If you configured your Mule application within the VPC to listen on HTTPS, set Protocol to https when you create the mapping rule list.
 
 
 
@@ -119,4 +136,16 @@ Read-Only:
 - `static_ip` (Boolean)
 - `status` (String)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# In order for the import to work, you should provide a ID composed of the following:
+#  {ORG_ID}/{VPC_ID}/{DLB_ID}
+
+terraform import \
+  -var-file params.tfvars.json \          #variables file
+  anypoint_dlb.dlb \            #resource name
+  aa1f55d6-213d-4f60-845c-201282484cd1/vpc-0cfd5cb3d3010cd44/64e8d2284b5e9b1c388d1bbc    #resource ID
+```

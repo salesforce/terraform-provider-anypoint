@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	vpn "github.com/mulesoft-consulting/anypoint-client-go/vpn"
+	vpn "github.com/mulesoft-anypoint/anypoint-client-go/vpn"
 )
 
 func dataSourceVPN() *schema.Resource {
@@ -164,38 +164,37 @@ func dataSourceVPN() *schema.Resource {
 }
 
 func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("vpc_id").(string)
 	orgid := d.Get("org_id").(string)
 	vpnid := d.Id()
 	authctx := getVPNAuthCtx(ctx, &pco)
-
 	//request specific VPN
 	res, httpr, err := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdGet(authctx, orgid, vpcid, vpnid).Execute()
-	defer httpr.Body.Close()
 	if err != nil {
 		var details string
-		if httpr != nil {
-			b, _ := ioutil.ReadAll(httpr.Body)
+		if httpr != nil && httpr.StatusCode >= 400 {
+			defer httpr.Body.Close()
+			b, _ := io.ReadAll(httpr.Body)
 			details = string(b)
 		} else {
 			details = err.Error()
 		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to Get VPN",
+			Summary:  "Unable to get VPN " + vpnid,
 			Detail:   details,
 		})
 		return diags
 	}
+	defer httpr.Body.Close()
 	//process data
 	vpninstance, err := flattenVPNData(&res)
 	if err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to parse VPN data",
+			Summary:  "Unable to parse VPN " + vpnid + " data",
 			Detail:   err.Error(),
 		})
 		return diags
@@ -204,18 +203,19 @@ func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{
 	if err := setVPNCoreAttributesToResourceData(d, vpninstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to set VPN",
+			Summary:  "Unable to set VPN " + vpnid,
 			Detail:   err.Error(),
 		})
 		return diags
 	}
 
-	d.SetId(vpcid)
+	d.SetId(vpnid)
 
 	return diags
 }
 
-/**
+/*
+*
 Transforms a vpn.VpnGet object to the dataSourceVPC schema
 Easily said: Transforms library API response object to a schema object
 @param vpcitem *vpc.Vpc the vpc struct
