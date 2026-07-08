@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -51,10 +51,17 @@ func resourceSAML() *schema.Resource {
 				Computed:    true,
 				Description: "The type of the identity provider, contains description and the name of the type of the provider (saml or oidc)",
 			},
+			"login_disabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether this provider is disabled for login",
+			},
 			"saml": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Description: "The description of identity provider specific for SAML types",
 				Required:    true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"issuer": {
@@ -143,7 +150,7 @@ func resourceSAML() *schema.Resource {
 	}
 }
 
-func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -157,14 +164,7 @@ func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m interface
 	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersPost(authctx, orgid).IdpPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create OIDC provider for org " + orgid,
@@ -173,30 +173,30 @@ func resourceSAMLCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diags
 	}
 	defer httpr.Body.Close()
-	d.SetId(res.GetProviderId())
+	d.SetId(res.SamlProviderGet.GetProviderId())
 	return resourceSAMLRead(ctx, d, m)
 }
 
-func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
 	orgid := d.Get("org_id").(string)
 	if isComposedResourceId(idpid) {
-		orgid, idpid = decomposeSAMLId(d)
+		orgid, idpid, diags = decomposeSAMLId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getIDPAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read SAML identity provider " + idpid + " in org " + orgid,
@@ -206,7 +206,7 @@ func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	defer httpr.Body.Close()
 	//process data
-	idpinstance := flattenIDPData(&res)
+	idpinstance := flattenIDPData(res)
 	//save in data source schema
 	if err := setIDPAttributesToResourceData(d, idpinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
@@ -223,7 +223,7 @@ func resourceSAMLRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-func resourceSAMLUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSAMLUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
@@ -240,14 +240,7 @@ func resourceSAMLUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		//perform request
 		_, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdPatch(authctx, orgid, idpid).IdpPatchBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to Update IDP " + idpid + " in org " + orgid,
@@ -263,7 +256,7 @@ func resourceSAMLUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
-func resourceSAMLDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSAMLDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	idpid := d.Id()
@@ -272,14 +265,7 @@ func resourceSAMLDelete(ctx context.Context, d *schema.ResourceData, m interface
 	//perform request
 	httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdDelete(authctx, orgid, idpid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Delete OIDC provider " + idpid,
@@ -300,80 +286,74 @@ func newSAMLPostBody(d *schema.ResourceData) (*idp.IdpPostBody, diag.Diagnostics
 	var diags diag.Diagnostics
 
 	name := d.Get("name").(string)
-	saml_input := d.Get("saml")
+	saml_input := d.Get("saml").([]any)
+	saml_data := saml_input[0].(map[string]any)
 	sp_sign_on_url := d.Get("sp_sign_on_url").(string)
 	sp_sign_out_url := d.Get("sp_sign_out_url").(string)
-
-	body := idp.NewIdpPostBody()
-
-	saml_type := idp.NewIdpPostBodyType()
-	saml_type.SetName("saml")
+	// init body SAML body
+	body := idp.NewSamlProviderPostBodyWithDefaults()
+	saml_type := idp.NewSamlProviderPostBodyType("saml")
 	saml_type.SetDescription("SAML 2.0")
-
-	saml := idp.NewSaml1()
-
-	if saml_input != nil {
-		set := saml_input.(*schema.Set)
-		list := set.List()
-		if set.Len() > 0 {
-			item := list[0]
-			data := item.(map[string]interface{})
-			if issuer, ok := data["issuer"]; ok {
-				saml.SetIssuer(issuer.(string))
-			}
-			if audience, ok := data["audience"]; ok {
-				saml.SetAudience(audience.(string))
-			}
-			if public_key, ok := data["public_key"]; ok {
-				l := public_key.([]interface{})
-				keys := make([]string, len(l))
-				for i, k := range l {
-					keys[i] = k.(string)
-				}
-				saml.SetPublicKey(keys)
-			}
-			//parsing claims
-			claims := idp.NewClaimsMapping2()
-			if claims_mapping_email_attribute, ok := data["claims_mapping_email_attribute"]; ok {
-				claims.SetEmailAttribute(claims_mapping_email_attribute.(string))
-			}
-			if claims_mapping_group_attribute, ok := data["claims_mapping_group_attribute"]; ok {
-				claims.SetGroupAttribute(claims_mapping_group_attribute.(string))
-			}
-			if claims_mapping_lastname_attribute, ok := data["claims_mapping_lastname_attribute"]; ok {
-				claims.SetLastnameAttribute(claims_mapping_lastname_attribute.(string))
-			}
-			if claims_mapping_username_attribute, ok := data["claims_mapping_username_attribute"]; ok {
-				claims.SetUsernameAttribute(claims_mapping_username_attribute.(string))
-			}
-			if claims_mapping_firstname_attribute, ok := data["claims_mapping_firstname_attribute"]; ok {
-				claims.SetFirstnameAttribute(claims_mapping_firstname_attribute.(string))
-			}
-			saml.SetClaimsMapping(*claims)
-
-			if sp_initiated_sso_enabled, ok := data["sp_initiated_sso_enabled"]; ok {
-				saml.SetSpInitiatedSsoEnabled(sp_initiated_sso_enabled.(bool))
-			}
-			if idp_initiated_sso_enabled, ok := data["idp_initiated_sso_enabled"]; ok {
-				saml.SetIdpInitiatedSsoEnabled(idp_initiated_sso_enabled.(bool))
-			}
-			if require_encrypted_saml_assertions, ok := data["require_encrypted_saml_assertions"]; ok {
-				saml.SetRequireEncryptedSamlAssertions(require_encrypted_saml_assertions.(bool))
-			}
+	saml := idp.NewSamlProviderPostBodySamlWithDefaults()
+	// parse saml data
+	if issuer, ok := saml_data["issuer"]; ok {
+		saml.SetIssuer(issuer.(string))
+	}
+	if audience, ok := saml_data["audience"]; ok {
+		saml.SetAudience(audience.(string))
+	}
+	if public_key, ok := saml_data["public_key"]; ok {
+		l := public_key.([]any)
+		keys := make([]string, len(l))
+		for i, k := range l {
+			keys[i] = k.(string)
 		}
+		saml.SetPublicKey(keys)
+	}
+	//parsing claims
+	claims := idp.NewSamlProviderPostBodySamlClaimsMapping()
+	if claims_mapping_email_attribute, ok := saml_data["claims_mapping_email_attribute"]; ok {
+		claims.SetEmailAttribute(claims_mapping_email_attribute.(string))
+	}
+	if claims_mapping_group_attribute, ok := saml_data["claims_mapping_group_attribute"]; ok {
+		claims.SetGroupAttribute(claims_mapping_group_attribute.(string))
+	}
+	if claims_mapping_lastname_attribute, ok := saml_data["claims_mapping_lastname_attribute"]; ok {
+		claims.SetLastnameAttribute(claims_mapping_lastname_attribute.(string))
+	}
+	if claims_mapping_username_attribute, ok := saml_data["claims_mapping_username_attribute"]; ok {
+		claims.SetUsernameAttribute(claims_mapping_username_attribute.(string))
+	}
+	if claims_mapping_firstname_attribute, ok := saml_data["claims_mapping_firstname_attribute"]; ok {
+		claims.SetFirstnameAttribute(claims_mapping_firstname_attribute.(string))
+	}
+	saml.SetClaimsMapping(*claims)
+	//parse flags
+	if sp_initiated_sso_enabled, ok := saml_data["sp_initiated_sso_enabled"]; ok {
+		saml.SetSpInitiatedSsoEnabled(sp_initiated_sso_enabled.(bool))
+	}
+	if idp_initiated_sso_enabled, ok := saml_data["idp_initiated_sso_enabled"]; ok {
+		saml.SetIdpInitiatedSsoEnabled(idp_initiated_sso_enabled.(bool))
+	}
+	if require_encrypted_saml_assertions, ok := saml_data["require_encrypted_saml_assertions"]; ok {
+		saml.SetRequireEncryptedSamlAssertions(require_encrypted_saml_assertions.(bool))
+	}
+	// parse service provider data
+	sp := idp.NewSamlProviderPostBodyServiceProviderWithDefaults()
+	sp_urls := idp.NewSamlProviderPostBodyServiceProviderUrls(sp_sign_on_url, sp_sign_out_url)
+	sp.SetUrls(*sp_urls)
+
+	//parsing login_disabled
+	if login_disabled, ok := saml_data["login_disabled"]; ok {
+		body.SetLoginDisabled(login_disabled.(bool))
 	}
 
-	sp := idp.NewServiceProvider1()
-	sp_urls := idp.NewUrls4()
-	sp_urls.SetSignOn(sp_sign_on_url)
-	sp_urls.SetSignOut(sp_sign_out_url)
-	sp.SetUrls(*sp_urls)
 	body.SetServiceProvider(*sp)
 	body.SetSaml(*saml)
 	body.SetName(name)
 	body.SetType(*saml_type)
 
-	return body, diags
+	return &idp.IdpPostBody{SamlProviderPostBody: body}, diags
 }
 
 /* Prepares the body required to patch an OIDC provider*/
@@ -381,81 +361,88 @@ func newSAMLPatchBody(d *schema.ResourceData) (*idp.IdpPatchBody, diag.Diagnosti
 	var diags diag.Diagnostics
 
 	name := d.Get("name").(string)
-	saml_input := d.Get("saml")
+	saml_input := d.Get("saml").([]any)
+	saml_data := saml_input[0].(map[string]any)
 	sp_sign_on_url := d.Get("sp_sign_on_url").(string)
 	sp_sign_out_url := d.Get("sp_sign_out_url").(string)
-
-	body := idp.NewIdpPatchBody()
-
-	saml_type := idp.NewIdpPatchBodyType()
+	// init body SAML body
+	body := idp.NewSamlProviderPatch()
+	saml_type := idp.NewSamlProviderPatchType()
 	saml_type.SetDescription("SAML 2.0")
-
-	saml := idp.NewSaml1()
-
-	if saml_input != nil {
-		set := saml_input.(*schema.Set)
-		list := set.List()
-		if set.Len() > 0 {
-			item := list[0]
-			data := item.(map[string]interface{})
-			if issuer, ok := data["issuer"]; ok {
-				saml.SetIssuer(issuer.(string))
-			}
-			if audience, ok := data["audience"]; ok {
-				saml.SetAudience(audience.(string))
-			}
-			if public_key, ok := data["public_key"]; ok {
-				l := public_key.([]interface{})
-				keys := make([]string, len(l))
-				for i, k := range l {
-					keys[i] = k.(string)
-				}
-				saml.SetPublicKey(keys)
-			}
-			//parsing claims
-			claims := idp.NewClaimsMapping2()
-			if claims_mapping_email_attribute, ok := data["claims_mapping_email_attribute"]; ok {
-				claims.SetEmailAttribute(claims_mapping_email_attribute.(string))
-			}
-			if claims_mapping_group_attribute, ok := data["claims_mapping_group_attribute"]; ok {
-				claims.SetGroupAttribute(claims_mapping_group_attribute.(string))
-			}
-			if claims_mapping_lastname_attribute, ok := data["claims_mapping_lastname_attribute"]; ok {
-				claims.SetLastnameAttribute(claims_mapping_lastname_attribute.(string))
-			}
-			if claims_mapping_username_attribute, ok := data["claims_mapping_username_attribute"]; ok {
-				claims.SetUsernameAttribute(claims_mapping_username_attribute.(string))
-			}
-			if claims_mapping_firstname_attribute, ok := data["claims_mapping_firstname_attribute"]; ok {
-				claims.SetFirstnameAttribute(claims_mapping_firstname_attribute.(string))
-			}
-			saml.SetClaimsMapping(*claims)
-
-			if sp_initiated_sso_enabled, ok := data["sp_initiated_sso_enabled"]; ok {
-				saml.SetSpInitiatedSsoEnabled(sp_initiated_sso_enabled.(bool))
-			}
-			if idp_initiated_sso_enabled, ok := data["idp_initiated_sso_enabled"]; ok {
-				saml.SetIdpInitiatedSsoEnabled(idp_initiated_sso_enabled.(bool))
-			}
-			if require_encrypted_saml_assertions, ok := data["require_encrypted_saml_assertions"]; ok {
-				saml.SetRequireEncryptedSamlAssertions(require_encrypted_saml_assertions.(bool))
-			}
-		}
+	//parse saml
+	saml := idp.NewSamlProviderPatchSaml()
+	if issuer, ok := saml_data["issuer"]; ok {
+		saml.SetIssuer(issuer.(string))
 	}
-	sp := idp.NewServiceProvider1()
-	sp_urls := idp.NewUrls4()
+	if audience, ok := saml_data["audience"]; ok {
+		saml.SetAudience(audience.(string))
+	}
+	if public_key, ok := saml_data["public_key"]; ok {
+		l := public_key.([]any)
+		keys := make([]string, len(l))
+		for i, k := range l {
+			keys[i] = k.(string)
+		}
+		saml.SetPublicKey(keys)
+	}
+	//parsing claims
+	claims := idp.NewSamlProviderPostBodySamlClaimsMapping()
+	if claims_mapping_email_attribute, ok := saml_data["claims_mapping_email_attribute"]; ok {
+		claims.SetEmailAttribute(claims_mapping_email_attribute.(string))
+	}
+	if claims_mapping_group_attribute, ok := saml_data["claims_mapping_group_attribute"]; ok {
+		claims.SetGroupAttribute(claims_mapping_group_attribute.(string))
+	}
+	if claims_mapping_lastname_attribute, ok := saml_data["claims_mapping_lastname_attribute"]; ok {
+		claims.SetLastnameAttribute(claims_mapping_lastname_attribute.(string))
+	}
+	if claims_mapping_username_attribute, ok := saml_data["claims_mapping_username_attribute"]; ok {
+		claims.SetUsernameAttribute(claims_mapping_username_attribute.(string))
+	}
+	if claims_mapping_firstname_attribute, ok := saml_data["claims_mapping_firstname_attribute"]; ok {
+		claims.SetFirstnameAttribute(claims_mapping_firstname_attribute.(string))
+	}
+	saml.SetClaimsMapping(*claims)
+	//parse flags
+	if sp_initiated_sso_enabled, ok := saml_data["sp_initiated_sso_enabled"]; ok {
+		saml.SetSpInitiatedSsoEnabled(sp_initiated_sso_enabled.(bool))
+	}
+	if idp_initiated_sso_enabled, ok := saml_data["idp_initiated_sso_enabled"]; ok {
+		saml.SetIdpInitiatedSsoEnabled(idp_initiated_sso_enabled.(bool))
+	}
+	if require_encrypted_saml_assertions, ok := saml_data["require_encrypted_saml_assertions"]; ok {
+		saml.SetRequireEncryptedSamlAssertions(require_encrypted_saml_assertions.(bool))
+	}
+	// parse service provider data
+	sp := idp.NewSamlProviderPatchServiceProvider()
+	sp_urls := idp.NewSamlProviderPatchServiceProviderUrls()
 	sp_urls.SetSignOn(sp_sign_on_url)
 	sp_urls.SetSignOut(sp_sign_out_url)
 	sp.SetUrls(*sp_urls)
+
+	//parsing login_disabled
+	if login_disabled, ok := saml_data["login_disabled"]; ok {
+		body.SetLoginDisabled(login_disabled.(bool))
+	}
+
 	body.SetServiceProvider(*sp)
 	body.SetSaml(*saml)
 	body.SetName(name)
 	body.SetType(*saml_type)
 
-	return body, diags
+	return &idp.IdpPatchBody{SamlProviderPatch: body}, diags
 }
 
-func decomposeSAMLId(d *schema.ResourceData) (string, string) {
+func decomposeSAMLId(d *schema.ResourceData) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid SAML ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/SAML_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }

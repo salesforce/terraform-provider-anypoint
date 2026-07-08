@@ -1,0 +1,88 @@
+name: Release
+
+# When a GitHub release is published, build + sign the provider binaries for
+# that tag with GoReleaser, upload them to the release, then announce the
+# release notes on Discord.
+#
+# Required repository secrets:
+#   GPG_PRIVATE_KEY  - ASCII-armored private key registered on the Terraform
+#                      registry (gpg --armor --export-secret-key <fingerprint>)
+#   GPG_PASSPHRASE   - passphrase for that key
+#   DISCORD_WEBHOOK  - channel webhook URL (optional; Discord step no-ops if unset)
+# GITHUB_TOKEN is provided automatically.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout at tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Stage release notes
+        env:
+          BODY: ${{ github.event.release.body }}
+        run: printf '%s' "$BODY" > release-notes.md
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean --release-notes release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.gpg.outputs.fingerprint }}
+
+      - name: Announce on Discord
+        if: ${{ !github.event.release.prerelease }}
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TAG: ${{ github.event.release.tag_name }}
+          URL: ${{ github.event.release.html_url }}
+          BODY: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_WEBHOOK secret not set — skipping Discord announce."
+            exit 0
+          fi
+          # Discord embed description caps at 4096 chars; leave headroom.
+          desc=$(printf '%s' "$BODY" | head -c 3800)
+          if [ "$(printf '%s' "$BODY" | wc -c)" -gt 3800 ]; then
+            desc="${desc}"$'\n\n…full notes → '"$URL"
+          fi
+          payload=$(jq -n \
+            --arg title "terraform-provider-anypoint ${TAG}" \
+            --arg url   "$URL" \
+            --arg desc  "$desc" \
+            '{
+              username: "Anypoint Provider Releases",
+              embeds: [{ title: $title, url: $url, description: $desc, color: 41183 }]
+            }')
+          code=$(curl -sS -o /tmp/discord_resp -w '%{http_code}' \
+            -H "Content-Type: application/json" \
+            -d "$payload" "$WEBHOOK")
+          echo "Discord responded: HTTP $code"
+          cat /tmp/discord_resp || true
+          [ "$code" = "204" ]

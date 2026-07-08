@@ -140,6 +140,8 @@ Read-Only:
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:
 #  {ORG_ID}/{VPC_ID}/{DLB_ID}

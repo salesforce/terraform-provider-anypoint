@@ -68,5 +68,3 @@ Read-Only:
 - `context_params` (Map of String)
 - `name` (String)
 - `role_id` (String)
-
-

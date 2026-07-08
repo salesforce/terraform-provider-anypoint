@@ -79,5 +79,3 @@ Read-Only:
 - `type` (String)
 - `updated_at` (String)
 - `username` (String)
-
-

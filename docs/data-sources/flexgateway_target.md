@@ -47,5 +47,3 @@ Read-Only:
 - `certificate_expiration_dates` (List of String)
 - `count` (Number)
 - `status` (String)
-
-

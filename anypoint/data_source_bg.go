@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -573,7 +572,7 @@ func dataSourceBG() *schema.Resource {
 /*
  * Reads a Business Group. Required the bg_id as input
  */
-func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("id").(string)
@@ -581,14 +580,7 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	//perform request
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get Business Group",
@@ -613,7 +605,7 @@ func dataSourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-func setBGCoreAttributesToResourceData(d *schema.ResourceData, bg map[string]interface{}) error {
+func setBGCoreAttributesToResourceData(d *schema.ResourceData, bg map[string]any) error {
 	attributes := getBGCoreAttributes()
 	if bg != nil {
 		for _, attr := range attributes {
@@ -628,9 +620,9 @@ func setBGCoreAttributesToResourceData(d *schema.ResourceData, bg map[string]int
 /*
  * Flattens the Business Group object
  */
-func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
+func flattenBGData(bg *org.MasterBGDetail) map[string]any {
 	if bg != nil {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 
 		item["id"] = bg.GetId()
 		item["name"] = bg.GetName()
@@ -655,9 +647,9 @@ func flattenBGData(bg *org.MasterBGDetail) map[string]interface{} {
 		item["subscription_type"] = subscription.GetType()
 		item["subscription_expiration"] = subscription.GetExpiration()
 
-		environments := make([]interface{}, len(bg.GetEnvironments()))
+		environments := make([]any, len(bg.GetEnvironments()))
 		for i, currentEnv := range bg.GetEnvironments() {
-			env := make(map[string]interface{})
+			env := make(map[string]any)
 			env["id"] = currentEnv.GetId()
 			env["name"] = currentEnv.GetName()
 			env["organization_id"] = currentEnv.GetOrganizationId()
@@ -838,9 +830,11 @@ func getBGCoreAttributes() []string {
 
 func getBGUpdatableAttributes() []string {
 	attributes := [...]string{
-		"name", "owner_id", "entitlements_createenvironments", "entitlements_createsuborgs",
-		"entitlements_globaldeployment", "entitlements_vcoresproduction_assigned", "entitlements_vcoressandbox_assigned",
-		"entitlements_vcoresdesign_assigned", "entitlements_vpcs_assigned", "entitlements_loadbalancer_assigned", "entitlements_vpns_assigned",
+		"name", "owner_id", "session_timeout", "is_federated",
+		"entitlements_createenvironments", "entitlements_createsuborgs", "entitlements_globaldeployment",
+		"entitlements_vcoresproduction_assigned", "entitlements_vcoressandbox_assigned", "entitlements_vcoresdesign_assigned",
+		"entitlements_vpcs_assigned", "entitlements_vpns_assigned", "entitlements_staticips_assigned",
+		"entitlements_loadbalancer_assigned",
 	}
 	return attributes[:]
 }

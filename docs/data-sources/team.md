@@ -42,5 +42,3 @@ resource "anypoint_team" "team" {
 				Shared teams are internal teams that can be mapped to external teams in other organizations where a trust relationship has been formed.
 				Enum values are: internal, private and shared.
 - `updated_at` (String) The time the team was last modified.
-
-

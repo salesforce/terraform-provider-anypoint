@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -121,7 +120,7 @@ func dataSourceApimInstancePolicies() *schema.Resource {
 	}
 }
 
-func dataSourceApimInstancePoliciesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceApimInstancePoliciesRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -129,16 +128,9 @@ func dataSourceApimInstancePoliciesRead(ctx context.Context, d *schema.ResourceD
 	apimid := d.Get("apim_id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//perform request
-	res, httpr, err := pco.apimpolicyclient.DefaultApi.GetApimPolicies(authctx, orgid, envid, apimid).FullInfo(false).Execute()
+	res, httpr, err := pco.apimpolicyclient.DefaultAPI.GetApimPolicies(authctx, orgid, envid, apimid).FullInfo(false).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get policies for api " + apimid,
@@ -161,8 +153,8 @@ func dataSourceApimInstancePoliciesRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenApimInstancePolicies(collection []apim_policy.ApimPolicy) []interface{} {
-	slice := make([]interface{}, len(collection))
+func flattenApimInstancePolicies(collection []apim_policy.ApimPolicy) []any {
+	slice := make([]any, len(collection))
 	for i, policy := range collection {
 		slice[i] = flattenApimInstancePolicy(&policy)
 	}

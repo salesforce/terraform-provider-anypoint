@@ -4,8 +4,8 @@ page_title: "anypoint_secretgroup_keystore Resource - terraform-provider-anypoin
 subcategory: ""
 description: |-
   Create and manage a keystore for a secret-group in a given organization and environment.
-      This resource doesn't support delete. The delete operation only removes the resource from local terraform state file.
-      Only the parent resource (secret-group) can be deleted.
+  	This resource doesn't support delete. The delete operation only removes the resource from local terraform state file.
+  	Only the parent resource (secret-group) can be deleted.
 ---
 
 # anypoint_secretgroup_keystore (Resource)
@@ -124,6 +124,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

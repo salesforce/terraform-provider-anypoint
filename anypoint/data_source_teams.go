@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -36,7 +35,7 @@ func dataSourceTeams() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Description: "team_id that must appear in the team's ancestor_team_ids.",
+							Description: "List of team_ids that must appear in the team's ancestor_team_ids",
 						},
 						"parent_team_id": {
 							Type:     schema.TypeList,
@@ -44,7 +43,7 @@ func dataSourceTeams() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Description: "team_id of the immediate parent of the team to return.",
+							Description: "List of team_ids of the immediate parent of the team to return.",
 						},
 						"team_id": {
 							Type:        schema.TypeString,
@@ -54,7 +53,7 @@ func dataSourceTeams() *schema.Resource {
 						"team_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "return only teams that are of this type",
+							Description: "return only teams that are of the given type. Enum values are: internal, shared, private, external.",
 						},
 						"search": {
 							Type:        schema.TypeString,
@@ -76,7 +75,7 @@ func dataSourceTeams() *schema.Resource {
 						"sort": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The field to sort on.",
+							Description: "The field to sort on. Default is team_name.",
 						},
 						"ascending": {
 							Type:        schema.TypeBool,
@@ -121,7 +120,7 @@ func dataSourceTeams() *schema.Resource {
 						},
 						"ancestor_team_ids": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -154,14 +153,14 @@ func dataSourceTeams() *schema.Resource {
 	}
 }
 
-func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	//prepare request
-	req := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsGet(authctx, orgid)
+	req := pco.teamclient.DefaultAPI.GetTeams(authctx, orgid)
 	req, errDiags := parseTeamSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
@@ -170,14 +169,7 @@ func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m interfac
 	//request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get teams",
@@ -221,7 +213,7 @@ func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
-func parseTeamSearchOpts(req team.DefaultApiApiOrganizationsOrgIdTeamsGetRequest, params *schema.Set) (team.DefaultApiApiOrganizationsOrgIdTeamsGetRequest, diag.Diagnostics) {
+func parseTeamSearchOpts(req team.DefaultAPIGetTeamsRequest, params *schema.Set) (team.DefaultAPIGetTeamsRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if params.Len() == 0 {
 		return req, diags
@@ -229,41 +221,41 @@ func parseTeamSearchOpts(req team.DefaultApiApiOrganizationsOrgIdTeamsGetRequest
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "ancestor_team_id" {
-			req = req.AncestorTeamId(v.([]string))
+			req = req.AncestorTeamId(ListInterface2ListStrings(v.([]any)))
 			continue
 		}
 		if k == "parent_team_id" {
-			req = req.ParentTeamId(v.([]string))
+			req = req.ParentTeamId(ListInterface2ListStrings(v.([]any)))
 			continue
 		}
-		if k == "team_id" {
-			req = req.TeamId(v.(string))
+		if k == "team_id" && toString(v) != "" {
+			req = req.TeamId(toString(v))
 			continue
 		}
-		if k == "team_type" {
-			req = req.TeamType(v.(string))
+		if k == "team_type" && toString(v) != "" {
+			req = req.TeamType(toString(v))
 			continue
 		}
-		if k == "search" {
-			req = req.Search(v.(string))
+		if k == "search" && toString(v) != "" {
+			req = req.Search(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
-		if k == "sort" {
-			req = req.Sort(v.(string))
+		if k == "sort" && toString(v) != "" {
+			req = req.Sort(toString(v))
 			continue
 		}
 		if k == "ascending" {
-			req = req.Ascending(v.(bool))
+			req = req.Ascending(toBool(v))
 			continue
 		}
 	}
@@ -271,14 +263,14 @@ func parseTeamSearchOpts(req team.DefaultApiApiOrganizationsOrgIdTeamsGetRequest
 	return req, diags
 }
 
-func flattenTeamsData(teams *[]team.Team) []interface{} {
+func flattenTeamsData(teams *[]team.Team) []any {
 	if teams != nil && len(*teams) > 0 {
-		res := make([]interface{}, len(*teams))
+		res := make([]any, len(*teams))
 		for i, team := range *teams {
 			res[i] = flattenTeamData(&team)
 		}
 		return res
 	}
 
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }

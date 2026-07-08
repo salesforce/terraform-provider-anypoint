@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -189,7 +188,7 @@ func dataSourceSecretGroupKeystore() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -199,14 +198,7 @@ func dataSourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceDa
 	authctx := getSgKeystoreAuthCtx(ctx, &pco)
 	res, httpr, err := pco.sgkeystoreclient.DefaultApi.GetSecretGroupKeystoreDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get keystore " + id,
@@ -230,7 +222,7 @@ func dataSourceSecretGroupKeystoreRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func flattenSgKeystore(keystore *secretgroup_keystore.Keystore) map[string]interface{} {
+func flattenSgKeystore(keystore *secretgroup_keystore.Keystore) map[string]any {
 	if isSgKeystorePEM(keystore.GetType()) {
 		return flattenSgKeystorePEM(keystore)
 	} else {
@@ -238,8 +230,8 @@ func flattenSgKeystore(keystore *secretgroup_keystore.Keystore) map[string]inter
 	}
 }
 
-func flattenSgKeystorePEM(keystore *secretgroup_keystore.Keystore) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystorePEM(keystore *secretgroup_keystore.Keystore) map[string]any {
+	item := make(map[string]any)
 
 	if val, ok := keystore.GetNameOk(); ok {
 		item["name"] = *val
@@ -254,7 +246,7 @@ func flattenSgKeystorePEM(keystore *secretgroup_keystore.Keystore) map[string]in
 		item["type"] = *val
 	}
 	if val, ok := keystore.GetDetailsOk(); ok {
-		item["details"] = []interface{}{flattenSgKeystoreDetails(val)}
+		item["details"] = []any{flattenSgKeystoreDetails(val)}
 	}
 	if val, ok := keystore.GetCertificateFileNameOk(); ok {
 		item["certificate_file_name"] = *val
@@ -269,8 +261,8 @@ func flattenSgKeystorePEM(keystore *secretgroup_keystore.Keystore) map[string]in
 	return item
 }
 
-func flattenSgKeystoreOthers(keystore *secretgroup_keystore.Keystore) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreOthers(keystore *secretgroup_keystore.Keystore) map[string]any {
+	item := make(map[string]any)
 	if val, ok := keystore.GetNameOk(); ok {
 		item["name"] = *val
 	}
@@ -284,7 +276,7 @@ func flattenSgKeystoreOthers(keystore *secretgroup_keystore.Keystore) map[string
 		item["type"] = *val
 	}
 	if val, ok := keystore.GetDetailsOk(); ok {
-		item["details"] = []interface{}{flattenSgKeystoreDetails(val)}
+		item["details"] = []any{flattenSgKeystoreDetails(val)}
 	}
 	if val, ok := keystore.GetKeystoreFileNameOk(); ok {
 		item["keystore_file_name"] = *val
@@ -298,10 +290,10 @@ func flattenSgKeystoreOthers(keystore *secretgroup_keystore.Keystore) map[string
 	return item
 }
 
-func flattenSgKeystoreDetails(details *secretgroup_keystore.KeystoreDetails) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreDetails(details *secretgroup_keystore.KeystoreDetails) map[string]any {
+	item := make(map[string]any)
 	if val, ok := details.GetCertificateOk(); ok {
-		item["certificate"] = []interface{}{flattenSgKeystoreDetailsCertificate(val)}
+		item["certificate"] = []any{flattenSgKeystoreDetailsCertificate(val)}
 	}
 	if val, ok := details.GetCapathOk(); ok {
 		item["capath"] = flattenSgKeystoreDetailsCaPath(val)
@@ -309,17 +301,17 @@ func flattenSgKeystoreDetails(details *secretgroup_keystore.KeystoreDetails) map
 	return item
 }
 
-func flattenSgKeystoreDetailsCaPath(capath []secretgroup_keystore.CertificateDetails) []map[string]interface{} {
+func flattenSgKeystoreDetailsCaPath(capath []secretgroup_keystore.CertificateDetails) []map[string]any {
 	length := len(capath)
-	result := make([]map[string]interface{}, length)
+	result := make([]map[string]any, length)
 	for i, item := range capath {
 		result[i] = flattenSgKeystoreDetailsCertificate(&item)
 	}
 	return result
 }
 
-func flattenSgKeystoreDetailsCertificate(cert *secretgroup_keystore.CertificateDetails) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreDetailsCertificate(cert *secretgroup_keystore.CertificateDetails) map[string]any {
+	item := make(map[string]any)
 	if val, ok := cert.GetIssuerOk(); ok {
 		item["issuer"] = flattenSgKeystoreIssuerSubject(val)
 	}
@@ -361,8 +353,8 @@ func flattenSgKeystoreDetailsCertificate(cert *secretgroup_keystore.CertificateD
 	return item
 }
 
-func flattenSgKeystoreCertificateValidity(validity *secretgroup_keystore.CertificateValidity) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreCertificateValidity(validity *secretgroup_keystore.CertificateValidity) map[string]any {
+	item := make(map[string]any)
 	if val, ok := validity.GetNotBeforeOk(); ok {
 		item["not_before"] = *val
 	}
@@ -372,8 +364,8 @@ func flattenSgKeystoreCertificateValidity(validity *secretgroup_keystore.Certifi
 	return item
 }
 
-func flattenSgKeystoreIssuerSubject(is *secretgroup_keystore.IssuerSubject) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreIssuerSubject(is *secretgroup_keystore.IssuerSubject) map[string]any {
+	item := make(map[string]any)
 	if val, ok := is.GetCommonNameOk(); ok {
 		item["common_name"] = *val
 	}
@@ -395,8 +387,8 @@ func flattenSgKeystoreIssuerSubject(is *secretgroup_keystore.IssuerSubject) map[
 	return item
 }
 
-func flattenSgKeystoreMeta(meta *secretgroup_keystore.Meta) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreMeta(meta *secretgroup_keystore.Meta) map[string]any {
+	item := make(map[string]any)
 	if val, ok := meta.GetIdOk(); ok {
 		item["id"] = *val
 	}
@@ -406,7 +398,7 @@ func flattenSgKeystoreMeta(meta *secretgroup_keystore.Meta) map[string]interface
 	return item
 }
 
-func setSgKeystoreAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setSgKeystoreAttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getSgKeystoreAttributes()
 	if data != nil {
 		for _, attr := range attributes {

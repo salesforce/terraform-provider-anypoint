@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"maps"
 	"strconv"
 	"time"
@@ -94,7 +93,7 @@ func dataSourceSecretGroupKeystores() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupKeystoresRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupKeystoresRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -112,14 +111,7 @@ func dataSourceSecretGroupKeystoresRead(ctx context.Context, d *schema.ResourceD
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get keystores for secret-group " + sgid,
@@ -153,29 +145,29 @@ func parseSgKeystoreSearchOpts(req secretgroup_keystore.DefaultApiGetSecretGroup
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "type" {
-			req = req.Type_(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "type" && toString(v) != "" {
+			req = req.Type_(toString(v))
 			continue
 		}
 	}
 	return req, diags
 }
 
-func flattenSgKeystoresSummaryCollection(collection []secretgroup_keystore.KeystoreSummary) []interface{} {
+func flattenSgKeystoresSummaryCollection(collection []secretgroup_keystore.KeystoreSummary) []any {
 	length := len(collection)
 	if length > 0 {
-		res := make([]interface{}, length)
+		res := make([]any, length)
 		for i, keystore := range collection {
 			res[i] = flattenSgKeystoreSummary(&keystore)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenSgKeystoreSummary(ksummary *secretgroup_keystore.KeystoreSummary) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgKeystoreSummary(ksummary *secretgroup_keystore.KeystoreSummary) map[string]any {
+	item := make(map[string]any)
 	if val, ok := ksummary.GetNameOk(); ok {
 		item["name"] = *val
 	}

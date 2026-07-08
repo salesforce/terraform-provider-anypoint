@@ -58,5 +58,3 @@ Read-Only:
 - `external_group_name` (String)
 - `membership_type` (String)
 - `provider_id` (String)
-
-

@@ -45,5 +45,3 @@ Read-Only:
 - `replicas_disconnected` (Number)
 - `status` (String)
 - `tags` (List of String)
-
-

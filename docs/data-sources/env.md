@@ -33,5 +33,3 @@ data "anypoint_env" "env" {
 - `is_production` (Boolean) True if the environment is a production environment
 - `name` (String) The name of the environment
 - `type` (String) The type of the environment: sandbox or production
-
-

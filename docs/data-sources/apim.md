@@ -122,7 +122,7 @@ Read-Only:
 - `upstreams` (Set of Object) (see [below for nested schema](#nestedobjatt--assets--apis--routing--upstreams))
 
 <a id="nestedobjatt--assets--apis--routing--rules"></a>
-### Nested Schema for `assets.apis.routing.upstreams`
+### Nested Schema for `assets.apis.routing.rules`
 
 Read-Only:
 
@@ -139,5 +139,3 @@ Read-Only:
 
 - `id` (String)
 - `weight` (Number)
-
-

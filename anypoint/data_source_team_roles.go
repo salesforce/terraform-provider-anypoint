@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -98,7 +97,7 @@ func dataSourceTeamRoles() *schema.Resource {
 	}
 }
 
-func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -106,7 +105,7 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 	teamid := d.Get("team_id").(string)
 	authctx := getTeamRolesAuthCtx(ctx, &pco)
 	//prepare request
-	req := pco.teamrolesclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdRolesGet(authctx, orgid, teamid)
+	req := pco.teamrolesclient.DefaultAPI.GetTeamRoles(authctx, orgid, teamid)
 	req, errDiags := parseTeamRolesSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
@@ -115,14 +114,7 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 	//request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid + " roles ",
@@ -132,7 +124,7 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 	defer httpr.Body.Close()
 	//process data
-	roles := flattenTeamRolesData(res.Data)
+	roles := flattenTeamRolesData(res.GetData())
 	//save in data source schema
 	if err := d.Set("roles", roles); err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -169,7 +161,7 @@ func dataSourceTeamRolesRead(ctx context.Context, d *schema.ResourceData, m inte
 Parses the team roles search options in order to check if the required search parameters are set correctly.
 Appends the parameters to the given request
 */
-func parseTeamRolesSearchOpts(req team_roles.DefaultApiApiOrganizationsOrgIdTeamsTeamIdRolesGetRequest, params *schema.Set) (team_roles.DefaultApiApiOrganizationsOrgIdTeamsTeamIdRolesGetRequest, diag.Diagnostics) {
+func parseTeamRolesSearchOpts(req team_roles.DefaultAPIGetTeamRolesRequest, params *schema.Set) (team_roles.DefaultAPIGetTeamRolesRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if params.Len() == 0 {
 		return req, diags
@@ -177,21 +169,21 @@ func parseTeamRolesSearchOpts(req team_roles.DefaultApiApiOrganizationsOrgIdTeam
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "role_id" {
-			req = req.RoleId(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "role_id" && toString(v) != "" {
+			req = req.RoleId(toString(v))
 			continue
 		}
-		if k == "search" {
-			req = req.Search(v.(string))
+		if k == "search" && toString(v) != "" {
+			req = req.Search(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 	}
@@ -199,20 +191,19 @@ func parseTeamRolesSearchOpts(req team_roles.DefaultApiApiOrganizationsOrgIdTeam
 	return req, diags
 }
 
-func flattenTeamRolesData(roles *[]team_roles.TeamRole) []interface{} {
-	if roles != nil && len(*roles) > 0 {
-		res := make([]interface{}, len(*roles))
-		for i, role := range *roles {
-			res[i] = flattenTeamRoleData(&role)
-		}
-		return res
+func flattenTeamRolesData(roles []team_roles.TeamRole) []any {
+	if len(roles) == 0 {
+		return make([]any, 0)
 	}
-
-	return make([]interface{}, 0)
+	res := make([]any, len(roles))
+	for i, role := range roles {
+		res[i] = flattenTeamRoleData(&role)
+	}
+	return res
 }
 
-func flattenTeamRoleData(role *team_roles.TeamRole) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenTeamRoleData(role *team_roles.TeamRole) map[string]any {
+	item := make(map[string]any)
 	if role == nil {
 		return item
 	}
@@ -224,12 +215,12 @@ func flattenTeamRoleData(role *team_roles.TeamRole) map[string]interface{} {
 	}
 	if val, ok := role.GetContextParamsOk(); ok {
 		if env, ok := val.GetEnvIdOk(); ok {
-			item["context_params"] = map[string]interface{}{
+			item["context_params"] = map[string]any{
 				"org":   val.GetOrg(),
 				"envId": *env,
 			}
 		} else {
-			item["context_params"] = map[string]interface{}{
+			item["context_params"] = map[string]any{
 				"org": val.GetOrg(),
 			}
 		}

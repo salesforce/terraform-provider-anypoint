@@ -70,5 +70,3 @@ Read-Only:
 
 - `cidr` (String)
 - `next_hop` (String)
-
-

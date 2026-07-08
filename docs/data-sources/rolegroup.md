@@ -38,5 +38,3 @@ output "rg" {
 - `external_names` (List of String) List of external names of the role-group
 - `name` (String) hte name of the role-group
 - `updated_at` (String) The role-group update date
-
-

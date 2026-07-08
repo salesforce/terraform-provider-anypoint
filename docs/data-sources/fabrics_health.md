@@ -204,5 +204,3 @@ Read-Only:
 - `last_transition_at` (Number)
 - `name` (String)
 - `reason` (String)
-
-

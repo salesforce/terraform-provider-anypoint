@@ -4,7 +4,7 @@ page_title: "anypoint_fabrics_associations Resource - terraform-provider-anypoin
 subcategory: ""
 description: |-
   Manages `Runtime Fabrics` Environment associations.
-      NOTE: The fabrics will be associated with all sandbox environments in every available org when this resource is deleted.
+  	NOTE: The fabrics will be associated with all sandbox environments in every available org when this resource is deleted.
 ---
 
 # anypoint_fabrics_associations (Resource)
@@ -83,6 +83,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

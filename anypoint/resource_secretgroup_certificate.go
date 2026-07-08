@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"os"
 	"time"
 
@@ -109,7 +109,7 @@ func resourceSecretGroupCertificate() *schema.Resource {
 	}
 }
 
-func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -132,14 +132,7 @@ func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.Resourc
 	//Execute request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create certificate " + name,
@@ -154,7 +147,7 @@ func resourceSecretGroupCertificateCreate(ctx context.Context, d *schema.Resourc
 	return resourceSecretGroupCertificateRead(ctx, d, m)
 }
 
-func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -162,20 +155,20 @@ func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceD
 	sgid := d.Get("sg_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, sgid, id = decomposeSgCertificateId(d)
+		orgid, envid, sgid, id, diags = decomposeSgCertificateId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getSgCertificateAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.sgcertificateclient.DefaultApi.GetSecretGroupCertificateDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get certificate " + id,
@@ -203,7 +196,7 @@ func resourceSecretGroupCertificateRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.HasChanges(getSgCertificateUpdatableAttributes()...) {
 		pco := m.(ProviderConfOutput)
@@ -227,14 +220,7 @@ func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.Resourc
 		//Execute request
 		_, httpr, err := req.Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update certificate " + id,
@@ -250,7 +236,7 @@ func resourceSecretGroupCertificateUpdate(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceSecretGroupCertificateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCertificateDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// NOTE: The delete action is not supported for this resource.
 	// a certificate cannot be deleted, only secret-group (parent) can be deleted
@@ -300,9 +286,18 @@ func loadSgCertificatePutBody(req secretgroup_certificate.DefaultApiPutSecretGro
 }
 
 // returns the composed of the secret
-func decomposeSgCertificateId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeSgCertificateId(d *schema.ResourceData) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Secret Group Certificate ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/SG_ID/ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }
 
 func getSgCertificateUpdatableAttributes() []string {

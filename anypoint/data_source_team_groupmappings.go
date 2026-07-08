@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -82,13 +81,13 @@ func dataSourceTeamGroupMappings() *schema.Resource {
 	}
 }
 
-func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("team_id").(string)
-	authctx := getTeamMembersAuthCtx(ctx, &pco)
+	authctx := getTeamGroupMappingsAuthCtx(ctx, &pco)
 	//prepare request
 	req := pco.teamgroupmappingsclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGroupmappingsGet(authctx, orgid, teamid)
 	req, errDiags := parseTeamGroupMappingsSearchOpts(req, searchOpts)
@@ -99,14 +98,7 @@ func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData
 	//request members
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid + " groupmappings ",
@@ -127,7 +119,7 @@ func dataSourceTeamGroupMappingsRead(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	if err := d.Set("total", res.GetTotal); err != nil {
+	if err := d.Set("total", res.GetTotal()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set total number of team " + teamid + " gropumappings",
@@ -153,13 +145,13 @@ func parseTeamGroupMappingsSearchOpts(req team_group_mappings.DefaultApiApiOrgan
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 	}
@@ -167,19 +159,19 @@ func parseTeamGroupMappingsSearchOpts(req team_group_mappings.DefaultApiApiOrgan
 	return req, diags
 }
 
-func flattenTeamGroupMappingsData(teamgroupmappings *[]team_group_mappings.TeamGroupMapping) []interface{} {
+func flattenTeamGroupMappingsData(teamgroupmappings *[]team_group_mappings.TeamGroupMapping) []any {
 	if teamgroupmappings != nil && len(*teamgroupmappings) > 0 {
-		res := make([]interface{}, len(*teamgroupmappings))
+		res := make([]any, len(*teamgroupmappings))
 		for i, teamgroupmapping := range *teamgroupmappings {
 			res[i] = flattenTeamGroupMappingData(&teamgroupmapping)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenTeamGroupMappingData(teamgroupmapping *team_group_mappings.TeamGroupMapping) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenTeamGroupMappingData(teamgroupmapping *team_group_mappings.TeamGroupMapping) map[string]any {
+	item := make(map[string]any)
 	if teamgroupmapping == nil {
 		//log.Printf("tm nil")
 		return item

@@ -45,5 +45,3 @@ Read-Only:
 - `env_id` (String)
 - `id` (String)
 - `org_id` (String)
-
-

@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"maps"
 	"strconv"
 	"time"
@@ -94,7 +93,7 @@ func dataSourceSecretGroupTruststores() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupTruststoresRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupTruststoresRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -112,14 +111,7 @@ func dataSourceSecretGroupTruststoresRead(ctx context.Context, d *schema.Resourc
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get truststores for secret-group " + sgid,
@@ -143,19 +135,19 @@ func dataSourceSecretGroupTruststoresRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenSgTruststoresSummaryCollection(collection []secretgroup_truststore.TruststoreSummary) []interface{} {
+func flattenSgTruststoresSummaryCollection(collection []secretgroup_truststore.TruststoreSummary) []any {
 	if len(collection) > 0 {
-		res := make([]interface{}, len(collection))
+		res := make([]any, len(collection))
 		for i, store := range collection {
 			res[i] = flattenSgTruststoreSummary(&store)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenSgTruststoreSummary(store *secretgroup_truststore.TruststoreSummary) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreSummary(store *secretgroup_truststore.TruststoreSummary) map[string]any {
+	item := make(map[string]any)
 	if val, ok := store.GetNameOk(); ok {
 		item["name"] = *val
 	}
@@ -171,8 +163,8 @@ func flattenSgTruststoreSummary(store *secretgroup_truststore.TruststoreSummary)
 	return item
 }
 
-func flattenSgTruststoreMeta(meta *secretgroup_truststore.Meta) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreMeta(meta *secretgroup_truststore.Meta) map[string]any {
+	item := make(map[string]any)
 	if val, ok := meta.GetIdOk(); ok {
 		item["id"] = *val
 	}
@@ -192,9 +184,9 @@ func parseSgTruststoreSearchOpts(req secretgroup_truststore.DefaultApiGetSecretG
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "type" {
-			req = req.Type_(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "type" && toString(v) != "" {
+			req = req.Type_(toString(v))
 			continue
 		}
 	}

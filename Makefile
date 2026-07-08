@@ -3,8 +3,8 @@ HOSTNAME=anypoint.mulesoft.com
 NAMESPACE=automation
 NAME=anypoint
 BINARY=terraform-provider-${NAME}
-VERSION=1.7.1-SNAPSHOT
-OS_ARCH=darwin_amd64
+VERSION=1.11.2
+OS_ARCH=darwin_arm64
 
 default: install
 
@@ -36,3 +36,6 @@ test:
 
 testacc:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+
+debug: build
+	dlv exec --headless ./${BINARY} -- --debug

@@ -4,7 +4,7 @@ page_title: "anypoint_app_deployments_v2 Data Source - terraform-provider-anypoi
 subcategory: ""
 description: |-
   Reads `Deployments` from the runtime manager for a given organization and environment.
-      This only works for Cloudhub V2 and Runtime Fabrics Apps.
+  	This only works for Cloudhub V2 and Runtime Fabrics Apps.
 ---
 
 # anypoint_app_deployments_v2 (Data Source)
@@ -64,5 +64,3 @@ Read-Only:
 - `status` (String)
 - `target_id` (String)
 - `target_provider` (String)
-
-

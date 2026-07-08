@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -144,7 +143,7 @@ func dataSourceAppDeploymentsV2() *schema.Resource {
 	}
 }
 
-func dataSourceAppDeploymentsV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAppDeploymentsV2Read(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -161,14 +160,7 @@ func dataSourceAppDeploymentsV2Read(ctx context.Context, d *schema.ResourceData,
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get deployments for org " + orgid + " and env " + envid,
@@ -210,36 +202,36 @@ func parseAppDeploymentSearchOpts(req application_manager_v2.DefaultApiGetAllDep
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "target_id" {
-			req = req.TargetId(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "target_id" && toString(v) != "" {
+			req = req.TargetId(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 	}
 	return req, diags
 }
 
-func flattenAppDeploymentV2ItemsResult(items []application_manager_v2.DeploymentItem) []interface{} {
+func flattenAppDeploymentV2ItemsResult(items []application_manager_v2.DeploymentItem) []any {
 	if len(items) > 0 {
-		res := make([]interface{}, len(items))
+		res := make([]any, len(items))
 		for i, item := range items {
 			res[i] = flattenAppDeploymentV2ItemResult(&item)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenAppDeploymentV2ItemResult(data *application_manager_v2.DeploymentItem) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2ItemResult(data *application_manager_v2.DeploymentItem) map[string]any {
+	item := make(map[string]any)
 	if data == nil {
 		return item
 	}

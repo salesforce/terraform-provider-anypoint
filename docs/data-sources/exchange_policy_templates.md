@@ -43,6 +43,7 @@ Optional:
 - `automated_only` (Boolean) Whether to include automated policies only
 - `env_id` (String) The environment id
 - `include_configuration` (Boolean) Whether to include configuration
+- `injection_point` (String) Filter by policy injection point ("inbound" or "outbound").
 - `latest` (Boolean) Whether to include only latest versions
 - `split_model` (Boolean) Whether to include asset split model
 
@@ -52,36 +53,55 @@ Optional:
 
 Read-Only:
 
+- `all_versions` (List of Object) (see [below for nested schema](#nestedobjatt--templates--all_versions))
 - `applicable` (Boolean)
 - `asset_id` (String)
 - `audit` (Map of String)
 - `category` (String)
 - `configuration` (List of Object) (see [below for nested schema](#nestedobjatt--templates--configuration))
+- `configuration_schema` (String)
 - `description` (String)
 - `encryption_supported` (Boolean)
 - `group_id` (String)
 - `id` (String)
 - `identity_management_type` (String)
+- `interface_scope` (List of String)
+- `interface_transformation` (List of Object) (see [below for nested schema](#nestedobjatt--templates--interface_transformation))
 - `is_ootb` (Boolean)
 - `jar_md5` (String)
 - `min_mule_version` (String)
 - `name` (String)
 - `oas_v2_snippet` (String)
 - `oas_v3_snippet` (String)
+- `ootb_upgradeable_impl` (Boolean)
 - `org_id` (String)
 - `provided_characteristics` (List of String)
 - `raml_snippet` (String)
 - `raml_v1_snippet` (String)
 - `required_characteristics` (List of String)
 - `resource_level_supported` (Boolean)
+- `schema_id` (String)
+- `split_asset_model` (Boolean)
 - `stage` (String)
 - `standalone` (Boolean)
 - `status` (String)
+- `supported_java_versions` (List of String)
 - `supported_policies_versions` (String)
 - `type` (String)
 - `version` (String)
 - `violation_category` (String)
 - `yaml_md5` (String)
+
+<a id="nestedobjatt--templates--all_versions"></a>
+### Nested Schema for `templates.all_versions`
+
+Read-Only:
+
+- `asset_id` (String)
+- `group_id` (String)
+- `status` (String)
+- `version` (String)
+
 
 <a id="nestedobjatt--templates--configuration"></a>
 ### Nested Schema for `templates.configuration`
@@ -100,3 +120,10 @@ Read-Only:
 - `type` (String)
 
 
+<a id="nestedobjatt--templates--interface_transformation"></a>
+### Nested Schema for `templates.interface_transformation`
+
+Read-Only:
+
+- `language` (String)
+- `transformation` (String)

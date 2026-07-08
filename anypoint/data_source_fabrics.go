@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -127,7 +126,9 @@ var FabricsIngressDomainsDefinition = &schema.Resource{
 			Type:        schema.TypeList,
 			Computed:    true,
 			Description: "The list of domains.",
-			Elem:        schema.TypeString,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	},
 }
@@ -277,7 +278,7 @@ func dataSourceFabrics() *schema.Resource {
 	}
 }
 
-func dataSourceFabricsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceFabricsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Get("id").(string)
@@ -286,14 +287,7 @@ func dataSourceFabricsRead(ctx context.Context, d *schema.ResourceData, m interf
 	//perform request
 	res, httpr, err := pco.rtfclient.DefaultApi.GetFabrics(authctx, orgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get fabrics " + id,
@@ -317,8 +311,8 @@ func dataSourceFabricsRead(ctx context.Context, d *schema.ResourceData, m interf
 	return diags
 }
 
-func flattenFabricsData(fabrics *rtf.Fabrics) map[string]interface{} {
-	mappedItem := make(map[string]interface{})
+func flattenFabricsData(fabrics *rtf.Fabrics) map[string]any {
+	mappedItem := make(map[string]any)
 
 	mappedItem["id"] = fabrics.GetId()
 	mappedItem["name"] = fabrics.GetName()
@@ -348,7 +342,7 @@ func flattenFabricsData(fabrics *rtf.Fabrics) map[string]interface{} {
 	if val, ok := fabrics.GetUpgradeOk(); ok {
 		mappedItem["upgrade"] = flattenFabricsUpgradeData(val)
 	} else {
-		mappedItem["upgrade"] = []interface{}{}
+		mappedItem["upgrade"] = []any{}
 	}
 	if val, ok := fabrics.GetNodesOk(); ok {
 		mappedItem["nodes"] = flattenFabricsNodesData(val)
@@ -390,45 +384,45 @@ func flattenFabricsData(fabrics *rtf.Fabrics) map[string]interface{} {
 	return mappedItem
 }
 
-func flattenFabricsUpgradeData(upgrade *rtf.FabricsUpgrade) []interface{} {
+func flattenFabricsUpgradeData(upgrade *rtf.FabricsUpgrade) []any {
 	if upgrade == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["status"] = upgrade.GetStatus()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsFeaturesData(features *rtf.Features) []interface{} {
+func flattenFabricsFeaturesData(features *rtf.Features) []any {
 	if features == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["enhanced_security"] = features.GetEnhancedSecurity()
 	data["persistent_store"] = features.GetPersistentStore()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsIngressData(ingress *rtf.Ingress) []interface{} {
+func flattenFabricsIngressData(ingress *rtf.Ingress) []any {
 	if ingress == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["domains"] = ingress.GetDomains()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsNodesData(nodes []rtf.FabricsNode) []interface{} {
+func flattenFabricsNodesData(nodes []rtf.FabricsNode) []any {
 	if len(nodes) == 0 {
-		return make([]interface{}, 0)
+		return make([]any, 0)
 	}
 
-	res := make([]interface{}, len(nodes))
+	res := make([]any, len(nodes))
 	for i, node := range nodes {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 
 		if val, ok := node.GetUidOk(); ok {
 			item["uid"] = *val
@@ -464,61 +458,61 @@ func flattenFabricsNodesData(nodes []rtf.FabricsNode) []interface{} {
 	return res
 }
 
-func flattenFabricsNodeStatusData(status *rtf.Status) []interface{} {
+func flattenFabricsNodeStatusData(status *rtf.Status) []any {
 	if status == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["is_healthy"] = status.GetIsHealthy()
 	data["is_ready"] = status.GetIsReady()
 	data["is_schedulable"] = status.GetIsSchedulable()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsNodeAllocReqCapacityData(capacity *rtf.AllocatedRequestCapacity) []interface{} {
+func flattenFabricsNodeAllocReqCapacityData(capacity *rtf.AllocatedRequestCapacity) []any {
 	if capacity == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["cpu"] = capacity.GetCpu()
 	data["cpu_millis"] = capacity.GetCpuMillis()
 	data["memory"] = capacity.GetMemory()
 	data["memory_mi"] = capacity.GetMemoryMi()
 	data["pods"] = capacity.GetPods()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsNodeAllocLimitCapacityData(capacity *rtf.AllocatedLimitCapacity) []interface{} {
+func flattenFabricsNodeAllocLimitCapacityData(capacity *rtf.AllocatedLimitCapacity) []any {
 	if capacity == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["cpu"] = capacity.GetCpu()
 	data["cpu_millis"] = capacity.GetCpuMillis()
 	data["memory"] = capacity.GetMemory()
 	data["memory_mi"] = capacity.GetMemoryMi()
 	data["pods"] = capacity.GetPods()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func flattenFabricsNodeCapacityData(capacity *rtf.Capacity) []interface{} {
+func flattenFabricsNodeCapacityData(capacity *rtf.Capacity) []any {
 	if capacity == nil {
-		return []interface{}{}
+		return []any{}
 	}
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["cpu"] = capacity.GetCpu()
 	data["cpu_millis"] = capacity.GetCpuMillis()
 	data["memory"] = capacity.GetMemory()
 	data["memory_mi"] = capacity.GetMemoryMi()
 	data["pods"] = capacity.GetPods()
 
-	return []interface{}{data}
+	return []any{data}
 }
 
-func setFabricsResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setFabricsResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getFabricsAttributes()
 	if data != nil {
 		for _, attr := range attributes {

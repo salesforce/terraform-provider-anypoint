@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -41,6 +40,11 @@ func dataSourceIDP() *schema.Resource {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "The type of the provider, contains description and the name of the type of the provider (saml or oidc)",
+			},
+			"login_disabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether this provider is disabled for login",
 			},
 			"oidc_provider": {
 				Type:        schema.TypeSet,
@@ -185,7 +189,7 @@ func dataSourceIDP() *schema.Resource {
 	}
 }
 
-func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	idpid := d.Get("id").(string)
@@ -194,14 +198,7 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//perform request
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersIdpIdGet(authctx, orgid, idpid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get IDP " + idpid + " in org " + orgid,
@@ -211,7 +208,7 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 	defer httpr.Body.Close()
 	//process data
-	idpinstance := flattenIDPData(&res)
+	idpinstance := flattenIDPData(res)
 	//save in data source schema
 	if err := setIDPAttributesToResourceData(d, idpinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
@@ -230,126 +227,151 @@ func dataSourceIDPRead(ctx context.Context, d *schema.ResourceData, m interface{
 /*
 * Transforms a idp.Idp object to the dataSourceIDP schema
  */
-func flattenIDPData(idpitem *idp.Idp) map[string]interface{} {
-	if idpitem != nil {
-		item := make(map[string]interface{})
-
-		item["provider_id"] = idpitem.GetProviderId()
-		item["name"] = idpitem.GetName()
-		t := idpitem.GetType()
-		t_tmp := make(map[string]string)
-		t_tmp["description"] = t.GetDescription()
-		t_tmp["name"] = t.GetName()
-		item["type"] = t_tmp
-
-		if _, ok := idpitem.GetOidcProviderOk(); ok {
-			item["oidc_provider"] = flattenOIDCData(idpitem)
-		} else if _, ok := idpitem.GetSamlOk(); ok {
-			item["saml"] = flattenSAMLData(idpitem)
-		}
-
-		if sp, ok := idpitem.GetServiceProviderOk(); ok {
-			if urls, ok := sp.GetUrlsOk(); ok {
-				if signon, ok := urls.GetSignOnOk(); ok {
-					item["sp_sign_on_url"] = *signon
-				} else {
-					item["sp_sign_on_url"] = ""
-				}
-				if signout, ok := urls.GetSignOutOk(); ok {
-					item["sp_sign_out_url"] = *signout
-				} else {
-					item["sp_sign_out_url"] = ""
-				}
-			} else {
-				item["sp_sign_on_url"] = ""
-				item["sp_sign_out_url"] = ""
-			}
-		} else {
-			item["sp_sign_on_url"] = ""
-			item["sp_sign_out_url"] = ""
-		}
-
-		return item
+func flattenIDPData(idpitem *idp.Idp) map[string]any {
+	if idpitem != nil && idpitem.OpenIDProviderGet != nil {
+		return flattenOIDCData(idpitem.OpenIDProviderGet)
+	} else if idpitem != nil && idpitem.SamlProviderGet != nil {
+		return flattenSAMLData(idpitem.SamlProviderGet)
 	}
 
 	return nil
 }
 
-func flattenOIDCData(idpitem *idp.Idp) []interface{} {
-	array := make([]interface{}, 0)
-	if idpitem != nil {
-		item := make(map[string]interface{})
-		oidcdata := idpitem.GetOidcProvider()
-		if urls, ok := oidcdata.GetUrlsOk(); ok {
-			item["token_url"] = urls.GetToken()
-			item["redirect_url"] = urls.GetRedirect()
-			item["userinfo_url"] = urls.GetUserinfo()
-			item["authorize_url"] = urls.GetAuthorize()
-		}
-		if client, ok := oidcdata.GetClientOk(); ok {
-			if urls, ok := client.GetUrlsOk(); ok {
-				item["client_registration_url"] = urls.GetRegister()
-			}
-			if creds, ok := client.GetCredentialsOk(); ok {
-				item["client_credentials_id"] = creds.GetId()
-			}
-			if meth, ok := client.GetTokenEndpointAuthMethodsSupportedOk(); ok {
-				item["client_token_endpoint_auth_methods_supported"] = *meth
-			}
-		}
-		item["issuer"] = oidcdata.GetIssuer()
-		item["group_scope"] = oidcdata.GetGroupScope()
+func flattenOIDCData(idpitem *idp.OpenIDProviderGet) map[string]any {
+	result := make(map[string]any)
 
-		if atc, ok := idpitem.GetAllowUntrustedCertificatesOk(); ok {
-			item["allow_untrusted_certificates"] = *atc
+	result["provider_id"] = idpitem.GetProviderId()
+	result["name"] = idpitem.GetName()
+	t := idpitem.GetType()
+	t_tmp := make(map[string]string)
+	t_tmp["description"] = t.GetDescription()
+	t_tmp["name"] = t.GetName()
+	result["type"] = t_tmp
+	array := make([]any, 0)
+	item := make(map[string]any)
+	oidcdata := idpitem.GetOidcProvider()
+	if urls, ok := oidcdata.GetUrlsOk(); ok {
+		item["token_url"] = urls.GetToken()
+		item["redirect_url"] = urls.GetRedirect()
+		item["userinfo_url"] = urls.GetUserinfo()
+		item["authorize_url"] = urls.GetAuthorize()
+	}
+	if client, ok := oidcdata.GetClientOk(); ok {
+		if urls, ok := client.GetUrlsOk(); ok {
+			item["client_registration_url"] = urls.GetRegister()
 		}
+		if creds, ok := client.GetCredentialsOk(); ok {
+			item["client_credentials_id"] = creds.GetId()
+		}
+		if authMeth, ok := client.GetTokenEndpointAuthMethodsSupportedOk(); ok {
+			item["client_token_endpoint_auth_methods_supported"] = authMeth
+		}
+	}
+	item["issuer"] = oidcdata.GetIssuer()
+	item["group_scope"] = oidcdata.GetGroupScope()
 
-		array = append(array, item)
+	if atc, ok := idpitem.GetAllowUntrustedCertificatesOk(); ok {
+		item["allow_untrusted_certificates"] = *atc
 	}
 
-	return array
+	result["oidc_provider"] = append(array, item)
+
+	if sp, ok := idpitem.GetServiceProviderOk(); ok {
+		if urls, ok := sp.GetUrlsOk(); ok {
+			if signon, ok := urls.GetSignOnOk(); ok {
+				result["sp_sign_on_url"] = *signon
+			} else {
+				result["sp_sign_on_url"] = ""
+			}
+		} else {
+			result["sp_sign_on_url"] = ""
+			result["sp_sign_out_url"] = ""
+		}
+	} else {
+		result["sp_sign_on_url"] = ""
+		result["sp_sign_out_url"] = ""
+	}
+
+	if login_disabled, ok := idpitem.GetLoginDisabledOk(); ok {
+		result["login_disabled"] = *login_disabled
+	}
+
+	return result
 }
 
-func flattenSAMLData(idpitem *idp.Idp) []interface{} {
-	array := make([]interface{}, 0)
-	if idpitem != nil {
-		item := make(map[string]interface{})
-		samldata := idpitem.GetSaml()
+func flattenSAMLData(idpitem *idp.SamlProviderGet) map[string]any {
+	result := make(map[string]any)
 
-		item["issuer"] = samldata.GetIssuer()
-		item["audience"] = samldata.GetAudience()
-		item["public_key"] = samldata.GetPublicKey()
-		if claims, ok := samldata.GetClaimsMappingOk(); ok {
-			if email, ok := claims.GetEmailAttributeOk(); ok {
-				item["claims_mapping_email_attribute"] = *email
-			}
-			if group, ok := claims.GetGroupAttributeOk(); ok {
-				item["claims_mapping_group_attribute"] = *group
-			}
-			if lastname, ok := claims.GetLastnameAttributeOk(); ok {
-				item["claims_mapping_lastname_attribute"] = *lastname
-			}
-			if username, ok := claims.GetUsernameAttributeOk(); ok {
-				item["claims_mapping_username_attribute"] = *username
-			}
-			if firstname, ok := claims.GetFirstnameAttributeOk(); ok {
-				item["claims_mapping_firstname_attribute"] = *firstname
-			}
+	result["provider_id"] = idpitem.GetProviderId()
+	result["name"] = idpitem.GetName()
+	t := idpitem.GetType()
+	t_tmp := make(map[string]string)
+	t_tmp["description"] = t.GetDescription()
+	t_tmp["name"] = t.GetName()
+	result["type"] = t_tmp
+
+	array := make([]any, 0)
+	item := make(map[string]any)
+	samldata := idpitem.GetSaml()
+
+	item["issuer"] = samldata.GetIssuer()
+	item["audience"] = samldata.GetAudience()
+	item["public_key"] = samldata.GetPublicKey()
+	if claims, ok := samldata.GetClaimsMappingOk(); ok {
+		if email, ok := claims.GetEmailAttributeOk(); ok {
+			item["claims_mapping_email_attribute"] = *email
 		}
-		item["sp_initiated_sso_enabled"] = samldata.GetSpInitiatedSsoEnabled()
-		item["idp_initiated_sso_enabled"] = samldata.GetIdpInitiatedSsoEnabled()
-		item["require_encrypted_saml_assertions"] = samldata.GetRequireEncryptedSamlAssertions()
+		if group, ok := claims.GetGroupAttributeOk(); ok {
+			item["claims_mapping_group_attribute"] = *group
+		}
+		if lastname, ok := claims.GetLastnameAttributeOk(); ok {
+			item["claims_mapping_lastname_attribute"] = *lastname
+		}
+		if username, ok := claims.GetUsernameAttributeOk(); ok {
+			item["claims_mapping_username_attribute"] = *username
+		}
+		if firstname, ok := claims.GetFirstnameAttributeOk(); ok {
+			item["claims_mapping_firstname_attribute"] = *firstname
+		}
+	}
+	item["sp_initiated_sso_enabled"] = samldata.GetSpInitiatedSsoEnabled()
+	item["idp_initiated_sso_enabled"] = samldata.GetIdpInitiatedSsoEnabled()
+	item["require_encrypted_saml_assertions"] = samldata.GetRequireEncryptedSamlAssertions()
 
-		array = append(array, item)
+	item["saml"] = append(array, item)
+
+	if sp, ok := idpitem.GetServiceProviderOk(); ok {
+		if urls, ok := sp.GetUrlsOk(); ok {
+			if signon, ok := urls.GetSignOnOk(); ok {
+				result["sp_sign_on_url"] = *signon
+			} else {
+				result["sp_sign_on_url"] = ""
+			}
+			if signout, ok := urls.GetSignOutOk(); ok {
+				result["sp_sign_out_url"] = *signout
+			} else {
+				result["sp_sign_out_url"] = ""
+			}
+		} else {
+			result["sp_sign_on_url"] = ""
+			result["sp_sign_out_url"] = ""
+		}
+	} else {
+		result["sp_sign_on_url"] = ""
+		result["sp_sign_out_url"] = ""
 	}
 
-	return array
+	if login_disabled, ok := idpitem.GetLoginDisabledOk(); ok {
+		result["login_disabled"] = *login_disabled
+	}
+
+	return result
 }
 
 /*
 * Copies the given idp instance into the given resource data
  */
-func setIDPAttributesToResourceData(d *schema.ResourceData, idpitem map[string]interface{}) error {
+func setIDPAttributesToResourceData(d *schema.ResourceData, idpitem map[string]any) error {
 	attributes := getIDPAttributes()
 	if idpitem != nil {
 		for _, attr := range attributes {
@@ -365,7 +387,7 @@ func setIDPAttributesToResourceData(d *schema.ResourceData, idpitem map[string]i
 
 func getIDPAttributes() []string {
 	attributes := [...]string{
-		"provider_id", "name", "type", "oidc_provider", "saml", "sp_sign_on_url", "sp_sign_out_url",
+		"provider_id", "name", "type", "oidc_provider", "saml", "sp_sign_on_url", "sp_sign_out_url", "login_disabled",
 	}
 	return attributes[:]
 }

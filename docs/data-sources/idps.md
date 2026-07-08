@@ -40,5 +40,3 @@ Read-Only:
 - `org_id` (String)
 - `provider_id` (String)
 - `type` (Map of String)
-
-

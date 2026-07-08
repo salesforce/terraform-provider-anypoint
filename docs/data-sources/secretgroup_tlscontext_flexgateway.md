@@ -60,5 +60,3 @@ Read-Only:
 Read-Only:
 
 - `skip_server_cert_validation` (Boolean)
-
-

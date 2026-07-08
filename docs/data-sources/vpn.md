@@ -71,5 +71,3 @@ Read-Only:
 - `remote_ptp_ip_address` (String)
 - `status` (String)
 - `status_message` (String)
-
-

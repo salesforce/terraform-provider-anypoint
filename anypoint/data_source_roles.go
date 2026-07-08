@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -128,7 +127,7 @@ func dataSourceRoles() *schema.Resource {
 	}
 }
 
-func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -143,14 +142,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, m interfac
 	//perform request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get Roles",
@@ -206,33 +198,33 @@ func parseRoleSearchOpts(req role.DefaultApiApiRolesGetRequest, params *schema.S
 	}
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "name" && len(v.(string)) > 0 {
-			req = req.Name(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "name" && len(toString(v)) > 0 {
+			req = req.Name(toString(v))
 			continue
 		}
-		if k == "description" && len(v.(string)) > 0 {
-			req = req.Description(v.(string))
+		if k == "description" && len(toString(v)) > 0 {
+			req = req.Description(toString(v))
 			continue
 		}
 		if k == "include_internal" {
-			req = req.IncludeInternal(v.(bool))
+			req = req.IncludeInternal(toBool(v))
 			continue
 		}
-		if k == "search" && len(v.(string)) > 0 {
-			req = req.Search(v.(string))
+		if k == "search" && len(toString(v)) > 0 {
+			req = req.Search(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 		if k == "ascending" {
-			req = req.Ascending(v.(bool))
+			req = req.Ascending(toBool(v))
 			continue
 		}
 	}
@@ -245,12 +237,12 @@ func parseRoleSearchOpts(req role.DefaultApiApiRolesGetRequest, params *schema.S
 * @param roles *[]role.Role the list of roles
 * @return list of generic items
  */
-func flattenRolesData(roles *[]role.Role) []interface{} {
+func flattenRolesData(roles *[]role.Role) []any {
 	if roles != nil && len(*roles) > 0 {
-		res := make([]interface{}, len(*roles))
+		res := make([]any, len(*roles))
 
 		for i, role := range *roles {
-			item := make(map[string]interface{})
+			item := make(map[string]any)
 
 			item["role_id"] = role.GetRoleId()
 			item["name"] = role.GetName()
@@ -265,5 +257,5 @@ func flattenRolesData(roles *[]role.Role) []interface{} {
 		return res
 	}
 
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }

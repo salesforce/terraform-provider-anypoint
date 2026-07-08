@@ -54,12 +54,13 @@ resource "anypoint_idp_oidc" "example2" {
 ### Required
 
 - `name` (String) The name of the identity provider
-- `oidc_provider` (Block Set, Min: 1) The description of provider specific for OIDC types (see [below for nested schema](#nestedblock--oidc_provider))
+- `oidc_provider` (Block List, Min: 1, Max: 1) The description of provider specific for OIDC types (see [below for nested schema](#nestedblock--oidc_provider))
 - `org_id` (String) The master organization id where the idp is defined.
 
 ### Optional
 
 - `last_updated` (String) The last time this resource has been updated locally.
+- `login_disabled` (Boolean) Whether this provider is disabled for login
 
 ### Read-Only
 
@@ -95,6 +96,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

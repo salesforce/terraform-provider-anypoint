@@ -31,5 +31,3 @@ data "anypoint_flexgateway_registration_token" "token" {
 
 - `id` (String) The ID of this resource.
 - `registration_token` (String) The registration token that can be used to register a new flex gateway
-
-

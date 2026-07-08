@@ -31,5 +31,3 @@ data "anypoint_fabrics_helm_repo" "repo" {
 - `rtf_image_registry_endpoint` (String) The runtime fabrics image registry endpoint
 - `rtf_image_registry_password` (String, Sensitive) The password to authenticated to the image registry
 - `rtf_image_registry_user` (String) The user to authenticated to the image registry
-
-

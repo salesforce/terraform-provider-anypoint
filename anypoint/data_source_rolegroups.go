@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -91,7 +90,7 @@ func dataSourceRoleGroups() *schema.Resource {
 	}
 }
 
-func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -99,14 +98,7 @@ func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m int
 	//perform request
 	res, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsGet(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get rolegroups",
@@ -147,12 +139,12 @@ func dataSourceRoleGroupsRead(ctx context.Context, d *schema.ResourceData, m int
 * @param rolegroups *[]rolegroup.Rolegroup the list of rolegroups
 * @return list of generic items
  */
-func flattenRoleGroupsData(rolegroups *[]rolegroup.Rolegroup) []interface{} {
+func flattenRoleGroupsData(rolegroups *[]rolegroup.Rolegroup) []any {
 	if rolegroups != nil && len(*rolegroups) > 0 {
-		res := make([]interface{}, len(*rolegroups))
+		res := make([]any, len(*rolegroups))
 
 		for i, rolegroup := range *rolegroups {
-			item := make(map[string]interface{})
+			item := make(map[string]any)
 
 			item["role_group_id"] = rolegroup.GetRoleGroupId()
 			item["name"] = rolegroup.GetName()
@@ -170,5 +162,5 @@ func flattenRoleGroupsData(rolegroups *[]rolegroup.Rolegroup) []interface{} {
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }

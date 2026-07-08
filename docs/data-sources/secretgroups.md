@@ -58,5 +58,3 @@ Read-Only:
 - `modified_at` (String)
 - `modified_by` (String)
 - `name` (String)
-
-

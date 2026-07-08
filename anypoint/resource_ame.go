@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -83,7 +83,7 @@ func resourceAME() *schema.Resource {
 	}
 }
 
-func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -95,14 +95,7 @@ func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{
 	//request user creation
 	_, httpr, err := pco.ameclient.DefaultApi.CreateAME(authctx, orgid, envid, regionid, exchangeid).ExchangeBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create AME " + exchangeid,
@@ -117,7 +110,7 @@ func resourceAMECreate(ctx context.Context, d *schema.ResourceData, m interface{
 	return resourceAMERead(ctx, d, m)
 }
 
-func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAMERead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -126,20 +119,20 @@ func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{})
 	exchangeid := d.Get("exchange_id").(string)
 	id := d.Id()
 	if isComposedResourceId(id) {
-		orgid, envid, regionid, exchangeid = decomposeAMEId(d)
+		orgid, envid, regionid, exchangeid, diags = decomposeAMEId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getAMEAuthCtx(ctx, &pco)
 	//request resource
 	res, httpr, err := pco.ameclient.DefaultApi.GetAME(authctx, orgid, envid, regionid, exchangeid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get AME " + d.Id(),
@@ -169,7 +162,7 @@ func resourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{})
 	return diags
 }
 
-func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -183,14 +176,7 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		//request resource creation
 		_, httpr, err := pco.ameclient.DefaultApi.UpdateAME(authctx, orgid, envid, regionid, exchangeid).ExchangeBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to patch AME " + d.Id(),
@@ -205,7 +191,7 @@ func resourceAMEUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -216,14 +202,7 @@ func resourceAMEDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	//perform request
 	httpr, err := pco.ameclient.DefaultApi.DeleteAME(authctx, orgid, envid, regionid, exchangeid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete AME " + d.Id(),
@@ -250,9 +229,18 @@ func newAMECreateBody(d *schema.ResourceData) *ame.ExchangeBody {
 	return body
 }
 
-func decomposeAMEId(d *schema.ResourceData, separator ...string) (string, string, string, string) {
+func decomposeAMEId(d *schema.ResourceData, separator ...string) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid AME ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/REGION_ID/EXCHANGE_ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }
 
 /*

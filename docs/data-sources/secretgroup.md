@@ -43,5 +43,3 @@ data "anypoint_secretgroup" "secretgroup" {
 - `modified_at` (String) Time at which this secret group was last modified
 - `modified_by` (String) Username of the anypoint platform user who modified this secret group
 - `name` (String) The name of the secret group
-
-

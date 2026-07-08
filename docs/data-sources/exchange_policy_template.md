@@ -33,7 +33,9 @@ data "anypoint_exchange_policy_template" "policy" {
 
 ### Optional
 
+- `api_instance_id` (String) Optional api instance id used to filter applicability of the template.
 - `include_all_versions` (Boolean) Whether to include all versions of the asset.
+- `split_model` (Boolean) Whether to request the split-asset model. When true, modern policies return `configuration` as a JSON Schema (draft-2019-09) object surfaced via `configuration_schema`; when false, legacy policies return a list of property configurations in `configuration`. Defaults to false for backward compatibility.
 
 ### Read-Only
 
@@ -41,24 +43,31 @@ data "anypoint_exchange_policy_template" "policy" {
 - `applicable` (Boolean) Whether the template snippet is applicable.
 - `audit` (Map of String) The exchange policy template auditing data.
 - `category` (String) The category of the policy template.
-- `configuration` (List of Object) The policy template list of property configurations. (see [below for nested schema](#nestedatt--configuration))
+- `configuration` (List of Object) Legacy policy configuration list (mule3/older mule4). Empty for modern policies that return a JSON Schema in `configuration_schema`. (see [below for nested schema](#nestedatt--configuration))
+- `configuration_schema` (String) Modern policy configuration as a JSON Schema (draft-2019-09) string. Populated when the policy returns the new schema shape; empty for legacy policies that use `configuration`.
 - `description` (String) The policy template description.
 - `encryption_supported` (Boolean) Whether the policy template supports encryption.
 - `identity_management_type` (String) The type of identity management.
+- `interface_scope` (List of String) Scopes at which the policy can be applied (e.g. "api", "resource").
+- `interface_transformation` (List of Object) Modern replacement for the flat raml/oas snippet fields. Each entry pairs a language identifier with a transformation snippet. (see [below for nested schema](#nestedatt--interface_transformation))
 - `is_ootb` (Boolean) Whether the policy template is out of the box.
 - `jar_md5` (String) The jar file checksum for data integrity.
 - `min_mule_version` (String) The minimum mule version to use the policy.
 - `name` (String) The policy template name.
 - `oas_v2_snippet` (String) The policy template snippet in OAS v2.
 - `oas_v3_snippet` (String) The policy template snippet in OAS v3.
+- `ootb_upgradeable_impl` (Boolean) Whether the OOTB implementation supports in-place upgrades.
 - `provided_characteristics` (List of String) List of provided characteristics.
 - `raml_snippet` (String) The policy template snippet in RAML.
 - `raml_v1_snippet` (String) The policy template snippet in RAML v1.
 - `required_characteristics` (List of String) List of required characteristics.
 - `resource_level_supported` (Boolean) Whether the policy template supports resource level.
+- `schema_id` (String) Identifier of the underlying JSON schema for modern policies.
+- `split_asset_model` (Boolean) Whether the policy uses the split asset model.
 - `stage` (String) The policy template stage.
 - `standalone` (Boolean) Whether the policy template is standalone.
 - `status` (String) The policy template status.
+- `supported_java_versions` (List of String) Java runtime versions this policy implementation is compatible with.
 - `supported_policies_versions` (String) The supported policies versions.
 - `type` (String) The policy template type.
 - `violation_category` (String) The violation category of the policy template.
@@ -71,6 +80,7 @@ Read-Only:
 
 - `asset_id` (String)
 - `group_id` (String)
+- `status` (String)
 - `version` (String)
 
 
@@ -91,3 +101,10 @@ Read-Only:
 - `type` (String)
 
 
+<a id="nestedatt--interface_transformation"></a>
+### Nested Schema for `interface_transformation`
+
+Read-Only:
+
+- `language` (String)
+- `transformation` (String)

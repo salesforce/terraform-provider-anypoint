@@ -135,3 +135,39 @@ resource "anypoint_apim_policy_custom" "policy_custom_05" {
     exposeHeaders = true
   })
 }
+
+#Outbound Credential Injection (OAuth2 OBO) Policy Example
+#injection_point = "outbound" creates the policy via POST /xapi/v1/.../policies/outbound-policies
+#and requires upstream_id to be set to an existing API instance upstream id.
+#Mule4 auto-creates one default upstream from endpoint_uri — read it with the
+#anypoint_apim_instance_upstreams data source as shown below.
+data "anypoint_apim_instance_upstreams" "api_upstreams" {
+  id     = anypoint_apim_mule4.api.id
+  org_id = var.root_org
+  env_id = var.env_id
+}
+
+resource "anypoint_apim_policy_custom" "policy_custom_06_outbound_obo" {
+  org_id          = var.root_org
+  env_id          = var.env_id
+  apim_id         = anypoint_apim_mule4.api.id
+  disabled        = false
+  asset_group_id  = "68ef9520-24e9-4cf2-b2f5-620025690913"
+  asset_id        = "credential-injection-oauth2-obo"
+  asset_version   = "1.1.1"
+  injection_point = "outbound"
+  upstream_id     = data.anypoint_apim_instance_upstreams.api_upstreams.upstreams[0].id
+
+  configuration_data = jsonencode({
+    flow             = "microsoft-entra-obo"
+    clientId         = var.mule_obo_client_id
+    clientSecret     = var.mule_obo_client_secret
+    tokenEndpoint    = var.token_exchange_endpoint
+    scope            = var.nickel_api_scope
+    timeout          = 10000
+    distributed      = false
+    cibaEnabled      = false
+    subjectTokenType = "urn:ietf:params:oauth:token-type:access_token"
+    targetType       = "audience"
+  })
+}

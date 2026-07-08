@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -73,7 +72,9 @@ func dataSourceAME() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "Includes only results with the given Ids.",
-							Elem:        schema.TypeString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 					},
 				},
@@ -107,7 +108,7 @@ func dataSourceAME() *schema.Resource {
 	}
 }
 
-func dataSourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAMERead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -127,14 +128,7 @@ func dataSourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{
 	//Executing Request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get AMEs",
@@ -143,10 +137,13 @@ func dataSourceAMERead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 	defer httpr.Body.Close()
+	// filter by destination_ids since API ignores it
+	res = filterAMQDestinationsByIds(res, searchopts)
+
 	//process data
-	amqinstance := flattenAMEsData(&res)
+	ameinstance := flattenAMEsData(&res)
 	//save in data source schema
-	if err := d.Set("exchanges", amqinstance); err != nil {
+	if err := d.Set("exchanges", ameinstance); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set AMEs",
@@ -173,21 +170,21 @@ func parseAMESearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.S
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "offset" {
-			req = req.Offset(v.(int32))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(v.(int32))
+			req = req.Limit(toInt32(v))
 			continue
 		}
-		if k == "starts_with" {
-			req = req.StartsWith(v.(string))
+		if k == "starts_with" && toString(v) != "" {
+			req = req.StartsWith(toString(v))
 			continue
 		}
 		if k == "destination_ids" {
-			req = req.DestinationIds(v.([]string))
+			req = req.DestinationIds(toStringSlice(v))
 			continue
 		}
 	}
@@ -196,7 +193,7 @@ func parseAMESearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.S
 }
 
 // Copies the given amq instance into the given resource data
-func setAMEAttributesToResourceData(d *schema.ResourceData, ameitem map[string]interface{}) error {
+func setAMEAttributesToResourceData(d *schema.ResourceData, ameitem map[string]any) error {
 	attributes := getAMECoreAttributes()
 	if ameitem != nil {
 		for _, attr := range attributes {
@@ -209,22 +206,22 @@ func setAMEAttributesToResourceData(d *schema.ResourceData, ameitem map[string]i
 }
 
 // flattens a list of Anypoint MQs
-func flattenAMEsData(queues *[]amq.Queue) []interface{} {
+func flattenAMEsData(queues *[]amq.Queue) []any {
 	if queues != nil && len(*queues) > 0 {
-		res := make([]interface{}, len(*queues))
+		res := make([]any, len(*queues))
 		for i, q := range *queues {
 			res[i] = flattenAMQEData(&q)
 		}
 		return res
 	}
 
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
 // flattens and maps a given Anypoint MQ object to extract exchange data only
-func flattenAMQEData(queue *amq.Queue) map[string]interface{} {
+func flattenAMQEData(queue *amq.Queue) map[string]any {
 	if queue != nil {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["exchange_id"] = queue.GetExchangeId()
 		item["type"] = queue.GetType()
 		item["encrypted"] = queue.GetEncrypted()
@@ -235,9 +232,9 @@ func flattenAMQEData(queue *amq.Queue) map[string]interface{} {
 }
 
 // flattens and maps a given Anypoint MQ Exchange object
-func flattenAMEData(exchange *ame.Exchange) map[string]interface{} {
+func flattenAMEData(exchange *ame.Exchange) map[string]any {
 	if exchange != nil {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["exchange_id"] = exchange.GetExchangeId()
 		item["type"] = exchange.GetType()
 		item["encrypted"] = exchange.GetEncrypted()

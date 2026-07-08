@@ -33,7 +33,6 @@ resource "anypoint_apim_mule4" "api" {
 - `asset_group_id` (String) The API specification's business group id
 - `asset_id` (String) The API specification's asset id in exchange
 - `asset_version` (String) The API specification's version number in exchange
-- `endpoint_uri` (String) The endpoint URI of this instance API
 - `env_id` (String) The environment id where the api manager instance is defined.
 - `org_id` (String) The organization id where the api manager instance is defined.
 
@@ -43,6 +42,7 @@ resource "anypoint_apim_mule4" "api" {
 - `description` (String) The description of the instance
 - `endpoint_deployment_type` (String) Endpoint's deployment type
 - `endpoint_proxy_uri` (String) Endpoint's Proxy URI
+- `endpoint_uri` (String) The endpoint URI of this instance API
 - `instance_label` (String) The instance's label.
 - `last_updated` (String) The last time this resource has been updated locally.
 - `provider_id` (String) The client identity provider's id to use for this instance
@@ -67,6 +67,8 @@ resource "anypoint_apim_mule4" "api" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

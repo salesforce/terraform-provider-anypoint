@@ -139,5 +139,3 @@ Read-Only:
 - `name` (String)
 - `secret_group_id` (String)
 - `tls_context_id` (String)
-
-

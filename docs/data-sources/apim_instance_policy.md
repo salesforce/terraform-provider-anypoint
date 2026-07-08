@@ -51,5 +51,3 @@ Read-Only:
 
 - `method_regex` (List of String)
 - `uri_template_regex` (String)
-
-

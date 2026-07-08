@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,7 +17,7 @@ func resourceUser() *schema.Resource {
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
 		Description: `
-		Creates a ` + "`" + `user` + "`" + ` for your org. 
+		Creates a ` + "`" + `user` + "`" + ` for your org.
 
 **N.B:** you can use a username only once even after it's deleted.
 		`,
@@ -167,7 +167,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -178,14 +178,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	//perform request
 	res, httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersPost(authctx, orgid).UserPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create user " + username,
@@ -198,26 +191,26 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return resourceUserRead(ctx, d, m)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Id()
 	orgid := d.Get("org_id").(string)
 	if isComposedResourceId(userid) {
-		orgid, userid = decomposeUserId(d)
+		orgid, userid, diags = decomposeUserId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getUserAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersUserIdGet(authctx, orgid, userid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to retrieve user " + userid,
@@ -244,7 +237,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Id()
@@ -256,14 +249,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		//request user creation
 		_, httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersUserIdPut(authctx, orgid, userid).UserPutBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update user " + userid,
@@ -279,7 +265,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Id()
@@ -288,14 +274,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 	//perform request
 	httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersUserIdDelete(authctx, orgid, userid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete user " + userid,
@@ -376,7 +355,16 @@ func getUserAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Contex
 	return context.WithValue(tmp, user.ContextServerIndex, pco.server_index)
 }
 
-func decomposeUserId(d *schema.ResourceData, separator ...string) (string, string) {
+func decomposeUserId(d *schema.ResourceData, separator ...string) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid User ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/USER_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }

@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,7 +65,7 @@ func dataSourceRoleGroup() *schema.Resource {
 	}
 }
 
-func dataSourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -75,14 +74,7 @@ func dataSourceRoleGroupRead(ctx context.Context, d *schema.ResourceData, m inte
 	//perform request
 	res, httpr, err := pco.rolegroupclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdGet(authctx, orgid, rolegroupid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get rolegroup",
@@ -124,8 +116,8 @@ func getRolegroupAttributes() []string {
 * @param rolegroup rolegroup.Rolegroup the rolegroup
 * @return generic items
  */
-func flattenRoleGroupData(rolegroup *rolegroup.Rolegroup) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenRoleGroupData(rolegroup *rolegroup.Rolegroup) map[string]any {
+	item := make(map[string]any)
 
 	item["role_group_id"] = rolegroup.GetRoleGroupId()
 	item["name"] = rolegroup.GetName()

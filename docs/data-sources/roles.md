@@ -70,5 +70,3 @@ Read-Only:
 - `org_id` (String)
 - `role_id` (String)
 - `shareable` (Boolean)
-
-

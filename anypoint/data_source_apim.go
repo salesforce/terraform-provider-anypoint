@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"maps"
 	"strconv"
 	"time"
@@ -392,7 +391,7 @@ func dataSourceApim() *schema.Resource {
 	}
 }
 
-func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	//init vars
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -410,14 +409,7 @@ func dataSourceApimRead(ctx context.Context, d *schema.ResourceData, m interface
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get api manager instances for org " + orgid + " and env " + envid,
@@ -459,7 +451,7 @@ func parseApimSearchOpts(req apim.DefaultApiGetEnvApimInstancesRequest, params *
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "query" {
 			req = req.Query(v.(string))
 			continue
@@ -499,38 +491,38 @@ func parseApimSearchOpts(req apim.DefaultApiGetEnvApimInstancesRequest, params *
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
-		if k == "sort" {
-			req = req.Sort(v.(string))
+		if k == "sort" && toString(v) != "" {
+			req = req.Sort(toString(v))
 			continue
 		}
 		if k == "ascending" {
-			req = req.Ascending(v.(bool))
+			req = req.Ascending(toBool(v))
 			continue
 		}
 	}
 	return req, diags
 }
 
-func flattenApimAssetsResult(assets []apim.ApimInstanceCollectionAssetsInner) []interface{} {
+func flattenApimAssetsResult(assets []apim.ApimInstanceCollectionAssetsInner) []any {
 	if len(assets) > 0 {
-		res := make([]interface{}, len(assets))
+		res := make([]any, len(assets))
 		for i, asset := range assets {
 			res[i] = flattenApimAssetResult(&asset)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssetsInner) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssetsInner) map[string]any {
+	item := make(map[string]any)
 	if asset == nil {
 		return item
 	}
@@ -564,13 +556,13 @@ func flattenApimAssetResult(asset *apim.ApimInstanceCollectionAssetsInner) map[s
 	return item
 }
 
-func flattenApimAssetApisResult(apis []apim.ApimInstanceCollectionAssetsInnerApisInner) []map[string]interface{} {
+func flattenApimAssetApisResult(apis []apim.ApimInstanceCollectionAssetsInnerApisInner) []map[string]any {
 	if len(apis) == 0 {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
-	result := make([]map[string]interface{}, len(apis))
+	result := make([]map[string]any, len(apis))
 	for i, api := range apis {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		if val, ok := api.GetAuditOk(); ok {
 			item["audit"] = flattenApimAudit(val)
 		}

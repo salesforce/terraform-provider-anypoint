@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -145,7 +144,7 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -154,14 +153,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface
 	//request roles
 	res, httpr, err := pco.userclient.DefaultApi.OrganizationsOrgIdUsersUserIdGet(authctx, orgid, userid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get user " + userid,
@@ -190,8 +182,8 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, m interface
 /*
 Transforms a set of users to the dataSourceUsers schema
 */
-func flattenUserData(usr *user.User) map[string]interface{} {
-	res := make(map[string]interface{})
+func flattenUserData(usr *user.User) map[string]any {
+	res := make(map[string]any)
 	if usr == nil {
 		return res
 	}
@@ -262,11 +254,11 @@ func flattenUserData(usr *user.User) map[string]interface{} {
 /*
  * Transforms a user organization array to a generic map array
  */
-func flattenUserOrgsData(userOrgs *[]user.Org) []map[string]interface{} {
+func flattenUserOrgsData(userOrgs *[]user.Org) []map[string]any {
 	if userOrgs == nil || len(*userOrgs) <= 0 {
-		return make([]map[string]interface{}, 0)
+		return make([]map[string]any, 0)
 	}
-	res := make([]map[string]interface{}, len(*userOrgs))
+	res := make([]map[string]any, len(*userOrgs))
 
 	for i, usrOrgData := range *userOrgs {
 		res[i] = flattenUserOrgData(&usrOrgData)
@@ -278,8 +270,8 @@ func flattenUserOrgsData(userOrgs *[]user.Org) []map[string]interface{} {
 /*
  * Transforms a user org data to generic map
  */
-func flattenUserOrgData(usrOrgData *user.Org) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenUserOrgData(usrOrgData *user.Org) map[string]any {
+	item := make(map[string]any)
 	if usrOrgData == nil {
 		return item
 	}
@@ -349,11 +341,11 @@ func flattenUserOrgData(usrOrgData *user.Org) map[string]interface{} {
 /*
  * Transforms a user organization to a generic map
  */
-func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]interface{} {
+func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]any {
 	if usrOrgData == nil {
 		return nil
 	}
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 
 	if val, ok := usrOrgData.GetNameOk(); ok {
 		res["name"] = val
@@ -422,7 +414,7 @@ func flattenUserOrganizationData(usrOrgData *user.Organization) map[string]inter
 /*
  * Copies the given user instance into the given Source data
  */
-func setUserAttributesToResourceData(d *schema.ResourceData, usr map[string]interface{}) error {
+func setUserAttributesToResourceData(d *schema.ResourceData, usr map[string]any) error {
 	attributes := getUserAttributes()
 	if usr != nil {
 		for _, attr := range attributes {

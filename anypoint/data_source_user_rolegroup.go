@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -87,7 +86,7 @@ func dataSourceUserRolegroup() *schema.Resource {
 	}
 }
 
-func dataSourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	userid := d.Get("user_id").(string)
 	rolegroupid := d.Id()
@@ -113,16 +112,19 @@ func dataSourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m 
 /*
 Searches for the rolegroup in the list of results that has the same id as the one given by the user
 */
-func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interface{}) (*user_rolegroups.Rolegroup, diag.Diagnostics) {
+func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m any) (*user_rolegroups.Rolegroup, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	userid := d.Get("user_id").(string)
 	orgid := d.Get("org_id").(string)
 	rolegroupid := d.Id()
 	if isComposedResourceId(rolegroupid) {
-		orgid, userid, rolegroupid = decomposeUserRolegroupId(d)
+		orgid, userid, rolegroupid, diags = decomposeUserRolegroupId(d)
 	} else if isComposedResourceId(rolegroupid, "_") { // retro-compatibility with versions < 1.6.x
-		orgid, userid, rolegroupid = decomposeUserRolegroupId(d, "_")
+		orgid, userid, rolegroupid, diags = decomposeUserRolegroupId(d, "_")
+	}
+	if diags.HasError() {
+		return nil, diags
 	}
 	authctx := getUserRolegroupsAuthCtx(ctx, &pco)
 	// params
@@ -136,14 +138,7 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 		req = req.Offset(int32(offset))
 		res, httpr, err := req.Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to get user " + userid + " rolegroup " + rolegroupid,
@@ -175,7 +170,7 @@ func searchUserRolegroup(ctx context.Context, d *schema.ResourceData, m interfac
 /*
 Copies the given user rolegroup instance into the given Source data
 */
-func setUserRolegroupAttributesToResourceData(d *schema.ResourceData, rg map[string]interface{}) error {
+func setUserRolegroupAttributesToResourceData(d *schema.ResourceData, rg map[string]any) error {
 	attributes := getUserRolegroupAttributes()
 	if rg != nil {
 		for _, attr := range attributes {
@@ -195,7 +190,16 @@ func getUserRolegroupAttributes() []string {
 	return attributes[:]
 }
 
-func decomposeUserRolegroupId(d *schema.ResourceData, separator ...string) (string, string, string) {
+func decomposeUserRolegroupId(d *schema.ResourceData, separator ...string) (string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1], s[2]
+	if len(s) != 3 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid User Rolegroup ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/USER_ID/ROLEGROUP_ID, got %s", d.Id()),
+		})
+		return "", "", "", diags
+	}
+	return s[0], s[1], s[2], diags
 }

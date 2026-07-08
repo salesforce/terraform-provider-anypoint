@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -88,8 +88,9 @@ func resourceApimInstancePolicyBasicAuth() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
+				Optional:    true,
 				Computed:    true,
-				Description: "The policy order.",
+				Description: "The policy execution order. Lower values execute earlier. Leave unset to let Anypoint append at the end of the stack. Updating this value reorders the policy in place via PATCH.",
 			},
 			"disabled": {
 				Type:        schema.TypeBool,
@@ -154,7 +155,7 @@ func resourceApimInstancePolicyBasicAuth() *schema.Resource {
 	}
 }
 
-func resourceApimInstancePolicyBasicAuthCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyBasicAuthCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -164,16 +165,9 @@ func resourceApimInstancePolicyBasicAuthCreate(ctx context.Context, d *schema.Re
 	//prepare body
 	body := newApimPolicyBasicAuthBody(d)
 	//perform request
-	res, httpr, err := pco.apimpolicyclient.DefaultApi.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
+	res, httpr, err := pco.apimpolicyclient.DefaultAPI.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create policy basic authentication for api " + apimid,
@@ -195,7 +189,7 @@ func resourceApimInstancePolicyBasicAuthCreate(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceApimInstancePolicyBasicAuthRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyBasicAuthRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -203,20 +197,20 @@ func resourceApimInstancePolicyBasicAuthRead(ctx context.Context, d *schema.Reso
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, apimid, id = decomposeApimPolicyBasicAuthId(d)
+		orgid, envid, apimid, id, diags = decomposeApimPolicyBasicAuthId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//perform request
-	res, httpr, err := pco.apimpolicyclient.DefaultApi.GetApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	res, httpr, err := pco.apimpolicyclient.DefaultAPI.GetApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read policy basic authentication " + id + " for api " + apimid,
@@ -242,10 +236,14 @@ func resourceApimInstancePolicyBasicAuthRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceApimInstancePolicyBasicAuthUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyBasicAuthUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// Capture the planned `disabled` value up front — the mid-Update Read below
+	// rewrites `disabled` in state with the API-returned value, which would flip
+	// the branch in the toggle block at the bottom of this function.
+	plannedDisabled := d.Get("disabled").(bool)
 	//detect change
-	if d.HasChanges("configuration_data", "pointcut_data") {
+	if d.HasChanges("configuration_data", "pointcut_data", "order") {
 		pco := m.(ProviderConfOutput)
 		orgid := d.Get("org_id").(string)
 		envid := d.Get("env_id").(string)
@@ -255,16 +253,9 @@ func resourceApimInstancePolicyBasicAuthUpdate(ctx context.Context, d *schema.Re
 		//prepare body
 		body := newApimPolicyBasicAuthPatchBody(d)
 		//perform request
-		_, httpr, err := pco.apimpolicyclient.DefaultApi.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
+		_, httpr, err := pco.apimpolicyclient.DefaultAPI.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update policy basic authentication for api " + apimid,
@@ -276,8 +267,7 @@ func resourceApimInstancePolicyBasicAuthUpdate(ctx context.Context, d *schema.Re
 		diags = append(diags, resourceApimInstancePolicyBasicAuthRead(ctx, d, m)...)
 	}
 	if d.HasChange("disabled") {
-		disabled := d.Get("disabled").(bool)
-		if disabled {
+		if plannedDisabled {
 			diags = append(diags, disableApimInstancePolicyBasicAuth(ctx, d, m)...)
 		} else {
 			diags = append(diags, enableApimInstancePolicyBasicAuth(ctx, d, m)...)
@@ -288,7 +278,7 @@ func resourceApimInstancePolicyBasicAuthUpdate(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceApimInstancePolicyBasicAuthDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyBasicAuthDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -296,16 +286,9 @@ func resourceApimInstancePolicyBasicAuthDelete(ctx context.Context, d *schema.Re
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	httpr, err := pco.apimpolicyclient.DefaultApi.DeleteApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	httpr, err := pco.apimpolicyclient.DefaultAPI.DeleteApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete policy basic authentication " + id + " for api " + apimid,
@@ -320,7 +303,7 @@ func resourceApimInstancePolicyBasicAuthDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func enableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func enableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -328,16 +311,9 @@ func enableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceDa
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	_, httpr, err := pco.apimpolicyclient.DefaultApi.EnableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	_, httpr, err := pco.apimpolicyclient.DefaultAPI.EnableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to enable policy basic authentication " + id + " for api " + apimid,
@@ -349,7 +325,7 @@ func enableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func disableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func disableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -357,16 +333,9 @@ func disableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceD
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	_, httpr, err := pco.apimpolicyclient.DefaultApi.DisableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	_, httpr, err := pco.apimpolicyclient.DefaultAPI.DisableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to disable policy basic authentication " + id + " for api " + apimid,
@@ -381,12 +350,12 @@ func disableApimInstancePolicyBasicAuth(ctx context.Context, d *schema.ResourceD
 func newApimPolicyBasicAuthBody(d *schema.ResourceData) *apim_policy.ApimPolicyBody {
 	body := apim_policy.NewApimPolicyBodyWithDefaults()
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
+		l := val.([]any)
+		cfg := l[0].(map[string]any)
 		body.SetConfigurationData(cfg)
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		body.SetPointcutData(newApimPolicyBasicAuthPointcutDataBody(val.([]interface{})))
+		body.SetPointcutData(newApimPolicyBasicAuthPointcutDataBody(val.([]any)))
 	}
 	if val, ok := d.GetOk("asset_group_id"); ok {
 		body.SetGroupId(val.(string))
@@ -397,19 +366,22 @@ func newApimPolicyBasicAuthBody(d *schema.ResourceData) *apim_policy.ApimPolicyB
 	if val, ok := d.GetOk("asset_version"); ok {
 		body.SetAssetVersion(val.(string))
 	}
+	if val, ok := d.GetOk("order"); ok {
+		body.SetOrder(int32(val.(int)))
+	}
 	return body
 }
 
-func newApimPolicyBasicAuthPatchBody(d *schema.ResourceData) map[string]interface{} {
-	body := make(map[string]interface{})
+func newApimPolicyBasicAuthPatchBody(d *schema.ResourceData) map[string]any {
+	body := make(map[string]any)
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
+		l := val.([]any)
+		cfg := l[0].(map[string]any)
 		body["configurationData"] = cfg
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		collection := newApimPolicyBasicAuthPointcutDataBody(val.([]interface{}))
-		slice := make([]map[string]interface{}, len(collection))
+		collection := newApimPolicyBasicAuthPointcutDataBody(val.([]any))
+		slice := make([]map[string]any, len(collection))
 		for i, item := range collection {
 			m, _ := item.ToMap()
 			slice[i] = m
@@ -427,13 +399,16 @@ func newApimPolicyBasicAuthPatchBody(d *schema.ResourceData) map[string]interfac
 	if val, ok := d.GetOk("asset_version"); ok {
 		body["assetVersion"] = val
 	}
+	if val, ok := d.GetOk("order"); ok {
+		body["order"] = int32(val.(int))
+	}
 	return body
 }
 
-func newApimPolicyBasicAuthPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
+func newApimPolicyBasicAuthPointcutDataBody(collection []any) []apim_policy.PointcutDataItem {
 	slice := make([]apim_policy.PointcutDataItem, len(collection))
 	for i, item := range collection {
-		data := item.(map[string]interface{})
+		data := item.(map[string]any)
 		body := apim_policy.NewPointcutDataItem()
 		if val, ok := data["method_regex"]; ok && val != nil {
 			set := val.(*schema.Set)
@@ -447,7 +422,16 @@ func newApimPolicyBasicAuthPointcutDataBody(collection []interface{}) []apim_pol
 	return slice
 }
 
-func decomposeApimPolicyBasicAuthId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeApimPolicyBasicAuthId(d *schema.ResourceData) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid APIM Policy Basic Auth ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/APIM_ID/INSTANCE_ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }

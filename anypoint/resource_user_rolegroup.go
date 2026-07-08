@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,7 +104,7 @@ func resourceUserRolegroup() *schema.Resource {
 	}
 }
 
-func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -115,14 +114,7 @@ func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m 
 	//request user creation
 	httpr, err := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsRolegroupIdPost(authctx, orgid, userid, rolegroupid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to assign user " + userid + " rolegroup " + rolegroupid,
@@ -136,21 +128,28 @@ func resourceUserRolegroupCreate(ctx context.Context, d *schema.ResourceData, m 
 	return resourceUserRead(ctx, d, m)
 }
 
-func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	orgid := d.Get("org_id").(string)
 	userid := d.Get("user_id").(string)
 	rolegroupid := d.Get("rolegroup_id").(string)
 	id := d.Id()
 	if isComposedResourceId(id) {
-		orgid, userid, rolegroupid = decomposeUserRolegroupId(d)
+		orgid, userid, rolegroupid, diags = decomposeUserRolegroupId(d)
 	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
-		orgid, userid, rolegroupid = decomposeUserRolegroupId(d, "_")
+		orgid, userid, rolegroupid, diags = decomposeUserRolegroupId(d, "_")
+	}
+	if diags.HasError() {
+		return diags
 	}
 	rg, errDiags := searchUserRolegroup(ctx, d, m)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
 		return diags
+	}
+	if rg == nil {
+		d.SetId("")
+		return nil
 	}
 	//process data
 	rolegroup := flattenUserRolegroupData(rg)
@@ -172,7 +171,7 @@ func resourceUserRolegroupRead(ctx context.Context, d *schema.ResourceData, m in
 	return diags
 }
 
-func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -182,14 +181,7 @@ func resourceUserRolegroupDelete(ctx context.Context, d *schema.ResourceData, m 
 	//perform request
 	httpr, err := pco.userrgpclient.DefaultApi.OrganizationsOrgIdUsersUserIdRolegroupsRolegroupIdDelete(authctx, orgid, userid, rolegroupid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete user " + userid + " rolegroup " + rolegroupid,

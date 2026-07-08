@@ -75,5 +75,3 @@ Read-Only:
 - `membership_type` (String)
 - `name` (String)
 - `updated_at` (String)
-
-

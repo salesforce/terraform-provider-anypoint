@@ -78,6 +78,7 @@ resource "anypoint_apim_policy_rate_limiting" "policy02" {
 - `asset_version` (String) the policy template version in anypoint exchange.
 - `disabled` (Boolean) Whether the policy is disabled.
 - `last_updated` (String) The last time this resource has been updated locally.
+- `order` (Number) The policy execution order. Lower values execute earlier. Leave unset to let Anypoint append at the end of the stack. Updating this value reorders the policy in place via PATCH.
 - `pointcut_data` (Block List) The Method & resource conditions (see [below for nested schema](#nestedblock--pointcut_data))
 
 ### Read-Only
@@ -85,7 +86,6 @@ resource "anypoint_apim_policy_rate_limiting" "policy02" {
 - `audit` (Map of String) The instance's auditing data
 - `id` (String) The policy's unique id
 - `master_organization_id` (String) The organization id where the api instance is defined.
-- `order` (Number) The policy order.
 - `policy_template_id` (String) The policy template id
 
 <a id="nestedblock--configuration_data"></a>
@@ -123,6 +123,8 @@ Required:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

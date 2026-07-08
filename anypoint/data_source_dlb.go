@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -252,7 +251,7 @@ func dataSourceDLB() *schema.Resource {
 	}
 }
 
-func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Get("id").(string)
@@ -262,14 +261,7 @@ func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//request dlb
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdGet(authctx, orgid, vpcid, dlbid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get DLB " + dlbid,
@@ -298,7 +290,7 @@ func dataSourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{
 /*
  * Copies the given dlb instance into the given resource data
  */
-func setDLBAttributesToResourceData(d *schema.ResourceData, dlbitem map[string]interface{}) error {
+func setDLBAttributesToResourceData(d *schema.ResourceData, dlbitem map[string]any) error {
 	attributes := getDLBAttributes()
 	if dlbitem != nil {
 		for _, attr := range attributes {
@@ -313,9 +305,9 @@ func setDLBAttributesToResourceData(d *schema.ResourceData, dlbitem map[string]i
 /*
  * Transforms a dlb.Dlb object to the dataSourceDLB schema
  */
-func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
+func flattenDLBData(dlbitem *dlb.Dlb) map[string]any {
 	if dlbitem != nil {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["id"] = dlbitem.GetId()
 		item["name"] = dlbitem.GetName()
 		item["vpc_id"] = dlbitem.GetVpcId()
@@ -331,9 +323,9 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 		item["ip_allowlist"] = dlbitem.GetIpAllowlist()
 		item["http_mode"] = dlbitem.GetHttpMode()
 		item["default_ssl_endpoint"] = dlbitem.GetDefaultSslEndpoint()
-		ssl_endpoints := make([]interface{}, len(dlbitem.GetSslEndpoints()))
+		ssl_endpoints := make([]any, len(dlbitem.GetSslEndpoints()))
 		for j, ssl_endpoint := range dlbitem.GetSslEndpoints() {
-			s := make(map[string]interface{})
+			s := make(map[string]any)
 			s["private_key_digest"] = ssl_endpoint.GetPrivateKeyDigest()
 			s["public_key_label"] = ssl_endpoint.GetPublicKeyLabel()
 			s["public_key_digest"] = ssl_endpoint.GetPublicKeyDigest()
@@ -345,9 +337,9 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 			s["revocation_list_label"] = ssl_endpoint.GetRevocationListLabel()
 			s["revocation_list_digest"] = ssl_endpoint.GetRevocationListDigest()
 			s["verify_client_mode"] = ssl_endpoint.GetVerifyClientMode()
-			mappings := make([]interface{}, len(ssl_endpoint.GetMappings()))
+			mappings := make([]any, len(ssl_endpoint.GetMappings()))
 			for k, mapping := range ssl_endpoint.GetMappings() {
-				m := make(map[string]interface{})
+				m := make(map[string]any)
 				m["input_uri"] = mapping.GetInputUri()
 				m["app_name"] = mapping.GetAppName()
 				m["app_uri"] = mapping.GetAppUri()
@@ -365,9 +357,9 @@ func flattenDLBData(dlbitem *dlb.Dlb) map[string]interface{} {
 		item["tlsv1"] = dlbitem.GetTlsv1()
 		item["upstream_tlsv12"] = dlbitem.GetUpstreamTlsv12()
 		item["proxy_read_timeout"] = dlbitem.GetProxyReadTimeout()
-		ip_addresses_info := make([]interface{}, len(dlbitem.GetIpAddressesInfo()))
+		ip_addresses_info := make([]any, len(dlbitem.GetIpAddressesInfo()))
 		for j, ip_address_info := range dlbitem.GetIpAddressesInfo() {
-			info := make(map[string]interface{})
+			info := make(map[string]any)
 			info["ip"] = ip_address_info.GetIp()
 			info["status"] = ip_address_info.GetStatus()
 			info["static_ip"] = ip_address_info.GetStaticIp()

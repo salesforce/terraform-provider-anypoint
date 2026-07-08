@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -126,7 +125,7 @@ func dataSourceSecretGroupTlsContextFG() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupTlsContextFGRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupTlsContextFGRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -137,14 +136,7 @@ func dataSourceSecretGroupTlsContextFGRead(ctx context.Context, d *schema.Resour
 	//perform request
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.GetSecretGroupTlsContextDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get tls-context " + id,
@@ -176,8 +168,8 @@ func dataSourceSecretGroupTlsContextFGRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenSgTlsContextFlexGateway(fg *secretgroup_tlscontext.TlsContextDetails) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTlsContextFlexGateway(fg *secretgroup_tlscontext.TlsContextDetails) map[string]any {
+	item := make(map[string]any)
 	if meta, ok := fg.GetMetaOk(); ok {
 		maps.Copy(item, flattenSgTlsContextMeta(meta))
 	}
@@ -209,31 +201,31 @@ func flattenSgTlsContextFlexGateway(fg *secretgroup_tlscontext.TlsContextDetails
 		item["alpn_protocols"] = val
 	}
 	if val, ok := fg.GetInboundSettingsOk(); ok {
-		item["inbound_settings"] = []interface{}{flattenSgTlsContextFlexGatewayInboundSetting(val)}
+		item["inbound_settings"] = []any{flattenSgTlsContextFlexGatewayInboundSetting(val)}
 	}
 	if val, ok := fg.GetOutboundSettingsOk(); ok {
-		item["outbound_settings"] = []interface{}{flattenSgTlsContextFlexGatewayOutboundSetting(val)}
+		item["outbound_settings"] = []any{flattenSgTlsContextFlexGatewayOutboundSetting(val)}
 	}
 	return item
 }
 
-func flattenSgTlsContextFlexGatewayInboundSetting(inbound *secretgroup_tlscontext.TlsContextDetailsInboundSettings) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTlsContextFlexGatewayInboundSetting(inbound *secretgroup_tlscontext.TlsContextDetailsInboundSettings) map[string]any {
+	item := make(map[string]any)
 	if val, ok := inbound.GetEnableClientCertValidationOk(); ok {
 		item["enable_client_cert_validation"] = *val
 	}
 	return item
 }
 
-func flattenSgTlsContextFlexGatewayOutboundSetting(inbound *secretgroup_tlscontext.TlsContextDetailsOutboundSettings) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTlsContextFlexGatewayOutboundSetting(inbound *secretgroup_tlscontext.TlsContextDetailsOutboundSettings) map[string]any {
+	item := make(map[string]any)
 	if val, ok := inbound.GetSkipServerCertValidationOk(); ok {
 		item["skip_server_cert_validation"] = *val
 	}
 	return item
 }
 
-func setSgTlsContextFGAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setSgTlsContextFGAttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getSgTlsContextFGAttributes()
 	if data != nil {
 		for _, attr := range attributes {

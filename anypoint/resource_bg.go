@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -10,6 +10,20 @@ import (
 
 	org "github.com/mulesoft-anypoint/anypoint-client-go/org"
 )
+
+// Soft-deprecation notice attached to non-writable entitlement_* fields whose
+// schema was flipped from Optional to Computed in v1.10.0 (PR #123 / issue #75).
+// The flip broke plans for existing configurations that still declared values for
+// fields the Anypoint API never honored. v1.10.1 restores Optional+Computed with
+// a Deprecated marker + always-suppress diff so legacy configurations plan cleanly
+// while signaling the upcoming v2.0.0 hard-flip. See issue #132.
+const bgReadOnlyEntitlementDeprecation = "Field is read-only on Anypoint. Value is ignored on Create/Update and computed from the subscription on Read. Remove from configuration; will become Computed-only in v2.0.0. See https://github.com/mulesoft-anypoint/terraform-provider-anypoint/issues/132."
+
+// suppressBGReadOnlyEntitlementDiff prevents user-provided values on read-only
+// entitlement_* fields from producing plan diffs against the API-sourced state.
+func suppressBGReadOnlyEntitlementDiff(k, old, new string, d *schema.ResourceData) bool {
+	return true
+}
 
 func resourceBG() *schema.Resource {
 	return &schema.Resource{
@@ -306,146 +320,140 @@ func resourceBG() *schema.Resource {
 				Description: "The number of VPNs reassigned to this organization.",
 			},
 			"entitlements_workerloggingoverride_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether the loggin override on workers is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the logging override on workers is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_mqmessages_base": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     50000000,
-				Description: "The number of basic MQ messages assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "50000000") // default value of integers if not set is 50000000
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of basic MQ messages assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_mqmessages_addon": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of MQ messages addons assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of MQ messages addons assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_mqrequests_base": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100000000,
-				Description: "The number of MQ requests base assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "100000000") // default value of integers if not set is 100000000
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of MQ requests base assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_mqrequests_addon": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of MQ requests addon assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of MQ requests addon assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_objectstorerequestunits_base": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of object store requests unists base for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of object store request units base for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_objectstorerequestunits_addon": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of object store requests units addon for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of object store request units addon for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_objectstorekeys_base": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of object store keys base for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of object store keys base for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_objectstorekeys_addon": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of object store keys addon for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of object store keys addon for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_mqadvancedfeatures_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether the Anypoint MQ advanced features are enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the Anypoint MQ advanced features are enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_gateways_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The number of gateways assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of gateways assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_designcenter_api": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether te design center api is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the design center api is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_designcenter_mozart": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether the design center mozart is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the design center mozart is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_partnersproduction_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of partners production vcores assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of partners production vcores assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_partnerssandbox_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of partners sandbox vcores assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of partners sandbox vcores assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_tradingpartnersproduction_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of traded partners production vcores assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of trading partners production vcores assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_tradingpartnerssandbox_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The number of traded partners sandbox vcores assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of trading partners sandbox vcores assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_loadbalancer_assigned": {
 				Type:        schema.TypeInt,
@@ -462,226 +470,220 @@ func resourceBG() *schema.Resource {
 				Description: "The number of dedicated load balancers (DLB) reassigned to this organization.",
 			},
 			"entitlements_externalidentity": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether an external identity provider (IDP) was assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether an external identity provider (IDP) was assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_autoscaling": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether autoscaling is enabled for this organization",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether autoscaling is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_armalerts": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether arm alerts are enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether arm alerts are enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apis_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "whether APIs are enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether APIs are enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apimonitoring_schedules": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     5,
-				Description: "The number of api monitoring schedules for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "5") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of api monitoring schedules for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apicommunitymanager_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether api community manager is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether api community manager is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_monitoringcenter_productsku": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     3,
-				Description: "The number of monitoring center products sku for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "3") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of monitoring center products sku for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apiquery_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether api queries are enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether api queries are enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apiquery_productsku": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     1,
-				Description: "The number of api query product sku for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of api query product sku for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_apiqueryc360_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether api query C360 is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether api query C360 is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_anggovernance_level": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "0") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The ANG governance level for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_crowd_hideapimanagerdesigner": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the Crowd hide API Manager designer entitlement is enabled. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_crowd_hideformerapiplatform": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the Crowd hide former API platform entitlement is enabled. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_crowd_environments": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the Crowd environments entitlement is enabled. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_cam_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether cam is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether CAM is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_exchange2_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether exchange v2 is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Exchange v2 is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_crowdselfservicemigration_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether crow self service migration is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Crowd self-service migration is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_kpidashboard_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether KPI dashboard is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the KPI dashboard is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_pcf": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether PCF is included for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether PCF is included for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_appviz": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether the app vizualize if enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "flase") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether the application visualization entitlement is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_runtimefabric": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether Runtime Fabrics (RTF) is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true")
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Runtime Fabric (RTF) is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_anypointsecuritytokenization_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "whether Anypoint securirty tokenization is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Anypoint Security tokenization is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_anypointsecurityedgepolicies_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether Anypoint security edge policies is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Anypoint Security edge policies are enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_runtimefabriccloud_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether Runtime Fabrics (RTF) is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "true") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Runtime Fabric Cloud is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_servicemesh_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Whether Service Mesh is enabled for this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "false") // default value of bool if not set is false
-				},
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "Whether Service Mesh is enabled for this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_messaging_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     1,
-				Description: "The number of messaging assigned to this organization.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of messaging units assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_workerclouds_assigned": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     1,
-				Description: "The number of worker clouds assigned to this organization",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return DiffSuppressFunc4OptionalPrimitives(k, old, new, d, "1") // default value of integers if not set is 0
-				},
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       bgReadOnlyEntitlementDeprecation,
+				Description:      "The number of worker clouds assigned to this organization. Read-only — tied to the organization's subscription.",
+				DiffSuppressFunc: suppressBGReadOnlyEntitlementDiff,
 			},
 			"entitlements_workerclouds_reassigned": {
 				Type:        schema.TypeInt,
@@ -782,26 +784,20 @@ func resourceBG() *schema.Resource {
 	}
 }
 
-func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	authctx := getBGAuthCtx(ctx, &pco)
 	body := newBGPostBody(d)
-	//perform request
-	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsPost(authctx).BGPostReqBody(*body).Execute()
+	//perform request with retry on transient parent-org contention (issue #54)
+	res, httpr, err := retryTransient(ctx, "bg create", func() (org.BGCore, *http.Response, error) {
+		return pco.orgclient.DefaultApi.OrganizationsPost(authctx).BGPostReqBody(*body).Execute()
+	})
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Create Business Group",
-			Detail:   details,
+			Detail:   extractAPIErrorDetail(err, httpr),
 		})
 		return diags
 	}
@@ -811,7 +807,7 @@ func resourceBGCreate(ctx context.Context, d *schema.ResourceData, m interface{}
 	return resourceBGRead(ctx, d, m)
 }
 
-func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceBGRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
@@ -819,14 +815,11 @@ func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	//perform request
 	res, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdGet(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read business group " + orgid,
@@ -849,7 +842,7 @@ func resourceBGRead(ctx context.Context, d *schema.ResourceData, m interface{}) 
 	return diags
 }
 
-func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
@@ -857,20 +850,14 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 	//check for updates
 	if d.HasChanges(getBGUpdatableAttributes()...) {
 		body := newBGPutBody(d)
-		_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdPut(authctx, orgid).BGPutReqBody(*body).Execute()
+		_, httpr, err := retryTransient(ctx, "bg update "+orgid, func() (org.BGCore, *http.Response, error) {
+			return pco.orgclient.DefaultApi.OrganizationsOrgIdPut(authctx, orgid).BGPutReqBody(*body).Execute()
+		})
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update business group " + orgid,
-				Detail:   details,
+				Detail:   extractAPIErrorDetail(err, httpr),
 			})
 			return diags
 		}
@@ -881,26 +868,20 @@ func resourceBGUpdate(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceBGDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Id()
 	authctx := getBGAuthCtx(ctx, &pco)
 	//perform request
-	_, httpr, err := pco.orgclient.DefaultApi.OrganizationsOrgIdDelete(authctx, orgid).Execute()
+	_, httpr, err := retryTransient(ctx, "bg delete "+orgid, func() (map[string]interface{}, *http.Response, error) {
+		return pco.orgclient.DefaultApi.OrganizationsOrgIdDelete(authctx, orgid).Execute()
+	})
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Delete Business Group",
-			Detail:   details,
+			Detail:   extractAPIErrorDetail(err, httpr),
 		})
 		return diags
 	}

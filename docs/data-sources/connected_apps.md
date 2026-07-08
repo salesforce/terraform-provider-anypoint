@@ -78,5 +78,3 @@ Read-Only:
 - `env_id` (String)
 - `org_id` (String)
 - `scope` (String)
-
-

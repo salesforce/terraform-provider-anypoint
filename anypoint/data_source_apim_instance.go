@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"maps"
 	"sort"
 	"strings"
@@ -407,7 +406,7 @@ func dataSourceApimInstance() *schema.Resource {
 	}
 }
 
-func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -417,14 +416,7 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 	//perform request
 	res, httpr, err := pco.apimclient.DefaultApi.GetApimInstanceDetails(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get API manager instance",
@@ -450,27 +442,23 @@ func dataSourceApimInstanceRead(ctx context.Context, d *schema.ResourceData, m i
 }
 
 // Read all upstreams for a the api manager instance
-func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, id = decomposeApimFlexGatewayId(d)
+		orgid, envid, id, diags = decomposeApimFlexGatewayId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getApimUpstreamAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.apimupstreamclient.DefaultApi.GetApimInstanceUpstreams(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get API manager instance " + id + " upstreams",
@@ -496,11 +484,11 @@ func readApimInstanceUpstreamsOnly(ctx context.Context, d *schema.ResourceData, 
 }
 
 // flattens api manager instance details
-func flattenApimInstanceDetails(details *apim.ApimInstanceDetails) map[string]interface{} {
+func flattenApimInstanceDetails(details *apim.ApimInstanceDetails) map[string]any {
 	if details == nil {
 		return nil
 	}
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	result["id"] = details.GetId()
 	result["org_id"] = details.GetOrganizationId()
@@ -571,11 +559,11 @@ func flattenApimInstanceDetails(details *apim.ApimInstanceDetails) map[string]in
 }
 
 // flattens endpoint object of api manager instances
-func flattenApimEndpoint(endpoint *apim.Endpoint) map[string]interface{} {
+func flattenApimEndpoint(endpoint *apim.Endpoint) map[string]any {
 	if endpoint == nil {
 		return nil
 	}
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	if val, ok := endpoint.GetAuditOk(); ok && val != nil {
 		result["endpoint_audit"] = flattenApimAudit(val)
 	}
@@ -601,7 +589,7 @@ func flattenApimEndpoint(endpoint *apim.Endpoint) map[string]interface{} {
 		result["endpoint_deployment_type"] = *val
 	}
 	if val, ok := endpoint.GetTlsContextsOk(); ok {
-		result["endpoint_tls_inbound_context"] = []map[string]interface{}{flattenApimEndpointTlsContext(val)}
+		result["endpoint_tls_inbound_context"] = []map[string]any{flattenApimEndpointTlsContext(val)}
 	}
 	if val, ok := endpoint.GetApiVersionIdOk(); ok && val != nil {
 		result["endpoint_api_version_id"] = *val
@@ -610,11 +598,11 @@ func flattenApimEndpoint(endpoint *apim.Endpoint) map[string]interface{} {
 }
 
 // flattens tls context of endpoints in any api manager
-func flattenApimEndpointTlsContext(tc *apim.EndpointTlsContexts) map[string]interface{} {
+func flattenApimEndpointTlsContext(tc *apim.EndpointTlsContexts) map[string]any {
 	if tc == nil {
 		return nil
 	}
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	if inbound, ok := tc.GetInboundOk(); ok {
 		if val, ok := inbound.GetSecretGroupIdOk(); ok {
 			result["secret_group_id"] = *val
@@ -636,8 +624,8 @@ func flattenApimEndpointTlsContext(tc *apim.EndpointTlsContexts) map[string]inte
 }
 
 // flattens deployment object of any api manager instance
-func flattenApimDeployment(deployment *apim.Deployment) map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenApimDeployment(deployment *apim.Deployment) map[string]any {
+	result := make(map[string]any)
 	if val, ok := deployment.GetAuditOk(); ok {
 		audit := flattenApimAudit(val)
 		if created, ok := audit["created"]; ok {
@@ -687,9 +675,9 @@ func flattenApimDeployment(deployment *apim.Deployment) map[string]interface{} {
 }
 
 // flattens list of routing of any api manager instance
-func flattenApimRoutingCollection(routings []apim.Routing) []map[string]interface{} {
+func flattenApimRoutingCollection(routings []apim.Routing) []map[string]any {
 	sortApimRouting(routings)
-	result := make([]map[string]interface{}, len(routings))
+	result := make([]map[string]any, len(routings))
 	for i, routing := range routings {
 		result[i] = flattenApimRouting(&routing)
 	}
@@ -697,15 +685,15 @@ func flattenApimRoutingCollection(routings []apim.Routing) []map[string]interfac
 }
 
 // flattens the routing object of any api manager instance
-func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenApimRouting(routing *apim.Routing) map[string]any {
+	item := make(map[string]any)
 	if val, ok := routing.GetLabelOk(); ok && val != nil {
 		item["label"] = *val
 	}
 	if upstreams, ok := routing.GetUpstreamsOk(); ok && upstreams != nil {
-		set := make([]map[string]interface{}, len(upstreams))
+		set := make([]map[string]any, len(upstreams))
 		for i, u := range upstreams {
-			upstream := make(map[string]interface{})
+			upstream := make(map[string]any)
 			if val, ok := u.GetIdOk(); ok {
 				upstream["id"] = *val
 			}
@@ -717,7 +705,7 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 		item["upstreams"] = set
 	}
 	if rules, ok := routing.GetRulesOk(); ok && rules != nil {
-		r := make(map[string]interface{})
+		r := make(map[string]any)
 		if val, ok := rules.GetMethodsOk(); ok && val != nil {
 			slice := strings.Split(*val, "|")
 			sort.Strings(slice)
@@ -732,13 +720,13 @@ func flattenApimRouting(routing *apim.Routing) map[string]interface{} {
 		if val, ok := rules.GetHeadersOk(); ok && val != nil {
 			r["headers"] = val
 		}
-		item["rules"] = []interface{}{r}
+		item["rules"] = []any{r}
 	}
 	return item
 }
 
-func flattenApimAudit(audit *apim.Audit) map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenApimAudit(audit *apim.Audit) map[string]any {
+	result := make(map[string]any)
 	if audit == nil {
 		return result
 	}
@@ -755,7 +743,7 @@ func flattenApimAudit(audit *apim.Audit) map[string]interface{} {
 	return result
 }
 
-func setApimInstanceDetailsAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setApimInstanceDetailsAttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getApimInstanceDetailsAttributes()
 	if data != nil {
 		for _, attr := range attributes {

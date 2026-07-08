@@ -49,5 +49,3 @@ Read-Only:
 - `role_group_id` (String)
 - `updated_at` (String)
 - `user_count` (Number)
-
-

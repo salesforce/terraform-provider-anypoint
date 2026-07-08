@@ -68,5 +68,3 @@ Read-Only:
 - `max_deliveries` (Number)
 - `queue_id` (String)
 - `type` (String)
-
-

@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -143,8 +143,9 @@ func resourceApimInstancePolicyMessageLogging() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
+				Optional:    true,
 				Computed:    true,
-				Description: "The policy order.",
+				Description: "The policy execution order. Lower values execute earlier. Leave unset to let Anypoint append at the end of the stack. Updating this value reorders the policy in place via PATCH.",
 			},
 			"disabled": {
 				Type:        schema.TypeBool,
@@ -208,7 +209,7 @@ func resourceApimInstancePolicyMessageLogging() *schema.Resource {
 	}
 }
 
-func resourceApimInstancePolicyMessageLoggingCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -218,16 +219,9 @@ func resourceApimInstancePolicyMessageLoggingCreate(ctx context.Context, d *sche
 	//prepare body
 	body := newApimPolicyMessageLoggingBody(d)
 	//perform request
-	res, httpr, err := pco.apimpolicyclient.DefaultApi.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
+	res, httpr, err := pco.apimpolicyclient.DefaultAPI.PostApimPolicy(authctx, orgid, envid, apimid).ApimPolicyBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create policy message logging for api " + apimid,
@@ -249,7 +243,7 @@ func resourceApimInstancePolicyMessageLoggingCreate(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -257,20 +251,20 @@ func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, apimid, id = decomposeApimPolicyMessageLoggingId(d)
+		orgid, envid, apimid, id, diags = decomposeApimPolicyMessageLoggingId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
 	//perform request
-	res, httpr, err := pco.apimpolicyclient.DefaultApi.GetApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	res, httpr, err := pco.apimpolicyclient.DefaultAPI.GetApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read policy message logging " + id + " for api " + apimid,
@@ -281,7 +275,7 @@ func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema
 	defer httpr.Body.Close()
 	// process data
 	data := flattenApimInstancePolicy(res)
-	data["configuration_data"] = []interface{}{flattenApimPolicyMessageLoggingCfg(d, res)}
+	data["configuration_data"] = []any{flattenApimPolicyMessageLoggingCfg(d, res)}
 	if err := setApimInstancePolicyAttributesToResourceData(d, data); err != nil {
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -297,10 +291,14 @@ func resourceApimInstancePolicyMessageLoggingRead(ctx context.Context, d *schema
 	return diags
 }
 
-func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// Capture the planned `disabled` value up front — the mid-Update Read below
+	// rewrites `disabled` in state with the API-returned value, which would flip
+	// the branch in the toggle block at the bottom of this function.
+	plannedDisabled := d.Get("disabled").(bool)
 	//detect change
-	if d.HasChanges("configuration_data", "pointcut_data") {
+	if d.HasChanges("configuration_data", "pointcut_data", "order") {
 		pco := m.(ProviderConfOutput)
 		orgid := d.Get("org_id").(string)
 		envid := d.Get("env_id").(string)
@@ -310,16 +308,9 @@ func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *sche
 		//prepare body
 		body := newApimPolicyMessageLoggingPatchBody(d)
 		//perform request
-		_, httpr, err := pco.apimpolicyclient.DefaultApi.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
+		_, httpr, err := pco.apimpolicyclient.DefaultAPI.PatchApimPolicy(authctx, orgid, envid, apimid, id).Body(body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update policy message logging for api " + apimid,
@@ -331,8 +322,7 @@ func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *sche
 		diags = append(diags, resourceApimInstancePolicyMessageLoggingRead(ctx, d, m)...)
 	}
 	if d.HasChange("disabled") {
-		disabled := d.Get("disabled").(bool)
-		if disabled {
+		if plannedDisabled {
 			diags = append(diags, disableApimInstancePolicyMessageLogging(ctx, d, m)...)
 		} else {
 			diags = append(diags, enableApimInstancePolicyMessageLogging(ctx, d, m)...)
@@ -343,7 +333,7 @@ func resourceApimInstancePolicyMessageLoggingUpdate(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceApimInstancePolicyMessageLoggingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceApimInstancePolicyMessageLoggingDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -351,16 +341,9 @@ func resourceApimInstancePolicyMessageLoggingDelete(ctx context.Context, d *sche
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	httpr, err := pco.apimpolicyclient.DefaultApi.DeleteApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	httpr, err := pco.apimpolicyclient.DefaultAPI.DeleteApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete policy message logging " + id + " for api " + apimid,
@@ -375,7 +358,7 @@ func resourceApimInstancePolicyMessageLoggingDelete(ctx context.Context, d *sche
 	return diags
 }
 
-func enableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func enableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -383,16 +366,9 @@ func enableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.Resou
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	_, httpr, err := pco.apimpolicyclient.DefaultApi.EnableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	_, httpr, err := pco.apimpolicyclient.DefaultAPI.EnableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to enable policy message logging " + id + " for api " + apimid,
@@ -404,7 +380,7 @@ func enableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -412,16 +388,9 @@ func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.Reso
 	apimid := d.Get("apim_id").(string)
 	id := d.Get("id").(string)
 	authctx := getApimPolicyAuthCtx(ctx, &pco)
-	_, httpr, err := pco.apimpolicyclient.DefaultApi.DisableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
+	_, httpr, err := pco.apimpolicyclient.DefaultAPI.DisableApimPolicy(authctx, orgid, envid, apimid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to disable policy message logging " + id + " for api " + apimid,
@@ -433,15 +402,15 @@ func disableApimInstancePolicyMessageLogging(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func flattenApimPolicyMessageLoggingCfg(_ *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]interface{} {
-	data := make(map[string]interface{})
+func flattenApimPolicyMessageLoggingCfg(_ *schema.ResourceData, policy *apim_policy.ApimPolicy) map[string]any {
+	data := make(map[string]any)
 	cfg := policy.GetConfigurationData()
-	logging_cfg := cfg["loggingConfiguration"].([]interface{})
-	lcfg_result := make([]map[string]interface{}, len(logging_cfg))
+	logging_cfg := cfg["loggingConfiguration"].([]any)
+	lcfg_result := make([]map[string]any, len(logging_cfg))
 	for i, item := range logging_cfg {
-		lcfg := item.(map[string]interface{})
-		item_data := lcfg["itemData"].(map[string]interface{})
-		c := make(map[string]interface{})
+		lcfg := item.(map[string]any)
+		item_data := lcfg["itemData"].(map[string]any)
+		c := make(map[string]any)
 		c["name"] = lcfg["itemName"]
 		c["message"] = item_data["message"]
 		if val, ok := item_data["conditional"]; ok {
@@ -462,13 +431,13 @@ func flattenApimPolicyMessageLoggingCfg(_ *schema.ResourceData, policy *apim_pol
 func newApimPolicyMessageLoggingBody(d *schema.ResourceData) *apim_policy.ApimPolicyBody {
 	body := apim_policy.NewApimPolicyBody()
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
+		l := val.([]any)
+		cfg := l[0].(map[string]any)
 		data := newApimPolicyMessageLoggingCfg(cfg)
 		body.SetConfigurationData(data)
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		body.SetPointcutData(newApimPolicyMessageLoggingPointcutDataBody(val.([]interface{})))
+		body.SetPointcutData(newApimPolicyMessageLoggingPointcutDataBody(val.([]any)))
 	}
 	if val, ok := d.GetOk("asset_group_id"); ok {
 		body.SetGroupId(val.(string))
@@ -479,20 +448,23 @@ func newApimPolicyMessageLoggingBody(d *schema.ResourceData) *apim_policy.ApimPo
 	if val, ok := d.GetOk("asset_version"); ok {
 		body.SetAssetVersion(val.(string))
 	}
+	if val, ok := d.GetOk("order"); ok {
+		body.SetOrder(int32(val.(int)))
+	}
 	return body
 }
 
-func newApimPolicyMessageLoggingPatchBody(d *schema.ResourceData) map[string]interface{} {
-	body := make(map[string]interface{})
+func newApimPolicyMessageLoggingPatchBody(d *schema.ResourceData) map[string]any {
+	body := make(map[string]any)
 	if val, ok := d.GetOk("configuration_data"); ok {
-		l := val.([]interface{})
-		cfg := l[0].(map[string]interface{})
+		l := val.([]any)
+		cfg := l[0].(map[string]any)
 		data := newApimPolicyMessageLoggingCfg(cfg)
 		body["configurationData"] = data
 	}
 	if val, ok := d.GetOk("pointcut_data"); ok {
-		collection := newApimPolicyClientIdEnfPointcutDataBody(val.([]interface{}))
-		slice := make([]map[string]interface{}, len(collection))
+		collection := newApimPolicyClientIdEnfPointcutDataBody(val.([]any))
+		slice := make([]map[string]any, len(collection))
 		for i, item := range collection {
 			m, _ := item.ToMap()
 			slice[i] = m
@@ -510,17 +482,20 @@ func newApimPolicyMessageLoggingPatchBody(d *schema.ResourceData) map[string]int
 	if val, ok := d.GetOk("asset_version"); ok {
 		body["assetVersion"] = val
 	}
+	if val, ok := d.GetOk("order"); ok {
+		body["order"] = int32(val.(int))
+	}
 	return body
 }
 
-func newApimPolicyMessageLoggingCfg(input map[string]interface{}) map[string]interface{} {
-	body := make(map[string]interface{})
-	logging_cfg := input["logging_configuration"].([]interface{})
-	lcfg := make([]map[string]interface{}, len(logging_cfg))
+func newApimPolicyMessageLoggingCfg(input map[string]any) map[string]any {
+	body := make(map[string]any)
+	logging_cfg := input["logging_configuration"].([]any)
+	lcfg := make([]map[string]any, len(logging_cfg))
 	for i, item := range logging_cfg {
-		cfg := item.(map[string]interface{})
+		cfg := item.(map[string]any)
 		//item data configuration
-		d := make(map[string]interface{})
+		d := make(map[string]any)
 		d["message"] = cfg["message"]
 		if val, ok := cfg["conditional"]; ok && val != nil && val.(string) != "" {
 			d["conditional"] = val
@@ -532,7 +507,7 @@ func newApimPolicyMessageLoggingCfg(input map[string]interface{}) map[string]int
 		d["firstSection"] = cfg["first_section"]
 		d["secondSection"] = cfg["second_section"]
 		//item
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c["itemName"] = cfg["name"]
 		c["itemData"] = d
 		lcfg[i] = c
@@ -541,10 +516,10 @@ func newApimPolicyMessageLoggingCfg(input map[string]interface{}) map[string]int
 	return body
 }
 
-func newApimPolicyMessageLoggingPointcutDataBody(collection []interface{}) []apim_policy.PointcutDataItem {
+func newApimPolicyMessageLoggingPointcutDataBody(collection []any) []apim_policy.PointcutDataItem {
 	slice := make([]apim_policy.PointcutDataItem, len(collection))
 	for i, item := range collection {
-		data := item.(map[string]interface{})
+		data := item.(map[string]any)
 		body := apim_policy.NewPointcutDataItem()
 		if val, ok := data["method_regex"]; ok && val != nil {
 			set := val.(*schema.Set)
@@ -558,7 +533,16 @@ func newApimPolicyMessageLoggingPointcutDataBody(collection []interface{}) []api
 	return slice
 }
 
-func decomposeApimPolicyMessageLoggingId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeApimPolicyMessageLoggingId(d *schema.ResourceData) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid APIM Policy Message Logging ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/APIM_ID/INSTANCE_ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }

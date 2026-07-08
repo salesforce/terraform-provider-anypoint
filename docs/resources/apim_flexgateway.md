@@ -4,8 +4,8 @@ page_title: "anypoint_apim_flexgateway Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
   Create an API Manager Instance of type Flex Gateway.
-      When an API instance of type Flex Gateway is created, it has automatically a default upstream linked to the endpoint_uri and a routing that points to this one.
-      This provider will remove all default routings and upstreams.
+  	When an API instance of type Flex Gateway is created, it has automatically a default upstream linked to the endpoint_uri and a routing that points to this one.
+  	This provider will remove all default routings and upstreams.
 ---
 
 # anypoint_apim_flexgateway (Resource)
@@ -202,6 +202,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

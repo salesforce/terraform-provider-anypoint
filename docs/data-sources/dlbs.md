@@ -95,5 +95,3 @@ Read-Only:
 - `app_uri` (String)
 - `input_uri` (String)
 - `upstream_protocol` (String)
-
-

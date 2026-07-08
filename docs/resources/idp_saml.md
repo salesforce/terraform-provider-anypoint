@@ -61,13 +61,14 @@ resource "anypoint_idp_saml" "example2" {
 
 - `name` (String) The name of the identity provider
 - `org_id` (String) The master organization id where the team is defined.
-- `saml` (Block Set, Min: 1) The description of identity provider specific for SAML types (see [below for nested schema](#nestedblock--saml))
+- `saml` (Block List, Min: 1, Max: 1) The description of identity provider specific for SAML types (see [below for nested schema](#nestedblock--saml))
 - `sp_sign_on_url` (String) The identity provider's sign on url
 - `sp_sign_out_url` (String) The identity provider's sign out url, only available for SAML
 
 ### Optional
 
 - `last_updated` (String) The last time this resource has been updated locally.
+- `login_disabled` (Boolean) Whether this provider is disabled for login
 
 ### Read-Only
 
@@ -98,6 +99,8 @@ Optional:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

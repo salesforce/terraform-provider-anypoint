@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -121,7 +120,7 @@ func dataSourceFabricsHealth() *schema.Resource {
 	}
 }
 
-func dataSourceFabricsHealthRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceFabricsHealthRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -130,14 +129,7 @@ func dataSourceFabricsHealthRead(ctx context.Context, d *schema.ResourceData, m 
 	//perform request
 	res, httpr, err := pco.rtfclient.DefaultApi.GetFabricsHealth(authctx, orgid, fabricsid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get fabrics health metrics",
@@ -163,55 +155,55 @@ func dataSourceFabricsHealthRead(ctx context.Context, d *schema.ResourceData, m 
 	return diags
 }
 
-func flattenFabricsHealthData(data *rtf.FabricsHealth) map[string]interface{} {
-	mappedItem := make(map[string]interface{})
+func flattenFabricsHealthData(data *rtf.FabricsHealth) map[string]any {
+	mappedItem := make(map[string]any)
 
 	if val, ok := data.GetClusterMonitoringOk(); ok {
-		mappedItem["cluster_monitoring"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["cluster_monitoring"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["cluster_monitoring"] = []interface{}{}
+		mappedItem["cluster_monitoring"] = []any{}
 	}
 	if val, ok := data.GetManageDeploymentsOk(); ok {
-		mappedItem["manage_deployments"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["manage_deployments"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["manage_deployments"] = []interface{}{}
+		mappedItem["manage_deployments"] = []any{}
 	}
 	if val, ok := data.GetLoadBalancingOk(); ok {
-		mappedItem["load_balancing"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["load_balancing"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["load_balancing"] = []interface{}{}
+		mappedItem["load_balancing"] = []any{}
 	}
 	if val, ok := data.GetAnypointMonitoringOk(); ok {
-		mappedItem["anypoint_monitoring"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["anypoint_monitoring"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["anypoint_monitoring"] = []interface{}{}
+		mappedItem["anypoint_monitoring"] = []any{}
 	}
 	if val, ok := data.GetExternalLogForwardingOk(); ok {
-		mappedItem["external_log_forwarding"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["external_log_forwarding"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["external_log_forwarding"] = []interface{}{}
+		mappedItem["external_log_forwarding"] = []any{}
 	}
 	if val, ok := data.GetApplianceOk(); ok {
-		mappedItem["appliance"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["appliance"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["appliance"] = []interface{}{}
+		mappedItem["appliance"] = []any{}
 	}
 	if val, ok := data.GetInfrastructureOk(); ok {
-		mappedItem["infrastructure"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["infrastructure"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["infrastructure"] = []interface{}{}
+		mappedItem["infrastructure"] = []any{}
 	}
 	if val, ok := data.GetPersistentGatewayOk(); ok {
-		mappedItem["persistent_gateway"] = []interface{}{flattenFabricsHealthStatusData(val)}
+		mappedItem["persistent_gateway"] = []any{flattenFabricsHealthStatusData(val)}
 	} else {
-		mappedItem["persistent_gateway"] = []interface{}{}
+		mappedItem["persistent_gateway"] = []any{}
 	}
 
 	return mappedItem
 }
 
-func flattenFabricsHealthStatusData(data *rtf.FabricsHealthStatus) map[string]interface{} {
-	mappedItem := make(map[string]interface{})
+func flattenFabricsHealthStatusData(data *rtf.FabricsHealthStatus) map[string]any {
+	mappedItem := make(map[string]any)
 	if val, ok := data.GetHealthyOk(); ok {
 		mappedItem["healthy"] = *val
 	}
@@ -222,7 +214,7 @@ func flattenFabricsHealthStatusData(data *rtf.FabricsHealthStatus) map[string]in
 		mappedItem["updated_at"] = *val
 	}
 	if val, ok := data.GetFailedProbesOk(); ok {
-		list := make([]interface{}, len(val))
+		list := make([]any, len(val))
 		for i, fhsfb := range val {
 			list[i] = flattenFabricsHealthStatusFailedProbesInner(&fhsfb)
 		}
@@ -231,8 +223,8 @@ func flattenFabricsHealthStatusData(data *rtf.FabricsHealthStatus) map[string]in
 	return mappedItem
 }
 
-func flattenFabricsHealthStatusFailedProbesInner(data *rtf.FabricsHealthStatusFailedProbesInner) map[string]interface{} {
-	mappedItem := make(map[string]interface{})
+func flattenFabricsHealthStatusFailedProbesInner(data *rtf.FabricsHealthStatusFailedProbesInner) map[string]any {
+	mappedItem := make(map[string]any)
 	if val, ok := data.GetNameOk(); ok {
 		mappedItem["name"] = *val
 	}
@@ -245,7 +237,7 @@ func flattenFabricsHealthStatusFailedProbesInner(data *rtf.FabricsHealthStatusFa
 	return mappedItem
 }
 
-func setFabricsHealthResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setFabricsHealthResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getFabricsHealthAttributes()
 	if data != nil {
 		for _, attr := range attributes {

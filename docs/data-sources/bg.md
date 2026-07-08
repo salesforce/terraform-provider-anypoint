@@ -139,5 +139,3 @@ Read-Only:
 - `name` (String)
 - `organization_id` (String)
 - `type` (String)
-
-

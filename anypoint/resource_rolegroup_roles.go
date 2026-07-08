@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,7 +97,7 @@ func resourceRoleGroupRoles() *schema.Resource {
 	}
 }
 
-func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	org_id := d.Get("org_id").(string)
@@ -113,14 +112,7 @@ func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m
 	//perform request
 	_, httpr, err := pco.roleclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdRolesPost(authctx, org_id, rolegroup_id).RequestBody(body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to assign roles to rolegroup " + rolegroup_id,
@@ -133,29 +125,29 @@ func resourceRoleGroupRolesCreate(ctx context.Context, d *schema.ResourceData, m
 	return resourceRoleGroupRolesRead(ctx, d, m)
 }
 
-func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	org_id := d.Get("org_id").(string)
 	rolegroup_id := d.Get("role_group_id").(string)
 	id := d.Id()
 	if isComposedResourceId(id) {
-		org_id, rolegroup_id = decomposeRolegroupRolesId(d)
+		org_id, rolegroup_id, diags = decomposeRolegroupRolesId(d)
 	} else if isComposedResourceId(id, "_") {
-		org_id, rolegroup_id = decomposeRolegroupRolesId(d, "_")
+		org_id, rolegroup_id, diags = decomposeRolegroupRolesId(d, "_")
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getRoleAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.roleclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdRolesGet(authctx, org_id, rolegroup_id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get rolegroup " + rolegroup_id + " assigned roles",
@@ -194,7 +186,7 @@ func resourceRoleGroupRolesRead(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	org_id := d.Get("org_id").(string)
@@ -209,14 +201,7 @@ func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m
 	//perform request
 	_, httpr, err := pco.roleclient.DefaultApi.OrganizationsOrgIdRolegroupsRolegroupIdRolesDelete(authctx, org_id, rolegroup_id).RequestBody(body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Delete rolegroup roles",
@@ -235,17 +220,17 @@ func resourceRoleGroupRolesDelete(ctx context.Context, d *schema.ResourceData, m
 /**
  * Generates body object for creating rolegroup roles
  */
-func newRolegroupRolesPostBody(org_id string, _ string, d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
+func newRolegroupRolesPostBody(org_id string, _ string, d *schema.ResourceData) ([]map[string]any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	roles := d.Get("roles").([]interface{})
+	roles := d.Get("roles").([]any)
 
 	if len(roles) == 0 {
 		return nil, diags
 	}
-	res := make([]map[string]interface{}, len(roles))
+	res := make([]map[string]any, len(roles))
 	for i, role := range roles {
-		item := make(map[string]interface{})
-		item["role_id"] = role.(map[string]interface{})["role_id"].(string)
+		item := make(map[string]any)
+		item["role_id"] = role.(map[string]any)["role_id"].(string)
 		item["context_params"] = map[string]string{
 			"org": org_id,
 		}
@@ -257,35 +242,35 @@ func newRolegroupRolesPostBody(org_id string, _ string, d *schema.ResourceData) 
 /**
  * Generates body object for deleting rolegroup roles
  */
-func newRolegroupRolesDeleteBody(d *schema.ResourceData) ([]map[string]interface{}, diag.Diagnostics) {
+func newRolegroupRolesDeleteBody(d *schema.ResourceData) ([]map[string]any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	roles := d.Get("roles").([]interface{})
+	roles := d.Get("roles").([]any)
 
 	if len(roles) == 0 {
 		return nil, diags
 	}
-	res := make([]map[string]interface{}, len(roles))
+	res := make([]map[string]any, len(roles))
 	for i, role := range roles {
-		item := make(map[string]interface{})
-		item["role_id"] = role.(map[string]interface{})["role_id"]
+		item := make(map[string]any)
+		item["role_id"] = role.(map[string]any)["role_id"]
 		item["context_params"] = map[string]string{
-			"org": role.(map[string]interface{})["context_params"].(map[string]interface{})["org"].(string),
+			"org": role.(map[string]any)["context_params"].(map[string]any)["org"].(string),
 		}
-		item["role_group_assignment_id"] = role.(map[string]interface{})["role_group_assignment_id"]
-		item["role_group_id"] = role.(map[string]interface{})["role_group_id"]
+		item["role_group_assignment_id"] = role.(map[string]any)["role_group_assignment_id"]
+		item["role_group_id"] = role.(map[string]any)["role_group_id"]
 		res[i] = item
 	}
 	return res, diags
 }
 
-func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string]interface{}, diag.Diagnostics) {
+func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string]any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(assigned_roles) > 0 {
-		res := make([]map[string]interface{}, len(assigned_roles))
+		res := make([]map[string]any, len(assigned_roles))
 
 		for i, role := range assigned_roles {
-			item := make(map[string]interface{})
+			item := make(map[string]any)
 			item["context_params"] = map[string]string{
 				"org": *role.GetContextParams().Org,
 			}
@@ -302,23 +287,23 @@ func flattenRoleGroupRolesData(assigned_roles []role.AssignedRole) ([]map[string
 		return res, diags
 	}
 
-	return make([]map[string]interface{}, 0), diags
+	return make([]map[string]any, 0), diags
 }
 
 /*
 * Copies the given rolegroup assigned roles into the given resource data
 * @param d *schema.ResourceData the resource data schema
-* @param assigned_roles map[string]interface{} the rolegroup assigned roles
+* @param assigned_roles map[string]any the rolegroup assigned roles
  */
-func setAssignedRolesAttributesToResourceData(d *schema.ResourceData, assigned_roles []map[string]interface{}) error {
+func setAssignedRolesAttributesToResourceData(d *schema.ResourceData, assigned_roles []map[string]any) error {
 	attributes := getAssignedRolesAttributes()
 
 	if len(assigned_roles) == 0 {
 		return nil
 	}
-	roles := make([]map[string]interface{}, len(assigned_roles))
+	roles := make([]map[string]any, len(assigned_roles))
 	for i, assigned_role := range assigned_roles {
-		role := make(map[string]interface{})
+		role := make(map[string]any)
 		for _, attr := range attributes {
 			role[attr] = assigned_role[attr]
 		}
@@ -349,7 +334,16 @@ func getRoleAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Contex
 	return context.WithValue(tmp, role.ContextServerIndex, pco.server_index)
 }
 
-func decomposeRolegroupRolesId(d *schema.ResourceData, separator ...string) (string, string) {
+func decomposeRolegroupRolesId(d *schema.ResourceData, separator ...string) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Rolegroup Roles ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ROLEGROUP_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }

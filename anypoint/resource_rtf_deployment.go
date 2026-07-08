@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -54,13 +54,13 @@ var DeplApplicationConfigPropsRTFDefinition = &schema.Resource{
 			Type:        schema.TypeMap,
 			Description: "The mule application properties.",
 			Optional:    true,
-			DefaultFunc: func() (interface{}, error) { return make(map[string]string), nil },
+			DefaultFunc: func() (any, error) { return make(map[string]string), nil },
 		},
 		"secure_properties": {
 			Type:        schema.TypeMap,
 			Description: "The mule application secured properties.",
 			Optional:    true,
-			DefaultFunc: func() (interface{}, error) { return make(map[string]string), nil },
+			DefaultFunc: func() (any, error) { return make(map[string]string), nil },
 		},
 	},
 }
@@ -362,11 +362,11 @@ var DeplTargetDeploymentSettingsRTFDefinition = &schema.Resource{
 			Description: "The details about http inbound or outbound configuration",
 			Optional:    true,
 			MaxItems:    1,
-			DefaultFunc: func() (interface{}, error) {
-				dict := make(map[string]interface{})
+			DefaultFunc: func() (any, error) {
+				dict := make(map[string]any)
 				dict["inbound_last_mile_security"] = false
 				dict["inbound_forward_ssl_session"] = false
-				return []interface{}{dict}, nil
+				return []any{dict}, nil
 			},
 			Elem: DeplTargetDeplSettHttpRTFDefinition,
 		},
@@ -392,10 +392,10 @@ var DeplTargetDeploymentSettingsRTFDefinition = &schema.Resource{
 			`,
 			Optional: true,
 			MaxItems: 1,
-			DefaultFunc: func() (interface{}, error) {
-				dict := make(map[string]interface{})
+			DefaultFunc: func() (any, error) {
+				dict := make(map[string]any)
 				dict["enabled"] = false
-				return []interface{}{dict}, nil
+				return []any{dict}, nil
 			},
 			Elem: DeplTargetDeplSettAutoscalingRTFDefinition,
 		},
@@ -577,7 +577,7 @@ func resourceRTFDeployment() *schema.Resource {
 	}
 }
 
-func resourceRTFDeploymentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	name := d.Get("name").(string)
@@ -588,14 +588,7 @@ func resourceRTFDeploymentCreate(ctx context.Context, d *schema.ResourceData, m 
 	//Execute post deployment
 	res, httpr, err := pco.appmanagerclient.DefaultApi.PostDeployment(authctx, orgid, envid).DeploymentRequestBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create " + name + " deployment for runtime fabrics.",
@@ -608,27 +601,27 @@ func resourceRTFDeploymentCreate(ctx context.Context, d *schema.ResourceData, m 
 	return resourceRTFDeploymentRead(ctx, d, m)
 }
 
-func resourceRTFDeploymentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, id = decomposeRTFDeploymentId(d)
+		orgid, envid, id, diags = decomposeRTFDeploymentId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.appmanagerclient.DefaultApi.GetDeploymentById(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read runtime fabrics deployment " + id + ".",
@@ -656,7 +649,7 @@ func resourceRTFDeploymentRead(ctx context.Context, d *schema.ResourceData, m in
 	return diags
 }
 
-func resourceRTFDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if !d.HasChanges(getRTFDeploymentUpdatableAttributes()...) {
 		return diags
@@ -670,14 +663,7 @@ func resourceRTFDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m 
 	body := newRTFDeploymentBody(d)
 	_, httpr, err := pco.appmanagerclient.DefaultApi.PatchDeployment(authctx, orgid, envid, id).DeploymentRequestBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to update deployment " + name + " on runtime fabrics.",
@@ -689,7 +675,7 @@ func resourceRTFDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m 
 	return resourceRTFDeploymentRead(ctx, d, m)
 }
 
-func resourceRTFDeploymentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceRTFDeploymentDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
@@ -699,14 +685,7 @@ func resourceRTFDeploymentDelete(ctx context.Context, d *schema.ResourceData, m 
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	httpr, err := pco.appmanagerclient.DefaultApi.DeleteDeployment(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete deployment " + name + " on cloudhub 2.0 shared-space.",
@@ -725,12 +704,12 @@ func resourceRTFDeploymentDelete(ctx context.Context, d *schema.ResourceData, m 
 func newRTFDeploymentBody(d *schema.ResourceData) *application_manager_v2.DeploymentRequestBody {
 	body := application_manager_v2.NewDeploymentRequestBody()
 	// -- Parsing Application
-	app_list_d := d.Get("application").([]interface{})
-	app_d := app_list_d[0].(map[string]interface{})
+	app_list_d := d.Get("application").([]any)
+	app_d := app_list_d[0].(map[string]any)
 	application := newRTFDeploymentApplication(app_d)
 	// -- Parsing Target
-	target_list_d := d.Get("target").([]interface{})
-	target_d := target_list_d[0].(map[string]interface{})
+	target_list_d := d.Get("target").([]any)
+	target_d := target_list_d[0].(map[string]any)
 	target := newRTFDeploymentTarget(target_d)
 	//Set Body Data
 	body.SetName(d.Get("name").(string))
@@ -741,14 +720,14 @@ func newRTFDeploymentBody(d *schema.ResourceData) *application_manager_v2.Deploy
 }
 
 // Prepares Application object out of map input
-func newRTFDeploymentApplication(app_d map[string]interface{}) *application_manager_v2.Application {
-	ref_list_d := app_d["ref"].([]interface{})
-	ref_d := ref_list_d[0].(map[string]interface{})
+func newRTFDeploymentApplication(app_d map[string]any) *application_manager_v2.Application {
+	ref_list_d := app_d["ref"].([]any)
+	ref_d := ref_list_d[0].(map[string]any)
 	// Ref
 	ref := newRTFDeploymentRef(ref_d)
 	//Parse Configuration
-	configuration_list_d := app_d["configuration"].([]interface{})
-	configuration_d := configuration_list_d[0].(map[string]interface{})
+	configuration_list_d := app_d["configuration"].([]any)
+	configuration_d := configuration_list_d[0].(map[string]any)
 	configuration := newRTFDeploymentConfiguration(configuration_d)
 	//Object Store V2
 	// object_store_v2_enabled_d := app_d["object_store_v2_enabled"].(bool)
@@ -770,9 +749,9 @@ func newRTFDeploymentApplication(app_d map[string]interface{}) *application_mana
 }
 
 // Prepares Target object out of map input
-func newRTFDeploymentTarget(target_d map[string]interface{}) *application_manager_v2.Target {
-	deployment_settings_list_d := target_d["deployment_settings"].([]interface{})
-	deployment_settings_d := deployment_settings_list_d[0].(map[string]interface{})
+func newRTFDeploymentTarget(target_d map[string]any) *application_manager_v2.Target {
+	deployment_settings_list_d := target_d["deployment_settings"].([]any)
+	deployment_settings_d := deployment_settings_list_d[0].(map[string]any)
 	deployment_settings := newRTFDeploymentDeploymentSettings(deployment_settings_d)
 	//Prepare Target data
 	target := application_manager_v2.NewTarget()
@@ -785,7 +764,7 @@ func newRTFDeploymentTarget(target_d map[string]interface{}) *application_manage
 }
 
 // Prepares Ref Object out of map input
-func newRTFDeploymentRef(ref_d map[string]interface{}) *application_manager_v2.Ref {
+func newRTFDeploymentRef(ref_d map[string]any) *application_manager_v2.Ref {
 	ref := application_manager_v2.NewRef()
 	ref.SetGroupId(ref_d["group_id"].(string))
 	ref.SetArtifactId(ref_d["artifact_id"].(string))
@@ -795,22 +774,22 @@ func newRTFDeploymentRef(ref_d map[string]interface{}) *application_manager_v2.R
 }
 
 // Prepares Application Configuration Object out of map input
-func newRTFDeploymentConfiguration(configuration_d map[string]interface{}) *application_manager_v2.AppConfiguration {
+func newRTFDeploymentConfiguration(configuration_d map[string]any) *application_manager_v2.AppConfiguration {
 	//Mule Agent App Properties Service
-	mule_agent_app_props_service_list_d := configuration_d["mule_agent_app_props_service"].([]interface{})
-	mule_agent_app_props_service_d := mule_agent_app_props_service_list_d[0].(map[string]interface{})
-	mule_agent_app_props_service_properties := mule_agent_app_props_service_d["properties"].(map[string]interface{})
-	mule_agent_app_props_service_secure_properties := mule_agent_app_props_service_d["secure_properties"].(map[string]interface{})
+	mule_agent_app_props_service_list_d := configuration_d["mule_agent_app_props_service"].([]any)
+	mule_agent_app_props_service_d := mule_agent_app_props_service_list_d[0].(map[string]any)
+	mule_agent_app_props_service_properties := mule_agent_app_props_service_d["properties"].(map[string]any)
+	mule_agent_app_props_service_secure_properties := mule_agent_app_props_service_d["secure_properties"].(map[string]any)
 	mule_agent_app_props_service := application_manager_v2.NewMuleAgentAppPropService()
 	mule_agent_app_props_service.SetProperties(mule_agent_app_props_service_properties)
 	mule_agent_app_props_service.SetSecureProperties(mule_agent_app_props_service_secure_properties)
-	mule_agent_logging_service_list_d := configuration_d["mule_agent_logging_service"].([]interface{})
-	mule_agent_logging_service_d := mule_agent_logging_service_list_d[0].(map[string]interface{})
+	mule_agent_logging_service_list_d := configuration_d["mule_agent_logging_service"].([]any)
+	mule_agent_logging_service_d := mule_agent_logging_service_list_d[0].(map[string]any)
 	//Scope logging configuration
-	scope_logging_configurations_list_d := mule_agent_logging_service_d["scope_logging_configurations"].([]interface{})
+	scope_logging_configurations_list_d := mule_agent_logging_service_d["scope_logging_configurations"].([]any)
 	scope_logging_configurations := make([]application_manager_v2.ScopeLoggingConfiguration, len(scope_logging_configurations_list_d))
 	for i, item := range scope_logging_configurations_list_d {
-		data := item.(map[string]interface{})
+		data := item.(map[string]any)
 		conf := application_manager_v2.NewScopeLoggingConfiguration()
 		conf.SetScope(data["scope"].(string))
 		conf.SetLogLevel(data["log_level"].(string))
@@ -827,7 +806,7 @@ func newRTFDeploymentConfiguration(configuration_d map[string]interface{}) *appl
 }
 
 // Prepares DeploymentSettings object out of map input
-func newRTFDeploymentDeploymentSettings(deployment_settings_d map[string]interface{}) *application_manager_v2.DeploymentSettings {
+func newRTFDeploymentDeploymentSettings(deployment_settings_d map[string]any) *application_manager_v2.DeploymentSettings {
 	//http
 	http := newRTFDeploymentHttp(deployment_settings_d)
 	//runtime
@@ -857,12 +836,12 @@ func newRTFDeploymentDeploymentSettings(deployment_settings_d map[string]interfa
 }
 
 // Prepares Runtime object out of map input
-func newRTFDeploymentRuntime(deployment_settings_d map[string]interface{}) *application_manager_v2.Runtime {
+func newRTFDeploymentRuntime(deployment_settings_d map[string]any) *application_manager_v2.Runtime {
 	runtime := application_manager_v2.NewRuntime()
 	if val, ok := deployment_settings_d["runtime"]; ok {
-		runtime_list_d := val.([]interface{})
+		runtime_list_d := val.([]any)
 		if len(runtime_list_d) > 0 {
-			runtime_d := runtime_list_d[0].(map[string]interface{})
+			runtime_d := runtime_list_d[0].(map[string]any)
 			runtime.SetVersion(runtime_d["version"].(string))
 			runtime.SetReleaseChannel(runtime_d["release_channel"].(string))
 			runtime.SetJava(runtime_d["java"].(string))
@@ -873,13 +852,14 @@ func newRTFDeploymentRuntime(deployment_settings_d map[string]interface{}) *appl
 }
 
 // Prepares Http object out of map input
-func newRTFDeploymentHttp(deployment_settings_d map[string]interface{}) *application_manager_v2.Http {
+func newRTFDeploymentHttp(deployment_settings_d map[string]any) *application_manager_v2.Http {
 	http_inbound := application_manager_v2.NewHttpInbound()
 	http := application_manager_v2.NewHttp()
 	if val, ok := deployment_settings_d["http"]; ok {
-		http_list_d := val.([]interface{})
+		http_list_d := val.([]any)
 		if len(http_list_d) > 0 {
-			http_d := http_list_d[0].(map[string]interface{})
+			http_d := http_list_d[0].(map[string]any)
+			http_inbound.SetPublicUrl(http_d["inbound_public_url"].(string))
 			http_inbound.SetLastMileSecurity(http_d["inbound_last_mile_security"].(bool))
 			http_inbound.SetForwardSslSession(http_d["inbound_forward_ssl_session"].(bool))
 			http.SetInbound(*http_inbound)
@@ -888,12 +868,12 @@ func newRTFDeploymentHttp(deployment_settings_d map[string]interface{}) *applica
 	return http
 }
 
-func newRTFDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *application_manager_v2.Autoscaling {
+func newRTFDeploymentAutoscaling(deployment_settings_d map[string]any) *application_manager_v2.Autoscaling {
 	autoscaling := application_manager_v2.NewAutoscaling()
 	if val, ok := deployment_settings_d["autoscaling"]; ok {
-		autoscaling_list_d := val.([]interface{})
+		autoscaling_list_d := val.([]any)
 		if len(autoscaling_list_d) > 0 {
-			autoscaling_d := autoscaling_list_d[0].(map[string]interface{})
+			autoscaling_d := autoscaling_list_d[0].(map[string]any)
 			autoscaling.SetEnabled(autoscaling_d["enabled"].(bool))
 			autoscaling.SetMinReplicas(int32(autoscaling_d["min_replicas"].(int)))
 			autoscaling.SetMaxReplicas(int32(autoscaling_d["max_replicas"].(int)))
@@ -902,12 +882,12 @@ func newRTFDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *
 	return autoscaling
 }
 
-func newRTFDeploymentResources(deployment_settings_d map[string]interface{}) *application_manager_v2.Resources {
+func newRTFDeploymentResources(deployment_settings_d map[string]any) *application_manager_v2.Resources {
 	resources := application_manager_v2.NewResources()
 	if val, ok := deployment_settings_d["resources"]; ok {
-		resources_list_d := val.([]interface{})
+		resources_list_d := val.([]any)
 		if len(resources_list_d) > 0 {
-			resources_d := resources_list_d[0].(map[string]interface{})
+			resources_d := resources_list_d[0].(map[string]any)
 			cpu := application_manager_v2.NewResourcesCpu()
 			cpu.SetLimit(resources_d["cpu_limit"].(string))
 			cpu.SetReserved(resources_d["cpu_reserved"].(string))
@@ -921,9 +901,18 @@ func newRTFDeploymentResources(deployment_settings_d map[string]interface{}) *ap
 	return resources
 }
 
-func decomposeRTFDeploymentId(d *schema.ResourceData) (string, string, string) {
+func decomposeRTFDeploymentId(d *schema.ResourceData) (string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2]
+	if len(s) != 3 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid RTF Deployment ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/RTF_ID/DEPLOYMENT_ID, got %s", d.Id()),
+		})
+		return "", "", "", diags
+	}
+	return s[0], s[1], s[2], diags
 }
 
 func getRTFDeploymentUpdatableAttributes() []string {

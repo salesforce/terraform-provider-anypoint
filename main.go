@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
@@ -18,17 +16,11 @@ func main() {
 	flag.Parse()
 
 	opts := &plugin.ServeOpts{
+		Debug:        debugMode,
+		ProviderAddr: "anypoint.mulesoft.com/automation/anypoint",
 		ProviderFunc: func() *schema.Provider {
 			return anypoint.Provider()
 		},
-	}
-
-	if debugMode {
-		err := plugin.Debug(context.Background(), "anypoint.mulesoft.com/automation/anypoint", opts)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		return
 	}
 
 	plugin.Serve(opts)

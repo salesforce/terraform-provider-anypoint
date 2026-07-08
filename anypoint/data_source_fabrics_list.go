@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -164,7 +163,7 @@ func dataSourceFabricsCollection() *schema.Resource {
 	}
 }
 
-func dataSourceAllFabricsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAllFabricsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -172,14 +171,7 @@ func dataSourceAllFabricsRead(ctx context.Context, d *schema.ResourceData, m int
 	//perform request
 	res, httpr, err := pco.rtfclient.DefaultApi.GetAllFabrics(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get fabrics list",
@@ -219,12 +211,12 @@ func dataSourceAllFabricsRead(ctx context.Context, d *schema.ResourceData, m int
 * @param fabricsCollection *[]rtf.Fabrics the list of fabrics
 * @return list of generic items
  */
-func flattenFabricsCollectionData(fabricsCollection []rtf.Fabrics) []interface{} {
+func flattenFabricsCollectionData(fabricsCollection []rtf.Fabrics) []any {
 	if len(fabricsCollection) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	data := make([]interface{}, len(fabricsCollection))
+	data := make([]any, len(fabricsCollection))
 	for i, fabrics := range fabricsCollection {
 		data[i] = flattenFabricsData(&fabrics)
 	}

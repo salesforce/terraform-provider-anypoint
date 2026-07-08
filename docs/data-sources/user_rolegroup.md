@@ -32,5 +32,3 @@ Reads the `user` related `rolegroup` in the business group.
 - `role_group_id` (String) The role-group id.
 - `updated_at` (String) The time when the user assignment to the role-group was updated.
 - `user_role_group_id` (String) The unique if of the user assignment to the role-group
-
-

@@ -1,24 +1,27 @@
 module github.com/mulesoft-anypoint/terraform-provider-anypoint
 
-go 1.20
+go 1.21
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/ame v1.0.0
-	github.com/mulesoft-anypoint/anypoint-client-go/ame_binding v1.0.0
+	github.com/mulesoft-anypoint/anypoint-client-go/ame_binding v1.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/amq v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/apim v0.1.0
-	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.0.1
+	github.com/mulesoft-anypoint/anypoint-client-go/apim_policy v0.4.0
+	github.com/mulesoft-anypoint/anypoint-client-go/apim_tier v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/apim_upstream v0.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/application_manager_v2 v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/authorization v0.3.0
-	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.1.1
+	github.com/mulesoft-anypoint/anypoint-client-go/connected_app v1.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/dlb v0.5.0
 	github.com/mulesoft-anypoint/anypoint-client-go/env v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/flexgateway v0.1.1
-	github.com/mulesoft-anypoint/anypoint-client-go/idp v0.2.0
+	github.com/mulesoft-anypoint/anypoint-client-go/idp v1.0.1
 	github.com/mulesoft-anypoint/anypoint-client-go/org v0.4.0
+	github.com/mulesoft-anypoint/anypoint-client-go/private_space v1.3.0
+	github.com/mulesoft-anypoint/anypoint-client-go/private_space_tlscontext v1.0.0
 	github.com/mulesoft-anypoint/anypoint-client-go/role v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/rolegroup v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/rtf v0.1.0
@@ -28,15 +31,22 @@ require (
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_keystore v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_tlscontext v0.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/secretgroup_truststore v0.1.0
-	github.com/mulesoft-anypoint/anypoint-client-go/team v0.3.0
+	github.com/mulesoft-anypoint/anypoint-client-go/team v1.1.0
 	github.com/mulesoft-anypoint/anypoint-client-go/team_group_mappings v0.2.1
 	github.com/mulesoft-anypoint/anypoint-client-go/team_members v0.2.0
-	github.com/mulesoft-anypoint/anypoint-client-go/team_roles v0.2.0
+	github.com/mulesoft-anypoint/anypoint-client-go/team_roles v1.1.1
 	github.com/mulesoft-anypoint/anypoint-client-go/user v0.3.0
 	github.com/mulesoft-anypoint/anypoint-client-go/user_rolegroups v0.2.0
 	github.com/mulesoft-anypoint/anypoint-client-go/vpc v0.6.0
 	github.com/mulesoft-anypoint/anypoint-client-go/vpn v0.1.0
 )
+
+require (
+	github.com/mulesoft-anypoint/anypoint-client-go/exchange_assets v0.0.5
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
+)
+
+require gopkg.in/validator.v2 v2.0.1 // indirect
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
@@ -50,7 +60,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.14.1 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.14.0 // indirect

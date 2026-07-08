@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"maps"
 	"strconv"
 	"time"
@@ -108,7 +107,7 @@ func dataSourceSecretGroups() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	//init vars
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -126,14 +125,7 @@ func dataSourceSecretGroupsRead(ctx context.Context, d *schema.ResourceData, m i
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get secret groups for org " + orgid + " and env " + envid,
@@ -157,19 +149,19 @@ func dataSourceSecretGroupsRead(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func flattenSecretGroupCollectionResult(secretgroups []secretgroup.SecretGroup) []interface{} {
+func flattenSecretGroupCollectionResult(secretgroups []secretgroup.SecretGroup) []any {
 	if len(secretgroups) > 0 {
-		res := make([]interface{}, len(secretgroups))
+		res := make([]any, len(secretgroups))
 		for i, sg := range secretgroups {
 			res[i] = flattenSecretGroupResult(&sg)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenSecretGroupResult(secretgroup *secretgroup.SecretGroup) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSecretGroupResult(secretgroup *secretgroup.SecretGroup) map[string]any {
+	item := make(map[string]any)
 	if secretgroup == nil {
 		return item
 	}
@@ -186,8 +178,8 @@ func flattenSecretGroupResult(secretgroup *secretgroup.SecretGroup) map[string]i
 	return item
 }
 
-func flattenSecretGroupMeta(meta *secretgroup.Meta) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSecretGroupMeta(meta *secretgroup.Meta) map[string]any {
+	item := make(map[string]any)
 	if meta == nil {
 		return item
 	}
@@ -225,9 +217,9 @@ func parseSecretGroupsSearchOpts(req secretgroup.DefaultApiGetEnvSecretGroupsReq
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "downloadable" {
-			req = req.Downloadable(v.(bool))
+			req = req.Downloadable(toBool(v))
 			continue
 		}
 	}

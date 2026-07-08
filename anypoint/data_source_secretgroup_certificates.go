@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"maps"
 	"strconv"
 	"time"
@@ -72,7 +71,7 @@ func dataSourceSecretGroupCertificates() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupCertificatesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupCertificatesRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -82,14 +81,7 @@ func dataSourceSecretGroupCertificatesRead(ctx context.Context, d *schema.Resour
 	// perform request
 	res, httpr, err := pco.sgcertificateclient.DefaultApi.GetSecretGroupCertificates(authctx, orgid, envid, sgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get certificates for secret-group " + sgid,
@@ -113,20 +105,20 @@ func dataSourceSecretGroupCertificatesRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func flattenSgCertificateSummaryCollection(collection []secretgroup_certificate.CertificateSummary) []interface{} {
+func flattenSgCertificateSummaryCollection(collection []secretgroup_certificate.CertificateSummary) []any {
 	length := len(collection)
 	if length > 0 {
-		res := make([]interface{}, length)
+		res := make([]any, length)
 		for i, cert := range collection {
 			res[i] = flattenSgCertificateSummary(&cert)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenSgCertificateSummary(cert *secretgroup_certificate.CertificateSummary) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgCertificateSummary(cert *secretgroup_certificate.CertificateSummary) map[string]any {
+	item := make(map[string]any)
 	if val, ok := cert.GetNameOk(); ok {
 		item["name"] = *val
 	}

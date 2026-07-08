@@ -4,7 +4,7 @@ page_title: "anypoint_app_deployment_v2 Data Source - terraform-provider-anypoin
 subcategory: ""
 description: |-
   Reads a specific `Deployment`.
-      This only works for Cloudhub V2 and Runtime Fabrics Apps.
+  	This only works for Cloudhub V2 and Runtime Fabrics Apps.
 ---
 
 # anypoint_app_deployment_v2 (Data Source)
@@ -231,5 +231,3 @@ Read-Only:
 - `anypoint_monitoring_resources_cpu_reserved` (String)
 - `anypoint_monitoring_resources_memory_limit` (String)
 - `anypoint_monitoring_resources_memory_reserved` (String)
-
-

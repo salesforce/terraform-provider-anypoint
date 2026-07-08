@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -128,7 +127,7 @@ func dataSourceUserRolegroups() *schema.Resource {
 	}
 }
 
-func dataSourceUserRolegroupsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceUserRolegroupsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -145,14 +144,7 @@ func dataSourceUserRolegroupsRead(ctx context.Context, d *schema.ResourceData, m
 	//request roles
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get user rolegroups",
@@ -208,13 +200,13 @@ func parseUserRolegroupsSearchOpts(req user_rolegroups.DefaultApiApiOrganization
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 	}
@@ -225,22 +217,22 @@ func parseUserRolegroupsSearchOpts(req user_rolegroups.DefaultApiApiOrganization
 /*
 Transforms a set of users to the dataSourceUsers schema
 */
-func flattenUserRolegroupsData(rolegroups *[]user_rolegroups.Rolegroup) []interface{} {
+func flattenUserRolegroupsData(rolegroups *[]user_rolegroups.Rolegroup) []any {
 	if rolegroups == nil || len(*rolegroups) <= 0 {
-		return make([]interface{}, 0)
+		return make([]any, 0)
 	}
-	res := make([]interface{}, len(*rolegroups))
+	res := make([]any, len(*rolegroups))
 	for i, rg := range *rolegroups {
 		res[i] = flattenUserRolegroupData(&rg)
 	}
 	return res
 }
 
-func flattenUserRolegroupData(rg *user_rolegroups.Rolegroup) map[string]interface{} {
+func flattenUserRolegroupData(rg *user_rolegroups.Rolegroup) map[string]any {
 	if rg == nil {
 		return nil
 	}
-	res := make(map[string]interface{})
+	res := make(map[string]any)
 	if val, ok := rg.GetRoleGroupIdOk(); ok {
 		res["role_group_id"] = *val
 	}

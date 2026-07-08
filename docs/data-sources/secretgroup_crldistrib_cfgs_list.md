@@ -43,5 +43,3 @@ Read-Only:
 - `id` (String)
 - `name` (String)
 - `path` (String)
-
-

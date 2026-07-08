@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -179,14 +178,14 @@ func dataSourceConnectedApps() *schema.Resource {
 	}
 }
 
-func dataSourceConnectedAppsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceConnectedAppsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	searchOpts := d.Get("params").(*schema.Set)
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
 	//prepare request
-	req := pco.connectedappclient.DefaultApi.GetAllConnectedApps(authctx).OrgId(orgid)
+	req := pco.connectedappclient.DefaultAPI.GetAllConnectedApps(authctx).OrgId(orgid)
 	req, errDiags := parseConnectedAppSearchOpts(req, searchOpts)
 	if errDiags.HasError() {
 		diags = append(diags, errDiags...)
@@ -195,14 +194,7 @@ func dataSourceConnectedAppsRead(ctx context.Context, d *schema.ResourceData, m 
 	//execut request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get connected-apps for org " + orgid,
@@ -238,36 +230,36 @@ func dataSourceConnectedAppsRead(ctx context.Context, d *schema.ResourceData, m 
 Parses the api manager search options in order to check if the required search parameters are set correctly.
 Appends the parameters to the given request
 */
-func parseConnectedAppSearchOpts(req connected_app.DefaultApiGetAllConnectedAppsRequest, params *schema.Set) (connected_app.DefaultApiGetAllConnectedAppsRequest, diag.Diagnostics) {
+func parseConnectedAppSearchOpts(req connected_app.DefaultAPIGetAllConnectedAppsRequest, params *schema.Set) (connected_app.DefaultAPIGetAllConnectedAppsRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if params.Len() == 0 {
 		return req, diags
 	}
 	opts := params.List()[0]
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "search" {
-			req = req.Search(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "search" && toString(v) != "" {
+			req = req.Search(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
 	}
 	return req, diags
 }
 
-func flattenConnectedAppsResult(collection []connected_app.ConnectedAppRespExt) []interface{} {
+func flattenConnectedAppsResult(collection []connected_app.ConnectedAppRespExt) []any {
 	if len(collection) > 0 {
-		res := make([]interface{}, len(collection))
+		res := make([]any, len(collection))
 		for i, connapp := range collection {
 			res[i] = flattenConnectedAppData(&connapp)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }

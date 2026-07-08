@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -163,7 +162,7 @@ func dataSourceVPN() *schema.Resource {
 	}
 }
 
-func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	vpcid := d.Get("vpc_id").(string)
@@ -173,14 +172,7 @@ func dataSourceVPNRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//request specific VPN
 	res, httpr, err := pco.vpnclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdIpsecVpnIdGet(authctx, orgid, vpcid, vpnid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get VPN " + vpnid,
@@ -221,8 +213,8 @@ Easily said: Transforms library API response object to a schema object
 @param vpcitem *vpc.Vpc the vpc struct
 @return the vpc mapped struct
 */
-func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]interface{}, error) {
-	item := make(map[string]interface{})
+func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]any, error) {
+	item := make(map[string]any)
 	var vpnState vpn.State
 	if val, ok := vpnItem.GetStateOk(); ok {
 		vpnState = *val
@@ -246,9 +238,9 @@ func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]interface{}, error) {
 
 	vpnTunnelConfig := *vpnSpec.TunnelConfigs
 	//Create the TunnelConfigs - this works
-	tcs := make([]map[string]interface{}, len(vpnTunnelConfig))
+	tcs := make([]map[string]any, len(vpnTunnelConfig))
 	for i, tc := range vpnTunnelConfig {
-		jsonTc := make(map[string]interface{})
+		jsonTc := make(map[string]any)
 		jsonTc["psk"] = tc.GetPsk()
 		jsonTc["ptp_cidr"] = tc.GetPtpCidr()
 		jsonTc["rekey_margin_in_seconds"] = tc.GetRekeyMarginInSeconds()
@@ -260,9 +252,9 @@ func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]interface{}, error) {
 	// The list of tunnels may not exist when the vpn is on error
 	if val, ok := vpnState.GetVpnTunnelsOk(); ok {
 		vpnTunnels := *val
-		vpnts := make([]map[string]interface{}, len(vpnTunnels))
+		vpnts := make([]map[string]any, len(vpnTunnels))
 		for i, vpnt := range vpnTunnels {
-			jsonVpnt := make(map[string]interface{})
+			jsonVpnt := make(map[string]any)
 			jsonVpnt["accepted_route_count"] = vpnt.GetAcceptedRouteCount()
 			jsonVpnt["last_status_change"] = vpnt.GetLastStatusChange()
 			jsonVpnt["local_external_ip_address"] = vpnt.GetLocalExternalIpAddress()
@@ -291,9 +283,9 @@ func flattenVPNData(vpnItem *vpn.VpnGet) (map[string]interface{}, error) {
 /*
 * Copies the given vpn instance into the given resource data
 * @param d *schema.ResourceData the resource data schema
-* @param vpnitem map[string]interface{} the vpn instance
+* @param vpnitem map[string]any the vpn instance
  */
-func setVPNCoreAttributesToResourceData(d *schema.ResourceData, vpnitem map[string]interface{}) error {
+func setVPNCoreAttributesToResourceData(d *schema.ResourceData, vpnitem map[string]any) error {
 	attributes := getVPNCoreAttributes()
 	if vpnitem != nil {
 		for _, attr := range attributes {

@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -436,7 +436,7 @@ func resourceSecretGroupTlsContextSF() *schema.Resource {
 	}
 }
 
-func resourceSecretGroupTlsContextSFCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupTlsContextSFCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -449,14 +449,7 @@ func resourceSecretGroupTlsContextSFCreate(ctx context.Context, d *schema.Resour
 	//perform request
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.PostSecretGroupTlsContext(authctx, orgid, envid, sgid).TlsContextPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create tls-context " + name,
@@ -470,7 +463,7 @@ func resourceSecretGroupTlsContextSFCreate(ctx context.Context, d *schema.Resour
 	return resourceSecretGroupTlsContextSFRead(ctx, d, m)
 }
 
-func resourceSecretGroupTlsContextSFRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupTlsContextSFRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -478,20 +471,20 @@ func resourceSecretGroupTlsContextSFRead(ctx context.Context, d *schema.Resource
 	sgid := d.Get("sg_id").(string)
 	id := d.Get("id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, sgid, id = decomposeSgTlsContextSFId(d)
+		orgid, envid, sgid, id, diags = decomposeSgTlsContextSFId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getSgTlsContextAuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.sgtlscontextclient.DefaultApi.GetSecretGroupTlsContextDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read tls-context " + id,
@@ -526,7 +519,7 @@ func resourceSecretGroupTlsContextSFRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceSecretGroupTlsContextSFUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupTlsContextSFUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.HasChanges(getSgTlsContextSFUpdatableAttributes()...) {
 		pco := m.(ProviderConfOutput)
@@ -540,14 +533,7 @@ func resourceSecretGroupTlsContextSFUpdate(ctx context.Context, d *schema.Resour
 		// perform request
 		_, httpr, err := pco.sgtlscontextclient.DefaultApi.PutSecretGroupTlsContext(authctx, orgid, envid, sgid, id).TlsContextPutBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update tls-context " + id,
@@ -563,7 +549,7 @@ func resourceSecretGroupTlsContextSFUpdate(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceSecretGroupTlsContextSFDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupTlsContextSFDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// NOTE: The delete action is not supported for this resource.
 	// a tls-context cannot be deleted, only secret-group (parent) can be deleted
@@ -599,9 +585,9 @@ func newSgTlsContextSFBody(d *schema.ResourceData) *secretgroup_tlscontext.TlsCo
 		body.SetTruststore(*truststore)
 	}
 	if val, ok := d.GetOk("acceptable_tls_versions"); ok {
-		list := val.([]interface{})
+		list := val.([]any)
 		if len(list) > 0 {
-			item := list[0].(map[string]interface{})
+			item := list[0].(map[string]any)
 			versions := secretgroup_tlscontext.NewAcceptableTlsVersions()
 			if val, ok := item["tls_v1_dot1"]; ok {
 				versions.SetTlsV1Dot1(val.(bool))
@@ -619,23 +605,23 @@ func newSgTlsContextSFBody(d *schema.ResourceData) *secretgroup_tlscontext.TlsCo
 		body.SetEnableMutualAuthentication(val.(bool))
 	}
 	if val, ok := d.GetOk("acceptable_cipher_suites"); ok {
-		list := val.([]interface{})
+		list := val.([]any)
 		if len(list) > 0 {
-			acs := newSgTlsContextSFAcceptableCipherSuites(list[0].(map[string]interface{}))
+			acs := newSgTlsContextSFAcceptableCipherSuites(list[0].(map[string]any))
 			body.SetAcceptableCipherSuites(*acs)
 		}
 	}
 	if val, ok := d.GetOk("mutual_authentication"); ok {
-		list := val.([]interface{})
+		list := val.([]any)
 		if len(list) > 0 {
-			ma := newSgTlsContextSFMutualAuthentication(list[0].(map[string]interface{}))
+			ma := newSgTlsContextSFMutualAuthentication(list[0].(map[string]any))
 			body.SetMutualAuthentication(*ma)
 		}
 	}
 	return body
 }
 
-func newSgTlsContextSFAcceptableCipherSuites(data map[string]interface{}) *secretgroup_tlscontext.AcceptableCipherSuites {
+func newSgTlsContextSFAcceptableCipherSuites(data map[string]any) *secretgroup_tlscontext.AcceptableCipherSuites {
 	body := secretgroup_tlscontext.NewAcceptableCipherSuites()
 	if val, ok := data["aes128_gcm_sha256"]; ok {
 		body.SetAes128GcmSha256(val.(bool))
@@ -706,10 +692,10 @@ func newSgTlsContextSFAcceptableCipherSuites(data map[string]interface{}) *secre
 	return body
 }
 
-func newSgTlsContextSFMutualAuthentication(data map[string]interface{}) *secretgroup_tlscontext.MutualAuthentication {
+func newSgTlsContextSFMutualAuthentication(data map[string]any) *secretgroup_tlscontext.MutualAuthentication {
 	body := secretgroup_tlscontext.NewMutualAuthentication()
 	if val, ok := data["certificate_policies"]; ok {
-		body.SetCertificatePolicies(ListInterface2ListStrings(val.([]interface{})))
+		body.SetCertificatePolicies(ListInterface2ListStrings(val.([]any)))
 	}
 	if val, ok := data["cert_checking_strength"]; ok {
 		body.SetCertCheckingStrength(val.(string))
@@ -744,16 +730,16 @@ func newSgTlsContextSFMutualAuthentication(data map[string]interface{}) *secretg
 		body.SetSendTruststore(val.(bool))
 	}
 	if val, ok := data["authentication_overrides"]; ok {
-		list := val.([]interface{})
+		list := val.([]any)
 		if len(list) > 0 {
-			ao := newSgTlsContextSFAuthOverrides(list[0].(map[string]interface{}))
+			ao := newSgTlsContextSFAuthOverrides(list[0].(map[string]any))
 			body.SetAuthenticationOverrides(*ao)
 		}
 	}
 	return body
 }
 
-func newSgTlsContextSFAuthOverrides(data map[string]interface{}) *secretgroup_tlscontext.AuthenticationOverrides {
+func newSgTlsContextSFAuthOverrides(data map[string]any) *secretgroup_tlscontext.AuthenticationOverrides {
 	body := secretgroup_tlscontext.NewAuthenticationOverrides()
 	if val, ok := data["certificate_bad_format"]; ok {
 		body.SetCertificateBadFormat(val.(bool))
@@ -797,7 +783,16 @@ func getSgTlsContextSFUpdatableAttributes() []string {
 }
 
 // returns the composed of the secret
-func decomposeSgTlsContextSFId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeSgTlsContextSFId(d *schema.ResourceData) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Secret Group TLS Context SecurityFabric ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/SG_ID/ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }

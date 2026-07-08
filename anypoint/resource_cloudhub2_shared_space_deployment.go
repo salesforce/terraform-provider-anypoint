@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,13 +54,13 @@ var DeplApplicationConfigPropsC2SSDefinition = &schema.Resource{
 			Type:        schema.TypeMap,
 			Description: "The mule application properties.",
 			Optional:    true,
-			DefaultFunc: func() (interface{}, error) { return make(map[string]string), nil },
+			DefaultFunc: func() (any, error) { return make(map[string]string), nil },
 		},
 		"secure_properties": {
 			Type:        schema.TypeMap,
 			Description: "The mule application secured properties.",
 			Optional:    true,
-			DefaultFunc: func() (interface{}, error) { return make(map[string]string), nil },
+			DefaultFunc: func() (any, error) { return make(map[string]string), nil },
 		},
 	},
 }
@@ -300,10 +299,10 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			Description: "The details about http inbound or outbound configuration",
 			Optional:    true,
 			MaxItems:    1,
-			DefaultFunc: func() (interface{}, error) {
-				dict := make(map[string]interface{})
+			DefaultFunc: func() (any, error) {
+				dict := make(map[string]any)
 				dict["inbound_last_mile_security"] = false
-				return []interface{}{dict}, nil
+				return []any{dict}, nil
 			},
 			Elem: DeplTargetDeplSettHttpC2SSDefinition,
 		},
@@ -329,10 +328,10 @@ var DeplTargetDeploymentSettingsC2SSDefinition = &schema.Resource{
 			`,
 			Optional: true,
 			MaxItems: 1,
-			DefaultFunc: func() (interface{}, error) {
-				dict := make(map[string]interface{})
+			DefaultFunc: func() (any, error) {
+				dict := make(map[string]any)
 				dict["enabled"] = false
-				return []interface{}{dict}, nil
+				return []any{dict}, nil
 			},
 			Elem: DeplTargetDeplSettAutoscalingC2SSDefinition,
 		},
@@ -527,7 +526,7 @@ func resourceCloudhub2SharedSpaceDeployment() *schema.Resource {
 	}
 }
 
-func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	name := d.Get("name").(string)
@@ -538,14 +537,7 @@ func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema
 	//Execute post deployment
 	res, httpr, err := pco.appmanagerclient.DefaultApi.PostDeployment(authctx, orgid, envid).DeploymentRequestBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create " + name + " deployment for cloudhub 2.0 shared-space.",
@@ -558,27 +550,27 @@ func resourceCloudhub2SharedSpaceDeploymentCreate(ctx context.Context, d *schema
 	return resourceCloudhub2SharedSpaceDeploymentRead(ctx, d, m)
 }
 
-func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
 	orgid := d.Get("org_id").(string)
 	envid := d.Get("env_id").(string)
 	if isComposedResourceId(id) {
-		orgid, envid, id = decomposeCloudhub2SharedSpaceDeploymentId(d)
+		orgid, envid, id, diags = decomposeCloudhub2SharedSpaceDeploymentId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	//perform request
 	res, httpr, err := pco.appmanagerclient.DefaultApi.GetDeploymentById(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read cloudhub2 deployment " + id + " on shared-space.",
@@ -606,7 +598,7 @@ func resourceCloudhub2SharedSpaceDeploymentRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if !d.HasChanges(getCloudhub2SharedSpaceDeploymentUpdatableAttributes()...) {
 		return diags
@@ -620,14 +612,7 @@ func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema
 	body := newCloudhub2SharedSpaceDeploymentBody(d)
 	_, httpr, err := pco.appmanagerclient.DefaultApi.PatchDeployment(authctx, orgid, envid, id).DeploymentRequestBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to update deployment " + name + " on cloudhub 2.0 shared-space.",
@@ -639,7 +624,7 @@ func resourceCloudhub2SharedSpaceDeploymentUpdate(ctx context.Context, d *schema
 	return resourceCloudhub2SharedSpaceDeploymentRead(ctx, d, m)
 }
 
-func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Id()
@@ -649,14 +634,7 @@ func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema
 	authctx := getAppDeploymentV2AuthCtx(ctx, &pco)
 	httpr, err := pco.appmanagerclient.DefaultApi.DeleteDeployment(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete deployment " + name + " on cloudhub 2.0 shared-space.",
@@ -675,12 +653,12 @@ func resourceCloudhub2SharedSpaceDeploymentDelete(ctx context.Context, d *schema
 func newCloudhub2SharedSpaceDeploymentBody(d *schema.ResourceData) *application_manager_v2.DeploymentRequestBody {
 	body := application_manager_v2.NewDeploymentRequestBody()
 	// -- Parsing Application
-	app_list_d := d.Get("application").([]interface{})
-	app_d := app_list_d[0].(map[string]interface{})
+	app_list_d := d.Get("application").([]any)
+	app_d := app_list_d[0].(map[string]any)
 	application := newCloudhub2SharedSpaceDeploymentApplication(app_d)
 	// -- Parsing Target
-	target_list_d := d.Get("target").([]interface{})
-	target_d := target_list_d[0].(map[string]interface{})
+	target_list_d := d.Get("target").([]any)
+	target_d := target_list_d[0].(map[string]any)
 	target := newCloudhub2SharedSpaceDeploymentTarget(target_d)
 	//Set Body Data
 	body.SetName(d.Get("name").(string))
@@ -691,14 +669,14 @@ func newCloudhub2SharedSpaceDeploymentBody(d *schema.ResourceData) *application_
 }
 
 // Prepares Application object out of map input
-func newCloudhub2SharedSpaceDeploymentApplication(app_d map[string]interface{}) *application_manager_v2.Application {
-	ref_list_d := app_d["ref"].([]interface{})
-	ref_d := ref_list_d[0].(map[string]interface{})
+func newCloudhub2SharedSpaceDeploymentApplication(app_d map[string]any) *application_manager_v2.Application {
+	ref_list_d := app_d["ref"].([]any)
+	ref_d := ref_list_d[0].(map[string]any)
 	// Ref
 	ref := newCloudhub2SharedSpaceDeploymentRef(ref_d)
 	//Parse Configuration
-	configuration_list_d := app_d["configuration"].([]interface{})
-	configuration_d := configuration_list_d[0].(map[string]interface{})
+	configuration_list_d := app_d["configuration"].([]any)
+	configuration_d := configuration_list_d[0].(map[string]any)
 	configuration := newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d)
 	//VCores
 	vcores_d := app_d["vcores"].(float64)
@@ -723,9 +701,9 @@ func newCloudhub2SharedSpaceDeploymentApplication(app_d map[string]interface{}) 
 }
 
 // Prepares Target object out of map input
-func newCloudhub2SharedSpaceDeploymentTarget(target_d map[string]interface{}) *application_manager_v2.Target {
-	deployment_settings_list_d := target_d["deployment_settings"].([]interface{})
-	deployment_settings_d := deployment_settings_list_d[0].(map[string]interface{})
+func newCloudhub2SharedSpaceDeploymentTarget(target_d map[string]any) *application_manager_v2.Target {
+	deployment_settings_list_d := target_d["deployment_settings"].([]any)
+	deployment_settings_d := deployment_settings_list_d[0].(map[string]any)
 	deployment_settings := newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d)
 	//Prepare Target data
 	target := application_manager_v2.NewTarget()
@@ -738,7 +716,7 @@ func newCloudhub2SharedSpaceDeploymentTarget(target_d map[string]interface{}) *a
 }
 
 // Prepares Ref Object out of map input
-func newCloudhub2SharedSpaceDeploymentRef(ref_d map[string]interface{}) *application_manager_v2.Ref {
+func newCloudhub2SharedSpaceDeploymentRef(ref_d map[string]any) *application_manager_v2.Ref {
 	ref := application_manager_v2.NewRef()
 	ref.SetGroupId(ref_d["group_id"].(string))
 	ref.SetArtifactId(ref_d["artifact_id"].(string))
@@ -748,22 +726,22 @@ func newCloudhub2SharedSpaceDeploymentRef(ref_d map[string]interface{}) *applica
 }
 
 // Prepares Application Configuration Object out of map input
-func newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d map[string]interface{}) *application_manager_v2.AppConfiguration {
+func newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d map[string]any) *application_manager_v2.AppConfiguration {
 	//Mule Agent App Properties Service
-	mule_agent_app_props_service_list_d := configuration_d["mule_agent_app_props_service"].([]interface{})
-	mule_agent_app_props_service_d := mule_agent_app_props_service_list_d[0].(map[string]interface{})
-	mule_agent_app_props_service_properties := mule_agent_app_props_service_d["properties"].(map[string]interface{})
-	mule_agent_app_props_service_secure_properties := mule_agent_app_props_service_d["secure_properties"].(map[string]interface{})
+	mule_agent_app_props_service_list_d := configuration_d["mule_agent_app_props_service"].([]any)
+	mule_agent_app_props_service_d := mule_agent_app_props_service_list_d[0].(map[string]any)
+	mule_agent_app_props_service_properties := mule_agent_app_props_service_d["properties"].(map[string]any)
+	mule_agent_app_props_service_secure_properties := mule_agent_app_props_service_d["secure_properties"].(map[string]any)
 	mule_agent_app_props_service := application_manager_v2.NewMuleAgentAppPropService()
 	mule_agent_app_props_service.SetProperties(mule_agent_app_props_service_properties)
 	mule_agent_app_props_service.SetSecureProperties(mule_agent_app_props_service_secure_properties)
-	mule_agent_logging_service_list_d := configuration_d["mule_agent_logging_service"].([]interface{})
-	mule_agent_logging_service_d := mule_agent_logging_service_list_d[0].(map[string]interface{})
+	mule_agent_logging_service_list_d := configuration_d["mule_agent_logging_service"].([]any)
+	mule_agent_logging_service_d := mule_agent_logging_service_list_d[0].(map[string]any)
 	//Scope logging configuration
-	scope_logging_configurations_list_d := mule_agent_logging_service_d["scope_logging_configurations"].([]interface{})
+	scope_logging_configurations_list_d := mule_agent_logging_service_d["scope_logging_configurations"].([]any)
 	scope_logging_configurations := make([]application_manager_v2.ScopeLoggingConfiguration, len(scope_logging_configurations_list_d))
 	for i, item := range scope_logging_configurations_list_d {
-		data := item.(map[string]interface{})
+		data := item.(map[string]any)
 		conf := application_manager_v2.NewScopeLoggingConfiguration()
 		conf.SetScope(data["scope"].(string))
 		conf.SetLogLevel(data["log_level"].(string))
@@ -780,7 +758,7 @@ func newCloudhub2SharedSpaceDeploymentConfiguration(configuration_d map[string]i
 }
 
 // Prepares DeploymentSettings object out of map input
-func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d map[string]interface{}) *application_manager_v2.DeploymentSettings {
+func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d map[string]any) *application_manager_v2.DeploymentSettings {
 	//http
 	http := newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d)
 	//runtime
@@ -806,12 +784,12 @@ func newCloudhub2SharedSpaceDeploymentDeploymentSettings(deployment_settings_d m
 }
 
 // Prepares Runtime object out of map input
-func newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d map[string]interface{}) *application_manager_v2.Runtime {
+func newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d map[string]any) *application_manager_v2.Runtime {
 	runtime := application_manager_v2.NewRuntime()
 	if val, ok := deployment_settings_d["runtime"]; ok {
-		runtime_list_d := val.([]interface{})
+		runtime_list_d := val.([]any)
 		if len(runtime_list_d) > 0 {
-			runtime_d := runtime_list_d[0].(map[string]interface{})
+			runtime_d := runtime_list_d[0].(map[string]any)
 			runtime.SetVersion(runtime_d["version"].(string))
 			runtime.SetReleaseChannel(runtime_d["release_channel"].(string))
 			runtime.SetJava(runtime_d["java"].(string))
@@ -821,13 +799,13 @@ func newCloudhub2SharedSpaceDeploymentRuntime(deployment_settings_d map[string]i
 }
 
 // Prepares Http object out of map input
-func newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d map[string]interface{}) *application_manager_v2.Http {
+func newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d map[string]any) *application_manager_v2.Http {
 	http_inbound := application_manager_v2.NewHttpInbound()
 	http := application_manager_v2.NewHttp()
 	if val, ok := deployment_settings_d["http"]; ok {
-		http_list_d := val.([]interface{})
+		http_list_d := val.([]any)
 		if len(http_list_d) > 0 {
-			http_d := http_list_d[0].(map[string]interface{})
+			http_d := http_list_d[0].(map[string]any)
 			http_inbound.SetLastMileSecurity(http_d["inbound_last_mile_security"].(bool))
 			http.SetInbound(*http_inbound)
 		}
@@ -835,12 +813,12 @@ func newCloudhub2SharedSpaceDeploymentHttp(deployment_settings_d map[string]inte
 	return http
 }
 
-func newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d map[string]interface{}) *application_manager_v2.Autoscaling {
+func newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d map[string]any) *application_manager_v2.Autoscaling {
 	autoscaling := application_manager_v2.NewAutoscaling()
 	if val, ok := deployment_settings_d["autoscaling"]; ok {
-		autoscaling_list_d := val.([]interface{})
+		autoscaling_list_d := val.([]any)
 		if len(autoscaling_list_d) > 0 {
-			autoscaling_d := autoscaling_list_d[0].(map[string]interface{})
+			autoscaling_d := autoscaling_list_d[0].(map[string]any)
 			autoscaling.SetEnabled(autoscaling_d["enabled"].(bool))
 			autoscaling.SetMinReplicas(int32(autoscaling_d["min_replicas"].(int)))
 			autoscaling.SetMaxReplicas(int32(autoscaling_d["max_replicas"].(int)))
@@ -849,7 +827,7 @@ func newCloudhub2SharedSpaceDeploymentAutoscaling(deployment_settings_d map[stri
 	return autoscaling
 }
 
-func VCoresValidatorDiag(v interface{}, p cty.Path) diag.Diagnostics {
+func VCoresValidatorDiag(v any, p cty.Path) diag.Diagnostics {
 	value := v.(float64)
 	var diags diag.Diagnostics
 	if !FloatInSlice([]float64{0.1, 0.2, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4}, value) {
@@ -863,9 +841,18 @@ func VCoresValidatorDiag(v interface{}, p cty.Path) diag.Diagnostics {
 	return diags
 }
 
-func decomposeCloudhub2SharedSpaceDeploymentId(d *schema.ResourceData) (string, string, string) {
+func decomposeCloudhub2SharedSpaceDeploymentId(d *schema.ResourceData) (string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2]
+	if len(s) != 3 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Cloudhub 2.0 Shared Space Deployment ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/APPLICATION_ID, got %s", d.Id()),
+		})
+		return "", "", "", diags
+	}
+	return s[0], s[1], s[2], diags
 }
 
 func getCloudhub2SharedSpaceDeploymentUpdatableAttributes() []string {

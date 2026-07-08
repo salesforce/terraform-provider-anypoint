@@ -110,5 +110,3 @@ Read-Only:
 - `invalid_ca` (Boolean)
 - `invalid_purpose` (Boolean)
 - `other` (Boolean)
-
-

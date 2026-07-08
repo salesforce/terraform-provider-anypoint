@@ -62,5 +62,3 @@ Read-Only:
 - `encrypted` (Boolean)
 - `exchange_id` (String)
 - `type` (String)
-
-

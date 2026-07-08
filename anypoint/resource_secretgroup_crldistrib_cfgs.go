@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -104,7 +104,7 @@ func resourceSecretGroupCrlDistribCfgs() *schema.Resource {
 	}
 }
 
-func resourceSecretGroupCrlDistribCfgsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCrlDistribCfgsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -117,14 +117,7 @@ func resourceSecretGroupCrlDistribCfgsCreate(ctx context.Context, d *schema.Reso
 	//perform request
 	res, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.PostSecretGroupCrlDistribCfgs(authctx, orgid, envid, sgid).CrlDistribCfgsReqBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create crl-distributor-configs " + name,
@@ -137,7 +130,7 @@ func resourceSecretGroupCrlDistribCfgsCreate(ctx context.Context, d *schema.Reso
 	return resourceSecretGroupCrlDistribCfgsRead(ctx, d, m)
 }
 
-func resourceSecretGroupCrlDistribCfgsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCrlDistribCfgsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -146,19 +139,19 @@ func resourceSecretGroupCrlDistribCfgsRead(ctx context.Context, d *schema.Resour
 	id := d.Get("id").(string)
 	authctx := getSgCrlDistribCfgsAuthCtx(ctx, &pco)
 	if isComposedResourceId(id) {
-		orgid, envid, sgid, id = decomposeSgCrlDistribCfgsId(d)
+		orgid, envid, sgid, id, diags = decomposeSgCrlDistribCfgsId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	//perform request
 	res, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.GetSecretGroupCrlDistribCfgsDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get crl-distributor-configs " + id,
@@ -185,7 +178,7 @@ func resourceSecretGroupCrlDistribCfgsRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceSecretGroupCrlDistribCfgsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCrlDistribCfgsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.HasChanges(getSgCrlDistribCfgsUpdatableAttributes()...) {
 		pco := m.(ProviderConfOutput)
@@ -199,14 +192,7 @@ func resourceSecretGroupCrlDistribCfgsUpdate(ctx context.Context, d *schema.Reso
 		// perform request
 		_, httpr, err := pco.sgcrldistribcfgsclient.DefaultApi.PutSecretGroupTlsContext(authctx, orgid, envid, sgid, id).CrlDistribCfgsReqBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update crl-distributor-configs " + id,
@@ -221,7 +207,7 @@ func resourceSecretGroupCrlDistribCfgsUpdate(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceSecretGroupCrlDistribCfgsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceSecretGroupCrlDistribCfgsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// NOTE: The delete action is not supported for this resource.
 	// a keystore cannot be deleted, only secret-group (parent) can be deleted
@@ -275,7 +261,16 @@ func getSgCrlDistribCfgsAuthCtx(ctx context.Context, pco *ProviderConfOutput) co
 }
 
 // returns the composed of the secret
-func decomposeSgCrlDistribCfgsId(d *schema.ResourceData) (string, string, string, string) {
+func decomposeSgCrlDistribCfgsId(d *schema.ResourceData) (string, string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2], s[3]
+	if len(s) != 4 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Secret Group CRL Distributor Configs ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/ENV_ID/SG_ID/ID, got %s", d.Id()),
+		})
+		return "", "", "", "", diags
+	}
+	return s[0], s[1], s[2], s[3], diags
 }

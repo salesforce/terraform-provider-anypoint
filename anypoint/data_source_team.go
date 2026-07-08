@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -73,23 +72,16 @@ func dataSourceTeam() *schema.Resource {
 	}
 }
 
-func dataSourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	teamid := d.Get("id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	//request roles
-	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGet(authctx, orgid, teamid).Execute()
+	res, httpr, err := pco.teamclient.DefaultAPI.GetTeam(authctx, orgid, teamid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid,
@@ -99,7 +91,7 @@ func dataSourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	defer httpr.Body.Close()
 	//process data
-	team := flattenTeamData(&res)
+	team := flattenTeamData(res)
 	//save in data source schema
 	if err := setTeamAttributesToResourceData(d, team); err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -115,8 +107,8 @@ func dataSourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
-func flattenTeamData(team *team.Team) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenTeamData(team *team.Team) map[string]any {
+	item := make(map[string]any)
 	if team == nil {
 		return item
 	}
@@ -133,7 +125,7 @@ func flattenTeamData(team *team.Team) map[string]interface{} {
 		item["team_type"] = *val
 	}
 	if val, ok := team.GetAncestorTeamIdsOk(); ok {
-		item["ancestor_team_ids"] = *val
+		item["ancestor_team_ids"] = val
 	}
 	if val, ok := team.GetCreatedAtOk(); ok {
 		item["created_at"] = *val
@@ -147,7 +139,7 @@ func flattenTeamData(team *team.Team) map[string]interface{} {
 /*
 Copies the given team instance into the given Source data
 */
-func setTeamAttributesToResourceData(d *schema.ResourceData, team map[string]interface{}) error {
+func setTeamAttributesToResourceData(d *schema.ResourceData, team map[string]any) error {
 	attributes := getTeamAttributes()
 	if team != nil {
 		for _, attr := range attributes {

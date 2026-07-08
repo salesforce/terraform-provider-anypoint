@@ -42,5 +42,3 @@ Read-Only:
 - `tls_v1_dot1` (Boolean)
 - `tls_v1_dot2` (Boolean)
 - `tls_v1_dot3` (Boolean)
-
-

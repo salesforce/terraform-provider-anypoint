@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -90,7 +89,7 @@ func resourceTeamMember() *schema.Resource {
 	}
 }
 
-func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -101,14 +100,7 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 	//request user creation
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdPut(authctx, orgid, teamid, userid).TeamMemberPutBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to add team member ",
@@ -124,7 +116,7 @@ func resourceTeamMemberCreate(ctx context.Context, d *schema.ResourceData, m int
 	return resourceTeamMemberRead(ctx, d, m)
 }
 
-func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -132,22 +124,22 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 	userid := d.Get("user_id").(string)
 	id := d.Id()
 	if isComposedResourceId(id) {
-		orgid, teamid, userid = decomposeTeamMemberId(d)
+		orgid, teamid, userid, diags = decomposeTeamMemberId(d)
 	} else if isComposedResourceId(id, "_") { // retro-compatibility with versions < 1.6.x
-		orgid, teamid, userid = decomposeTeamMemberId(d, "_")
+		orgid, teamid, userid, diags = decomposeTeamMemberId(d, "_")
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getTeamMembersAuthCtx(ctx, &pco)
 	//request members
 	res, httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersGet(authctx, orgid, teamid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid + " members",
@@ -184,7 +176,7 @@ func resourceTeamMemberRead(ctx context.Context, d *schema.ResourceData, m inter
 	return diags
 }
 
-func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -194,14 +186,7 @@ func resourceTeamMemberDelete(ctx context.Context, d *schema.ResourceData, m int
 	//perform request
 	httpr, err := pco.teammembersclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdMembersUserIdDelete(authctx, orgid, teamid, userid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete team " + teamid + " member" + userid,
@@ -226,7 +211,7 @@ func newTeamMemberPutBody(d *schema.ResourceData) *team_members.TeamMemberPutBod
 /*
  * Copies the given user instance into the given Source data
  */
-func setTeamMemberAttributesToResourceData(d *schema.ResourceData, teammember map[string]interface{}) error {
+func setTeamMemberAttributesToResourceData(d *schema.ResourceData, teammember map[string]any) error {
 	attributes := getTeamMemberAttributes()
 	if teammember != nil {
 		for _, attr := range attributes {
@@ -264,7 +249,16 @@ func getTeamMembersAuthCtx(ctx context.Context, pco *ProviderConfOutput) context
 	return context.WithValue(tmp, team_members.ContextServerIndex, pco.server_index)
 }
 
-func decomposeTeamMemberId(d *schema.ResourceData, separator ...string) (string, string, string) {
+func decomposeTeamMemberId(d *schema.ResourceData, separator ...string) (string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1], s[2]
+	if len(s) != 3 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Team Member ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/TEAM_ID/USER_ID, got %s", d.Id()),
+		})
+		return "", "", "", diags
+	}
+	return s[0], s[1], s[2], diags
 }

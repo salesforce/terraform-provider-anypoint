@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -94,7 +93,7 @@ func dataSourceSecretGroupTruststore() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupTruststoreRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupTruststoreRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -104,14 +103,7 @@ func dataSourceSecretGroupTruststoreRead(ctx context.Context, d *schema.Resource
 	authctx := getSgTruststoreAuthCtx(ctx, &pco)
 	res, httpr, err := pco.sgtruststoreclient.DefaultApi.GetSecretGroupTruststoreDetails(authctx, orgid, envid, sgid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get truststore " + id,
@@ -136,7 +128,7 @@ func dataSourceSecretGroupTruststoreRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenSgTruststore(store *secretgroup_truststore.Truststore) map[string]interface{} {
+func flattenSgTruststore(store *secretgroup_truststore.Truststore) map[string]any {
 	if isSgTruststorePEM(store.GetType()) {
 		return flattenSgTruststorePEM(store)
 	} else {
@@ -144,8 +136,8 @@ func flattenSgTruststore(store *secretgroup_truststore.Truststore) map[string]in
 	}
 }
 
-func flattenSgTruststorePEM(store *secretgroup_truststore.Truststore) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststorePEM(store *secretgroup_truststore.Truststore) map[string]any {
+	item := make(map[string]any)
 	if val, ok := store.GetNameOk(); ok {
 		item["name"] = *val
 	}
@@ -170,8 +162,8 @@ func flattenSgTruststorePEM(store *secretgroup_truststore.Truststore) map[string
 	return item
 }
 
-func flattenSgTruststoreOthers(store *secretgroup_truststore.Truststore) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreOthers(store *secretgroup_truststore.Truststore) map[string]any {
+	item := make(map[string]any)
 	maps.Copy(item, flattenSgTruststorePEM(store))
 	if val, ok := store.GetAlgorithmOk(); ok {
 		item["algorithm"] = *val
@@ -179,24 +171,24 @@ func flattenSgTruststoreOthers(store *secretgroup_truststore.Truststore) map[str
 	return item
 }
 
-func flattenSgTruststoreDetails(details *secretgroup_truststore.TruststoreDetails) []map[string]interface{} {
-	certs := make([]map[string]interface{}, 0)
+func flattenSgTruststoreDetails(details *secretgroup_truststore.TruststoreDetails) []map[string]any {
+	certs := make([]map[string]any, 0)
 	if entries, ok := details.GetCertificateEntriesOk(); ok {
 		for _, entry := range entries {
-			item := make(map[string]interface{})
+			item := make(map[string]any)
 			if val, ok := entry.GetAliasOk(); ok {
 				item["alias"] = *val
 			}
 			if cert, ok := entry.GetCertificateOk(); ok {
-				item["certificate"] = []interface{}{flattenSgTruststoreDetailsCertificate(cert)}
+				item["certificate"] = []any{flattenSgTruststoreDetailsCertificate(cert)}
 			}
 		}
 	}
 	return certs
 }
 
-func flattenSgTruststoreDetailsCertificate(cert *secretgroup_truststore.CertificateDetails) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreDetailsCertificate(cert *secretgroup_truststore.CertificateDetails) map[string]any {
+	item := make(map[string]any)
 	if val, ok := cert.GetIssuerOk(); ok {
 		item["issuer"] = flattenSgTruststoreIssuerSubject(val)
 	}
@@ -238,8 +230,8 @@ func flattenSgTruststoreDetailsCertificate(cert *secretgroup_truststore.Certific
 	return item
 }
 
-func flattenSgTruststoreCertificateValidity(validity *secretgroup_truststore.CertificateValidity) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreCertificateValidity(validity *secretgroup_truststore.CertificateValidity) map[string]any {
+	item := make(map[string]any)
 	if val, ok := validity.GetNotBeforeOk(); ok {
 		item["not_before"] = *val
 	}
@@ -249,8 +241,8 @@ func flattenSgTruststoreCertificateValidity(validity *secretgroup_truststore.Cer
 	return item
 }
 
-func flattenSgTruststoreIssuerSubject(is *secretgroup_truststore.IssuerSubject) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenSgTruststoreIssuerSubject(is *secretgroup_truststore.IssuerSubject) map[string]any {
+	item := make(map[string]any)
 	if val, ok := is.GetCommonNameOk(); ok {
 		item["common_name"] = *val
 	}
@@ -276,7 +268,7 @@ func isSgTruststorePEM(t string) bool {
 	return t == "PEM"
 }
 
-func setSgTruststoreAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setSgTruststoreAttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getSgTruststoreAttributes()
 	if data != nil {
 		for _, attr := range attributes {

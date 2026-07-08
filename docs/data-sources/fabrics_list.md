@@ -150,5 +150,3 @@ Read-Only:
 Read-Only:
 
 - `status` (String)
-
-

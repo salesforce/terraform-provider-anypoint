@@ -29,6 +29,7 @@ data "anypoint_idp" "idp" {
 
 ### Read-Only
 
+- `login_disabled` (Boolean) Whether this provider is disabled for login
 - `name` (String) The name of the identity provider
 - `oidc_provider` (Set of Object) The description of provider specific for OIDC types (see [below for nested schema](#nestedatt--oidc_provider))
 - `provider_id` (String) The identity provider unique generated id
@@ -70,5 +71,3 @@ Read-Only:
 - `public_key` (List of String)
 - `require_encrypted_saml_assertions` (Boolean)
 - `sp_initiated_sso_enabled` (Boolean)
-
-

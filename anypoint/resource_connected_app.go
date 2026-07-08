@@ -3,11 +3,11 @@ package anypoint
 import (
 	"context"
 	"errors"
-	"io"
+	"fmt"
 	"net/http"
-	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -56,8 +56,9 @@ func resourceConnectedApp() *schema.Resource {
 			},
 			"user_id": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
-				Description: "The id of the user who owns the connected app",
+				Description: "The id of the user who owns the connected app. Set to a different user id to transfer ownership; leave unset to keep the platform default (creator on first apply).",
 			},
 			"grant_types": {
 				Type:     schema.TypeList,
@@ -87,7 +88,7 @@ func resourceConnectedApp() *schema.Resource {
 				Description: "Configure which URIs users may be directed to after authorization",
 				Type:        schema.TypeList,
 				Optional:    true,
-				DefaultFunc: func() (interface{}, error) {
+				DefaultFunc: func() (any, error) {
 					return make([]string, 0), nil
 				},
 				Elem: &schema.Schema{
@@ -98,21 +99,28 @@ func resourceConnectedApp() *schema.Resource {
 				},
 			},
 			"scope": {
-				Description: "The scopes this connected app has authorization to work on",
-				Type:        schema.TypeList,
-				Optional:    true,
-				DefaultFunc: func() (interface{}, error) {
-					return make([]interface{}, 0), nil
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return equalsConnectedAppScopes(d.GetChange("scope"))
-				},
+				Description: "The scopes this connected app has authorization to work on. " +
+					"Do not declare the `profile` scope: Anypoint attaches it automatically to " +
+					"`client_credentials` connected apps, and the Read step filters it out of " +
+					"state, so declaring it in configuration would create a perpetual diff.",
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"scope": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Scope",
+							Description: "Scope name. The reserved `profile` scope is not allowed here — it is platform-managed.",
+							ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
+								if s, ok := v.(string); ok && strings.EqualFold(s, "profile") {
+									return diag.Diagnostics{diag.Diagnostic{
+										Severity: diag.Error,
+										Summary:  "Reserved scope \"profile\" cannot be declared",
+										Detail:   "Anypoint attaches the `profile` scope automatically to `client_credentials` connected apps. The provider strips it from state on Read, so declaring it in configuration produces a perpetual diff. Remove the scope block (or replace it with a real scope name) to fix the plan.",
+									}}
+								}
+								return nil
+							},
 						},
 						"org_id": {
 							Type:        schema.TypeString,
@@ -130,7 +138,7 @@ func resourceConnectedApp() *schema.Resource {
 			"public_keys": {
 				Type:     schema.TypeList,
 				Optional: true,
-				DefaultFunc: func() (interface{}, error) {
+				DefaultFunc: func() (any, error) {
 					return make([]string, 0), nil
 				},
 				Elem: &schema.Schema{
@@ -180,23 +188,16 @@ func resourceConnectedApp() *schema.Resource {
 	}
 }
 
-func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
 	body := newConnectedAppPostBody(d)
 	//request connected app creation
-	res, httpr, err := pco.connectedappclient.DefaultApi.CreateConnectedApp(authctx, orgid).ConnectedAppCore(*body).Execute()
+	res, httpr, err := pco.connectedappclient.DefaultAPI.CreateConnectedApp(authctx, orgid).ConnectedAppCore(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create connected-app",
@@ -209,7 +210,7 @@ func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m i
 	// Is it a "on its own behalf" connected apps?
 	if grant_types, ok := body.GetGrantTypesOk(); ok && StringInSlice(grant_types, "client_credentials", true) {
 		// Are there scopes to be saved?
-		if scopes := d.Get("scope"); scopes != nil && len(scopes.([]interface{})) > 0 {
+		if scopes := d.Get("scope"); scopes != nil && len(scopes.([]any)) > 0 {
 			// Save the connected app scopes
 			if error := replaceConnectedAppScopes(authctx, d, m); error != nil {
 				diags := append(diags, diag.Diagnostic{
@@ -225,13 +226,16 @@ func resourceConnectedAppCreate(ctx context.Context, d *schema.ResourceData, m i
 	return resourceConnectedAppRead(ctx, d, m)
 }
 
-func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	connappid := d.Id()
 	if isComposedResourceId(connappid) {
-		orgid, connappid = decomposeConnectedAppId(d)
+		orgid, connappid, diags = decomposeConnectedAppId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
 	//execute request
@@ -240,20 +244,17 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 	var err error
 	// perform request depending on if org_id exists or not
 	if len(orgid) > 0 {
-		res, httpr, err = pco.connectedappclient.DefaultApi.GetConnectedApp(authctx, orgid, connappid).Execute()
+		res, httpr, err = pco.connectedappclient.DefaultAPI.GetConnectedApp(authctx, orgid, connappid).Execute()
 	} else {
 		// NOTE: Ensuring backwards compatibility
-		res, httpr, err = pco.connectedappclient.DefaultApi.GetConnectedAppByIdOnly(authctx, connappid).Execute()
+		res, httpr, err = pco.connectedappclient.DefaultAPI.GetConnectedAppByIdOnly(authctx, connappid).Execute()
 	}
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read connected-app " + connappid,
@@ -293,7 +294,7 @@ func resourceConnectedAppRead(ctx context.Context, d *schema.ResourceData, m int
 	return diags
 }
 
-func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -302,16 +303,9 @@ func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m i
 	if d.HasChanges(getConnectedAppAttributes()...) {
 		body := newConnectedAppPatchBody(d)
 		//perform request
-		_, httpr, err := pco.connectedappclient.DefaultApi.UpdateConnectedApp(authctx, orgid, connappid).ConnectedAppPatchExt(*body).Execute()
+		_, httpr, err := pco.connectedappclient.DefaultAPI.UpdateConnectedApp(authctx, orgid, connappid).ConnectedAppPatchExt(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update connected-app " + connappid,
@@ -320,19 +314,17 @@ func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m i
 			return diags
 		}
 		defer httpr.Body.Close()
-		// Is it a "on its own behalf" connected apps?
-		if grant_types, ok := body.GetGrantTypesOk(); ok && StringInSlice(grant_types, "client_credentials", true) {
-			// Are there scopes to be saved?
-			if scopes := d.Get("scope"); scopes != nil && len(scopes.([]interface{})) > 0 {
-				// Save the connected app scopes
-				if error := replaceConnectedAppScopes(authctx, d, m); error != nil {
-					diags := append(diags, diag.Diagnostic{
-						Severity: diag.Error,
-						Summary:  "Unable to create connected-app " + connappid + " scopes",
-						Detail:   error.Error(),
-					})
-					return diags
-				}
+		// Push scopes whenever they changed for "on its own behalf"
+		// connected apps. An empty list must also be sent so removing all
+		// scope blocks actually clears scopes on the platform.
+		if grant_types, ok := body.GetGrantTypesOk(); ok && StringInSlice(grant_types, "client_credentials", true) && d.HasChange("scope") {
+			if error := replaceConnectedAppScopes(authctx, d, m); error != nil {
+				diags := append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to update connected-app " + connappid + " scopes",
+					Detail:   error.Error(),
+				})
+				return diags
 			}
 		}
 		return resourceConnectedAppRead(ctx, d, m)
@@ -340,23 +332,16 @@ func resourceConnectedAppUpdate(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func resourceConnectedAppDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceConnectedAppDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	connappid := d.Id()
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
 	// perform request
-	httpr, err := pco.connectedappclient.DefaultApi.DeleteConnectedApp(authctx, orgid, connappid).Execute()
+	httpr, err := pco.connectedappclient.DefaultAPI.DeleteConnectedApp(authctx, orgid, connappid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete connected-app " + connappid,
@@ -372,22 +357,16 @@ func resourceConnectedAppDelete(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func replaceConnectedAppScopes(ctx context.Context, d *schema.ResourceData, m interface{}) error {
+func replaceConnectedAppScopes(ctx context.Context, d *schema.ResourceData, m any) error {
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	connappid := d.Id()
 	authctx := getConnectedAppAuthCtx(ctx, &pco)
 	body := newConnectedAppScopesPutBody(d)
 	//request scopes replacement
-	httpr, err := pco.connectedappclient.DefaultApi.UpdateConnectedAppScopes(authctx, orgid, connappid).ConnectedAppScopesPutBody(*body).Execute()
+	httpr, err := pco.connectedappclient.DefaultAPI.UpdateConnectedAppScopes(authctx, orgid, connappid).ConnectedAppScopesPutBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		return errors.New(details)
 	}
 	defer httpr.Body.Close()
@@ -398,10 +377,10 @@ func newConnectedAppScopesPutBody(d *schema.ResourceData) *connected_app.Connect
 	body := connected_app.NewConnectedAppScopesPutBodyWithDefaults()
 	// Is there any scope set in the resource?
 	if scopes, ok := d.GetOk("scope"); ok {
-		scopes_list := scopes.([]interface{})
+		scopes_list := scopes.([]any)
 		scopes_body := make([]connected_app.ScopeCore, len(scopes_list))
 		for i, scope := range scopes_list {
-			scope_map := scope.(map[string]interface{})
+			scope_map := scope.(map[string]any)
 			scope_core := connected_app.NewScopeCoreWithDefaults()
 			if val, ok := scope_map["scope"]; ok {
 				scope_core.SetScope(val.(string))
@@ -430,19 +409,19 @@ func newConnectedAppPostBody(d *schema.ResourceData) *connected_app.ConnectedApp
 
 	// connected_app.ConnectedAppCore attributes
 	body.SetClientName(d.Get("name").(string))
-	body.SetGrantTypes(ListInterface2ListStrings(d.Get("grant_types").([]interface{})))
+	body.SetGrantTypes(ListInterface2ListStrings(d.Get("grant_types").([]any)))
 	body.SetAudience(d.Get("audience").(string))
 
 	// Required by Anypoint endpoint, but value can be an empty list
 	if publickeys, ok := d.GetOk("public_keys"); ok {
-		body.SetPublicKeys(ListInterface2ListStrings(publickeys.([]interface{})))
+		body.SetPublicKeys(ListInterface2ListStrings(publickeys.([]any)))
 	} else {
 		body.SetPublicKeys(make([]string, 0))
 	}
 
 	// Required by Anypoint endpoint, but value can be an empty list
 	if redirecturis, ok := d.GetOk("redirect_uris"); ok {
-		body.SetRedirectUris(ListInterface2ListStrings(redirecturis.([]interface{})))
+		body.SetRedirectUris(ListInterface2ListStrings(redirecturis.([]any)))
 	} else {
 		body.SetRedirectUris(make([]string, 0))
 	}
@@ -450,10 +429,10 @@ func newConnectedAppPostBody(d *schema.ResourceData) *connected_app.ConnectedApp
 	if grant_types, ok := body.GetGrantTypesOk(); ok && !StringInSlice(grant_types, "client_credentials", true) {
 		// Is there any scope set in the resource?
 		if scopes := d.Get("scope"); scopes != nil {
-			scopes_list := scopes.([]interface{})
+			scopes_list := scopes.([]any)
 			scopes_body := make([]string, len(scopes_list))
 			for i, scope := range scopes_list {
-				scope_map := scope.(map[string]interface{})
+				scope_map := scope.(map[string]any)
 				if val := scope_map["scope"]; val != nil {
 					scopes_body[i] = val.(string)
 				}
@@ -477,19 +456,19 @@ func newConnectedAppPatchBody(d *schema.ResourceData) *connected_app.ConnectedAp
 
 	// connected_app.ConnectedAppCore attributes
 	body.SetClientName(d.Get("name").(string))
-	body.SetGrantTypes(ListInterface2ListStrings(d.Get("grant_types").([]interface{})))
+	body.SetGrantTypes(ListInterface2ListStrings(d.Get("grant_types").([]any)))
 	body.SetAudience(d.Get("audience").(string))
 
 	// Required by Anypoint endpoint, but value can be an empty list
 	if publickeys, ok := d.GetOk("public_keys"); ok {
-		body.SetPublicKeys(ListInterface2ListStrings(publickeys.([]interface{})))
+		body.SetPublicKeys(ListInterface2ListStrings(publickeys.([]any)))
 	} else {
 		body.SetPublicKeys(make([]string, 0))
 	}
 
 	// Required by Anypoint endpoint, but value can be an empty list
 	if redirecturis, ok := d.GetOk("redirect_uris"); ok {
-		body.SetRedirectUris(ListInterface2ListStrings(redirecturis.([]interface{})))
+		body.SetRedirectUris(ListInterface2ListStrings(redirecturis.([]any)))
 	} else {
 		body.SetRedirectUris(make([]string, 0))
 	}
@@ -497,10 +476,10 @@ func newConnectedAppPatchBody(d *schema.ResourceData) *connected_app.ConnectedAp
 	if val, ok := body.GetGrantTypesOk(); ok && !StringInSlice(val, "client_credentials", true) {
 		// Is there any scope set in the resource?
 		if scopes := d.Get("scope"); scopes != nil {
-			scopes_list := scopes.([]interface{})
+			scopes_list := scopes.([]any)
 			scopes_body := make([]string, len(scopes_list))
 			for i, scope := range scopes_list {
-				scope_map := scope.(map[string]interface{})
+				scope_map := scope.(map[string]any)
 				if val, ok := scope_map["scope"]; ok {
 					scopes_body[i] = val.(string)
 				}
@@ -520,98 +499,10 @@ func newConnectedAppPatchBody(d *schema.ResourceData) *connected_app.ConnectedAp
 	if enabled, ok := d.GetOk("enabled"); ok {
 		body.SetEnabled(enabled.(bool))
 	}
+	if userid, ok := d.GetOk("user_id"); ok {
+		body.SetOwnerUserId(userid.(string))
+	}
 	return body
-}
-
-// Compares 2 scopes lists
-// returns true if they are the same, false otherwise
-func equalsConnectedAppScopes(old, new interface{}) bool {
-	old_list := old.([]interface{})
-	new_list := new.([]interface{})
-
-	old_list = removeProfileScope(old_list)
-	new_list = removeProfileScope(new_list)
-
-	if len(new_list) != len(old_list) {
-		return false
-	}
-
-	if len(new_list) == 0 {
-		return true
-	}
-
-	sortScopes(old_list)
-	sortScopes(new_list)
-
-	for i, val := range old_list {
-		o := val.(map[string]interface{})
-		n := new_list[i].(map[string]interface{})
-
-		old_scope := o["scope"].(string)
-		new_scope := n["scope"].(string)
-
-		if old_scope != new_scope {
-			return false
-		}
-
-		old_org_id := o["org_id"]
-		new_org_id := n["org_id"]
-
-		if old_org_id != new_org_id {
-			return false
-		}
-
-		old_env_id := o["env_id"]
-		new_env_id := n["env_id"]
-
-		if old_env_id != new_env_id {
-			return false
-		}
-	}
-
-	return true
-}
-
-// "Profile" is a defaul scope added to "act on its own behalf" connected apps.
-// It should not be considered when dealing with this kind of connecte app
-func removeProfileScope(scopes []interface{}) []interface{} {
-	if len(scopes) == 0 {
-		return scopes
-	}
-
-	for i, scope := range scopes {
-		scope_map := scope.(map[string]interface{})
-
-		if strings.EqualFold(scope_map["scope"].(string), "profile") {
-			scopes[i] = scopes[len(scopes)-1]
-			return scopes[:len(scopes)-1]
-		}
-	}
-
-	return scopes
-}
-
-func sortScopes(list []interface{}) {
-	sort.SliceStable(list, func(i, j int) bool {
-		i_elem := list[i].(map[string]interface{})
-		j_elem := list[j].(map[string]interface{})
-		i_scope := i_elem["scope"].(string)
-		j_scope := j_elem["scope"].(string)
-		if i_scope != j_scope {
-			return i_scope < j_scope
-		}
-		i_org_id := i_elem["org_id"].(string)
-		j_org_id := j_elem["org_id"].(string)
-		if i_org_id != j_org_id {
-			return i_org_id < j_org_id
-		}
-		i_env_id := i_elem["env_id"].(string)
-		j_env_id := j_elem["env_id"].(string)
-		if i_env_id != j_env_id {
-			return i_env_id < j_env_id
-		}
-		return true
-	})
 }
 
 /*
@@ -622,7 +513,16 @@ func getConnectedAppAuthCtx(ctx context.Context, pco *ProviderConfOutput) contex
 	return context.WithValue(tmp, connected_app.ContextServerIndex, pco.server_index)
 }
 
-func decomposeConnectedAppId(d *schema.ResourceData) (string, string) {
+func decomposeConnectedAppId(d *schema.ResourceData) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Connected App ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/CONNECTED_APP_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }

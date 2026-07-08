@@ -3,7 +3,7 @@ package anypoint
 import (
 	"context"
 	"encoding/json"
-	"io"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -351,7 +351,7 @@ func resourceDLB() *schema.Resource {
 	}
 }
 
-func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -369,14 +369,7 @@ func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	//request user creation
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersPost(authctx, orgid, vpcid).DlbPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create DLB of org " + orgid + " and vpc " + vpcid,
@@ -391,7 +384,7 @@ func resourceDLBCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	return resourceDLBRead(ctx, d, m)
 }
 
-func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Id()
@@ -399,19 +392,19 @@ func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	vpcid := d.Get("vpc_id").(string)
 	authctx := getDLBAuthCtx(ctx, &pco)
 	if isComposedResourceId(dlbid) {
-		orgid, vpcid, dlbid = decomposeDlbId(d)
+		orgid, vpcid, dlbid, diags = decomposeDlbId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	//request roles
 	res, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdGet(authctx, orgid, vpcid, dlbid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get dlb " + dlbid,
@@ -437,7 +430,7 @@ func resourceDLBRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	return diags
 }
 
-func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Id()
@@ -450,14 +443,7 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 		//request user creation
 		_, httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdPatch(authctx, orgid, vpcid, dlbid).RequestBody(body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to patch dlb " + dlbid,
@@ -473,7 +459,7 @@ func resourceDLBUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
-func resourceDLBDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDLBDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	dlbid := d.Id()
@@ -483,14 +469,7 @@ func resourceDLBDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	//perform request
 	httpr, err := pco.dlbclient.DefaultApi.OrganizationsOrgIdVpcsVpcIdLoadbalancersDlbIdDelete(authctx, orgid, vpcid, dlbid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete dlb " + dlbid,
@@ -519,10 +498,10 @@ func newDLBPostBody(d *schema.ResourceData) (*dlb.DlbPostBody, error) {
 		body.SetDomain(domain.(string))
 	}
 	if ip_whitelist := d.Get("ip_whitelist"); ip_whitelist != nil {
-		body.SetIpWhitelist(ListInterface2ListStrings(ip_whitelist.([]interface{})))
+		body.SetIpWhitelist(ListInterface2ListStrings(ip_whitelist.([]any)))
 	}
 	if ip_allowlist := d.Get("ip_allowlist"); ip_allowlist != nil {
-		body.SetIpAllowlist(ListInterface2ListStrings(ip_allowlist.([]interface{})))
+		body.SetIpAllowlist(ListInterface2ListStrings(ip_allowlist.([]any)))
 	}
 	if http_mode := d.Get("http_mode"); http_mode != nil {
 		body.SetHttpMode(http_mode.(string))
@@ -564,13 +543,13 @@ func newDLBPostBody(d *schema.ResourceData) (*dlb.DlbPostBody, error) {
 }
 
 // Creates a Patch Body Object to update a DLB
-func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
+func newDLBPatchBody(d *schema.ResourceData) []map[string]any {
 	attributes := getDLBPatchWatchAttributes()
-	body := make([]map[string]interface{}, len(attributes))
+	body := make([]map[string]any, len(attributes))
 	op_replace := "replace"
 	for i, attr := range attributes {
 		camlAttr := strcase.ToLowerCamel(attr)
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		if attr == "ssl_endpoints" {
 			ssl_endpoints_set := d.Get(attr).(*schema.Set)
 			ssl_endpoints_extract := newDlbPostBodySSLEndpointsMap(ssl_endpoints_set)
@@ -580,7 +559,7 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 		} else if StringInSlice([]string{"ip_whitelist", "ip_allowlist"}, attr, false) { // update of
 			item["op"] = op_replace
 			item["path"] = "/" + camlAttr
-			item["value"] = ListInterface2ListStrings(d.Get(attr).([]interface{}))
+			item["value"] = ListInterface2ListStrings(d.Get(attr).([]any))
 		} else if StringInSlice([]string{
 			"tlsv1", "upstream_tlsv12", "keep_url_encoding",
 			"double_static_ips", "enable_streaming", "forward_client_certificate",
@@ -603,9 +582,9 @@ func newDLBPatchBody(d *schema.ResourceData) []map[string]interface{} {
 }
 
 // Creates a, SSL Endpoint Requst Object from Terraform Schema Set
-func newDlbPostBodySSLEndpointsMap(ssl_endpoints_set *schema.Set) []map[string]interface{} {
+func newDlbPostBodySSLEndpointsMap(ssl_endpoints_set *schema.Set) []map[string]any {
 	ssl_endpoints_list := ssl_endpoints_set.List()
-	ssl_endpoints_body := make([]map[string]interface{}, len(ssl_endpoints_list))
+	ssl_endpoints_body := make([]map[string]any, len(ssl_endpoints_list))
 	public_key_field := "public_key"
 	public_key_label_field := "public_key_label"
 	private_key_field := "private_key"
@@ -621,8 +600,8 @@ func newDlbPostBodySSLEndpointsMap(ssl_endpoints_set *schema.Set) []map[string]i
 	mappings_app_uri_field := "app_uri"
 	mappings_upstream_protocol_field := "upstream_protocol"
 	for i, endpoint := range ssl_endpoints_list {
-		endpoint_converted := endpoint.(map[string]interface{})
-		endpoint_item := make(map[string]interface{})
+		endpoint_converted := endpoint.(map[string]any)
+		endpoint_item := make(map[string]any)
 		log.Println("****** PRINT SSL ENDPOINT BEFORE TRANSFORM ********")
 		b2, _ := json.Marshal(endpoint_converted)
 		log.Println(string(b2[:]))
@@ -656,10 +635,10 @@ func newDlbPostBodySSLEndpointsMap(ssl_endpoints_set *schema.Set) []map[string]i
 		if val, ok := endpoint_converted[mappings_field]; ok {
 			mappings_set := val.(*schema.Set)
 			mappings := mappings_set.List()
-			mappings_body := make([]map[string]interface{}, len(mappings))
+			mappings_body := make([]map[string]any, len(mappings))
 			for j, mapping := range mappings {
-				mapping_converted := mapping.(map[string]interface{})
-				mapping_item := make(map[string]interface{})
+				mapping_converted := mapping.(map[string]any)
+				mapping_item := make(map[string]any)
 				if val, ok := mapping_converted[mappings_input_uri_field]; ok {
 					mapping_item[strcase.ToLowerCamel(mappings_input_uri_field)] = val.(string)
 				}
@@ -684,7 +663,7 @@ func newDlbPostBodySSLEndpointsMap(ssl_endpoints_set *schema.Set) []map[string]i
 	return ssl_endpoints_body
 }
 
-func convertMap2DlbPostBodySslEndpoints(ssl_endpoints_array []map[string]interface{}) ([]dlb.DlbPostBodySslEndpoints, error) {
+func convertMap2DlbPostBodySslEndpoints(ssl_endpoints_array []map[string]any) ([]dlb.DlbPostBodySslEndpoints, error) {
 	list := make([]dlb.DlbPostBodySslEndpoints, len(ssl_endpoints_array))
 	for i, endpoint := range ssl_endpoints_array {
 		nullable_body := dlb.NewNullableDlbPostBodySslEndpoints(nil)
@@ -743,7 +722,7 @@ func verifyDLBDigest(source string, digest string) bool {
 
 // Compares 2 states of DLB ssl_endpoints
 // returns true if they are the same, false otherwise
-func equalDLBSSLEndpoints(old, new interface{}) bool {
+func equalDLBSSLEndpoints(old, new any) bool {
 	old_set := old.(*schema.Set)
 	old_list := old_set.List()
 	new_set := new.(*schema.Set)
@@ -758,8 +737,8 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 	}
 
 	for i, val := range old_list {
-		o := val.(map[string]interface{})
-		n := new_list[i].(map[string]interface{})
+		o := val.(map[string]any)
+		n := new_list[i].(map[string]any)
 		public_key := n["public_key"].(string)
 		private_key := n["private_key"].(string)
 		public_key_digest := o["public_key_digest"].(string)
@@ -792,7 +771,7 @@ func equalDLBSSLEndpoints(old, new interface{}) bool {
 
 // compares two SSL Endpoint Mappings
 // returns true if they are equal, false otherwise
-func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
+func equalDLBSSLEndpointsMappings(old, new []any) bool {
 	sortAttr := []string{"app_uri"}
 	SortMapListAl(old, sortAttr)
 	SortMapListAl(new, sortAttr)
@@ -806,8 +785,8 @@ func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
 	}
 
 	for i, item := range old {
-		old_mapping := item.(map[string]interface{})
-		new_mapping := new[i].(map[string]interface{})
+		old_mapping := item.(map[string]any)
+		new_mapping := new[i].(map[string]any)
 		//compare mapping attributes
 		for _, attr := range attributes {
 			if new_mapping[attr].(string) != old_mapping[attr].(string) {
@@ -820,9 +799,9 @@ func equalDLBSSLEndpointsMappings(old, new []interface{}) bool {
 
 // Compares old and new values of allow list attribute
 // returns true if they are the same, false otherwise
-func equalDLBAllowList(old, new interface{}) bool {
-	old_list := old.([]interface{})
-	new_list := new.([]interface{})
+func equalDLBAllowList(old, new any) bool {
+	old_list := old.([]any)
+	new_list := new.([]any)
 	SortStrListAl(old_list)
 	SortStrListAl(new_list)
 	for i, item := range old_list {
@@ -834,19 +813,19 @@ func equalDLBAllowList(old, new interface{}) bool {
 }
 
 // returns true if the DLB key elements have been changed
-func isDLBChanged(_ context.Context, d *schema.ResourceData, _ interface{}) bool {
+func isDLBChanged(_ context.Context, d *schema.ResourceData, _ any) bool {
 	watchAttrs := getDLBPatchWatchAttributes()
 
 	for _, attr := range watchAttrs {
 		if attr == "ssl_endpoints" && !equalDLBSSLEndpoints(d.GetChange(attr)) {
 			return true
 		} else if attr == "ip_allowlist" {
-			ip_allowlist := d.Get("ip_allowlist").([]interface{})
+			ip_allowlist := d.Get("ip_allowlist").([]any)
 			if len(ip_allowlist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
 				return true
 			}
 		} else if attr == "ip_whitelist" {
-			ip_whitelist := d.Get("ip_whitelist").([]interface{})
+			ip_whitelist := d.Get("ip_whitelist").([]any)
 			if len(ip_whitelist) > 0 && !equalDLBAllowList(d.GetChange(attr)) {
 				return true
 			}
@@ -857,7 +836,16 @@ func isDLBChanged(_ context.Context, d *schema.ResourceData, _ interface{}) bool
 	return false
 }
 
-func decomposeDlbId(d *schema.ResourceData) (string, string, string) {
+func decomposeDlbId(d *schema.ResourceData) (string, string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1], s[2]
+	if len(s) != 3 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid DLB ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/VPC_ID/DLB_ID, got %s", d.Id()),
+		})
+		return "", "", "", diags
+	}
+	return s[0], s[1], s[2], diags
 }

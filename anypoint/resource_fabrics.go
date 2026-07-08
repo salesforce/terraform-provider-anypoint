@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -173,7 +173,7 @@ func resourceFabrics() *schema.Resource {
 	}
 }
 
-func resourceFabricsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceFabricsCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -183,14 +183,7 @@ func resourceFabricsCreate(ctx context.Context, d *schema.ResourceData, m interf
 	//prepare request
 	res, httpr, err := pco.rtfclient.DefaultApi.PostFabrics(authctx, orgid).FabricsPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create fabrics " + name,
@@ -205,26 +198,26 @@ func resourceFabricsCreate(ctx context.Context, d *schema.ResourceData, m interf
 	return resourceFabricsRead(ctx, d, m)
 }
 
-func resourceFabricsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceFabricsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	fabricsid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getFabricsAuthCtx(ctx, &pco)
 	if isComposedResourceId(fabricsid) {
-		orgid, fabricsid = decomposeFabricsId(d)
+		orgid, fabricsid, diags = decomposeFabricsId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	//perform request
 	res, httpr, err := pco.rtfclient.DefaultApi.GetFabrics(authctx, orgid, fabricsid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to read fabrics " + fabricsid,
@@ -249,11 +242,11 @@ func resourceFabricsRead(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
-func resourceFabricsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceFabricsUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	return resourceFabricsRead(ctx, d, m)
 }
 
-func resourceFabricsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceFabricsDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	fabricsid := d.Id()
@@ -262,14 +255,7 @@ func resourceFabricsDelete(ctx context.Context, d *schema.ResourceData, m interf
 	//perform request
 	httpr, err := pco.rtfclient.DefaultApi.DeleteFabrics(authctx, orgid, fabricsid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete fabrics " + fabricsid,
@@ -293,9 +279,18 @@ func prepareFabricsPostBody(d *schema.ResourceData) *rtf.FabricsPostBody {
 	return body
 }
 
-func decomposeFabricsId(d *schema.ResourceData) (string, string) {
+func decomposeFabricsId(d *schema.ResourceData) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id())
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Fabrics ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/FABRICS_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }
 
 /*

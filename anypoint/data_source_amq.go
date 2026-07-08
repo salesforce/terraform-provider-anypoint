@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -72,7 +71,9 @@ func dataSourceAMQ() *schema.Resource {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: "Includes only results with the given Ids.",
-							Elem:        schema.TypeString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 					},
 				},
@@ -136,7 +137,7 @@ func dataSourceAMQ() *schema.Resource {
 	}
 }
 
-func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -155,14 +156,7 @@ func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{
 	//Executing Request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get AMQs",
@@ -171,6 +165,9 @@ func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diags
 	}
 	defer httpr.Body.Close()
+	// filter by destination_ids since API ignores it
+	res = filterAMQDestinationsByIds(res, searchopts)
+
 	//process data
 	amqinstance := flattenAMQsData(&res)
 	//save in data source schema
@@ -188,6 +185,40 @@ func dataSourceAMQRead(ctx context.Context, d *schema.ResourceData, m interface{
 	return diags
 }
 
+// NOTE: Temporary workaround because Anypoint MQ API ignores 'destinationIds' query param.
+// It manually filters the results locally. Remove this once Mulesoft fixes the underlying API to honor 'destinationIds'.
+func filterAMQDestinationsByIds(destinations []amq.Queue, searchopts *schema.Set) []amq.Queue {
+	if searchopts == nil || searchopts.Len() == 0 {
+		return destinations
+	}
+	opts := searchopts.List()[0].(map[string]any)
+	destIdsRaw, ok := opts["destination_ids"]
+	if !ok {
+		return destinations
+	}
+	destIds := toStringSlice(destIdsRaw)
+	if len(destIds) == 0 {
+		return destinations
+	}
+
+	idMap := make(map[string]bool)
+	for _, id := range destIds {
+		idMap[id] = true
+	}
+
+	filtered := make([]amq.Queue, 0)
+	for _, q := range destinations {
+		id := q.GetQueueId()
+		if id == "" {
+			id = q.GetExchangeId()
+		}
+		if idMap[id] {
+			filtered = append(filtered, q)
+		}
+	}
+	return filtered
+}
+
 // Parses search parameters
 func parseAMQSearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.Set) (amq.DefaultApiApiGetAMQListRequest, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -201,21 +232,21 @@ func parseAMQSearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.S
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
+	for k, v := range opts.(map[string]any) {
 		if k == "offset" {
-			req = req.Offset(v.(int32))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(v.(int32))
+			req = req.Limit(toInt32(v))
 			continue
 		}
-		if k == "starts_with" {
-			req = req.StartsWith(v.(string))
+		if k == "starts_with" && toString(v) != "" {
+			req = req.StartsWith(toString(v))
 			continue
 		}
 		if k == "destination_ids" {
-			req = req.DestinationIds(v.([]string))
+			req = req.DestinationIds(toStringSlice(v))
 			continue
 		}
 	}
@@ -224,7 +255,7 @@ func parseAMQSearchOpts(req amq.DefaultApiApiGetAMQListRequest, params *schema.S
 }
 
 // Copies the given amq instance into the given resource data
-func setAMQAttributesToResourceData(d *schema.ResourceData, amqitem map[string]interface{}) error {
+func setAMQAttributesToResourceData(d *schema.ResourceData, amqitem map[string]any) error {
 	attributes := getAMQCoreAttributes()
 	if amqitem != nil {
 		for _, attr := range attributes {
@@ -237,22 +268,22 @@ func setAMQAttributesToResourceData(d *schema.ResourceData, amqitem map[string]i
 }
 
 // flattens a list of Anypoint MQs
-func flattenAMQsData(queues *[]amq.Queue) []interface{} {
+func flattenAMQsData(queues *[]amq.Queue) []any {
 	if queues != nil && len(*queues) > 0 {
-		res := make([]interface{}, len(*queues))
+		res := make([]any, len(*queues))
 		for i, q := range *queues {
 			res[i] = flattenAMQData(&q)
 		}
 		return res
 	}
 
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
 // flattens and maps a given Anypoint MQ object
-func flattenAMQData(queue *amq.Queue) map[string]interface{} {
+func flattenAMQData(queue *amq.Queue) map[string]any {
 	if queue != nil {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 
 		item["queue_id"] = queue.GetQueueId()
 		item["default_ttl"] = queue.GetDefaultTtl()

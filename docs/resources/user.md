@@ -3,14 +3,14 @@
 page_title: "anypoint_user Resource - terraform-provider-anypoint"
 subcategory: ""
 description: |-
-  Creates a `user` for your org. 
+  Creates a `user` for your org.
   
   N.B: you can use a username only once even after it's deleted.
 ---
 
 # anypoint_user (Resource)
 
-Creates a `user` for your org. 
+Creates a `user` for your org.
 
 **N.B:** you can use a username only once even after it's deleted.
 
@@ -73,6 +73,8 @@ output "user" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:

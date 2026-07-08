@@ -48,5 +48,3 @@ Read-Only:
 - `subject_alternative_name` (List of String)
 - `validity` (Map of String)
 - `version` (String)
-
-

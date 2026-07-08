@@ -2,7 +2,7 @@ package anypoint
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -91,23 +91,16 @@ func resourceTeam() *schema.Resource {
 	}
 }
 
-func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	body := newTeamPostBody(d)
 	//request user creation
-	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsPost(authctx, orgid).TeamPostBody(*body).Execute()
+	res, httpr, err := pco.teamclient.DefaultAPI.CreateTeam(authctx, orgid).TeamPostBody(*body).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create team ",
@@ -120,26 +113,26 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return resourceTeamRead(ctx, d, m)
 }
 
-func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	if isComposedResourceId(teamid) {
-		orgid, teamid = decomposeTeamId(d)
+		orgid, teamid, diags = decomposeTeamId(d)
+	}
+	if diags.HasError() {
+		return diags
 	}
 	authctx := getTeamAuthCtx(ctx, &pco)
 	//request roles
-	res, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdGet(authctx, orgid, teamid).Execute()
+	res, httpr, err := pco.teamclient.DefaultAPI.GetTeam(authctx, orgid, teamid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
+		if httpr != nil && httpr.StatusCode == 404 {
+			d.SetId("")
+			return nil
 		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid,
@@ -149,7 +142,7 @@ func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	}
 	defer httpr.Body.Close()
 	//process data
-	team := flattenTeamData(&res)
+	team := flattenTeamData(res)
 	//save in data source schema
 	if err := setTeamAttributesToResourceData(d, team); err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -166,7 +159,7 @@ func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	teamid := d.Id()
@@ -176,16 +169,9 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if d.HasChanges(getTeamPatchWatchAttributes()...) {
 		body := newTeamPatchBody(d)
 		//request user creation
-		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdPatch(authctx, orgid, teamid).TeamPatchBody(*body).Execute()
+		_, httpr, err := pco.teamclient.DefaultAPI.UpdateTeam(authctx, orgid, teamid).TeamPatchBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to patch team " + teamid,
@@ -200,16 +186,9 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if d.HasChanges(getTeamPutWatchAttributes()...) {
 		body := newTeamPutBody(d)
 		//request user creation
-		_, httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdParentPut(authctx, orgid, teamid).TeamPutBody(*body).Execute()
+		_, httpr, err := pco.teamclient.DefaultAPI.MoveTeam(authctx, orgid, teamid).TeamPutBody(*body).Execute()
 		if err != nil {
-			var details string
-			if httpr != nil && httpr.StatusCode >= 400 {
-				defer httpr.Body.Close()
-				b, _ := io.ReadAll(httpr.Body)
-				details = string(b)
-			} else {
-				details = err.Error()
-			}
+			details := extractAPIErrorDetail(err, httpr)
 			diags := append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to move team " + teamid,
@@ -224,23 +203,16 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	return resourceTeamRead(ctx, d, m)
 }
 
-func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	teamid := d.Id()
 	orgid := d.Get("org_id").(string)
 	authctx := getTeamAuthCtx(ctx, &pco)
 	//perform request
-	httpr, err := pco.teamclient.DefaultApi.OrganizationsOrgIdTeamsTeamIdDelete(authctx, orgid, teamid).Execute()
+	httpr, err := pco.teamclient.DefaultAPI.DeleteTeam(authctx, orgid, teamid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to delete team " + teamid,
@@ -322,7 +294,16 @@ func getTeamAuthCtx(ctx context.Context, pco *ProviderConfOutput) context.Contex
 	return context.WithValue(tmp, team.ContextServerIndex, pco.server_index)
 }
 
-func decomposeTeamId(d *schema.ResourceData, separator ...string) (string, string) {
+func decomposeTeamId(d *schema.ResourceData, separator ...string) (string, string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	s := DecomposeResourceId(d.Id(), separator...)
-	return s[0], s[1]
+	if len(s) != 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Team ID format",
+			Detail:   fmt.Sprintf("Expected ORG_ID/TEAM_ID, got %s", d.Id()),
+		})
+		return "", "", diags
+	}
+	return s[0], s[1], diags
 }

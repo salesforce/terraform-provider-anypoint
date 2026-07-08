@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -61,7 +60,7 @@ func dataSourceIDPs() *schema.Resource {
 	}
 }
 
-func dataSourceIDPsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceIDPsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -69,14 +68,7 @@ func dataSourceIDPsRead(ctx context.Context, d *schema.ResourceData, m interface
 	//request env
 	res, httpr, err := pco.idpclient.DefaultApi.OrganizationsOrgIdIdentityProvidersGet(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags := append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to Get IDPs for org " + orgid,
@@ -114,10 +106,10 @@ func dataSourceIDPsRead(ctx context.Context, d *schema.ResourceData, m interface
 /*
 * Transforms a list of idp summaries object to the dataSourceIDPs schema
  */
-func flattenIDPsData(idps []idp.IdpSummary) []interface{} {
-	result := make([]interface{}, len(idps))
+func flattenIDPsData(idps []idp.IdpSummary) []any {
+	result := make([]any, len(idps))
 	for i, idpItem := range idps {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["provider_id"] = idpItem.GetProviderId()
 		item["org_id"] = idpItem.GetOrgId()
 		item["name"] = idpItem.GetName()

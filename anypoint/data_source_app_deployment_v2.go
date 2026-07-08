@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -595,7 +594,7 @@ func dataSourceAppDeploymentV2() *schema.Resource {
 	}
 }
 
-func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	id := d.Get("id").(string)
@@ -605,14 +604,7 @@ func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, 
 	//execut request
 	res, httpr, err := pco.appmanagerclient.DefaultApi.GetDeploymentById(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get deployment for org " + orgid + " and env " + envid + " with id " + id,
@@ -635,8 +627,8 @@ func dataSourceAppDeploymentV2Read(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[string]any {
+	item := make(map[string]any)
 	if val, ok := deployment.GetNameOk(); ok {
 		item["name"] = *val
 	}
@@ -656,10 +648,10 @@ func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[s
 		item["status"] = *val
 	}
 	if application, ok := deployment.GetApplicationOk(); ok {
-		item["application"] = []interface{}{flattenAppDeploymentV2Application(application)}
+		item["application"] = []any{flattenAppDeploymentV2Application(application)}
 	}
 	if target, ok := deployment.GetTargetOk(); ok {
-		item["target"] = []interface{}{flattenAppDeploymentV2Target(target)}
+		item["target"] = []any{flattenAppDeploymentV2Target(target)}
 	}
 	if val, ok := deployment.GetLastSuccessfulVersionOk(); ok && val != nil {
 		item["last_successful_version"] = *val
@@ -669,8 +661,8 @@ func flattenAppDeploymentV2(deployment *application_manager_v2.Deployment) map[s
 }
 
 // Flattens the replicas array. Only includes replicas with id in the final result.
-func flattenAppDeploymentV2Replicas(replicas []application_manager_v2.Replicas) []interface{} {
-	res := make([]interface{}, 0)
+func flattenAppDeploymentV2Replicas(replicas []application_manager_v2.Replicas) []any {
+	res := make([]any, 0)
 	for _, replica := range replicas {
 		if replica.HasId() {
 			res = append(res, flattenAppDeploymentV2Replica(&replica))
@@ -680,8 +672,8 @@ func flattenAppDeploymentV2Replicas(replicas []application_manager_v2.Replicas) 
 }
 
 // maps a replica object
-func flattenAppDeploymentV2Replica(replica *application_manager_v2.Replicas) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Replica(replica *application_manager_v2.Replicas) map[string]any {
+	item := make(map[string]any)
 	if val, ok := replica.GetIdOk(); ok {
 		item["id"] = *val
 	}
@@ -700,8 +692,8 @@ func flattenAppDeploymentV2Replica(replica *application_manager_v2.Replicas) map
 	return item
 }
 
-func flattenAppDeploymentV2Application(application *application_manager_v2.Application) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Application(application *application_manager_v2.Application) map[string]any {
+	item := make(map[string]any)
 	if val, ok := application.GetStatusOk(); ok {
 		item["status"] = *val
 	}
@@ -709,10 +701,10 @@ func flattenAppDeploymentV2Application(application *application_manager_v2.Appli
 		item["desired_state"] = *val
 	}
 	if ref, ok := application.GetRefOk(); ok {
-		item["ref"] = []interface{}{flattenAppDeploymentV2Ref(ref)}
+		item["ref"] = []any{flattenAppDeploymentV2Ref(ref)}
 	}
 	if config, ok := application.GetConfigurationOk(); ok {
-		item["configuration"] = []interface{}{flattenAppDeploymentV2Config(config)}
+		item["configuration"] = []any{flattenAppDeploymentV2Config(config)}
 	}
 	if val, ok := application.GetVCoresOk(); ok {
 		item["vcores"] = RoundFloat64(float64(*val), 1) // Insures that the value would be 0.1 and not 0.10000000149011612 for example
@@ -724,8 +716,8 @@ func flattenAppDeploymentV2Application(application *application_manager_v2.Appli
 	return item
 }
 
-func flattenAppDeploymentV2Target(target *application_manager_v2.Target) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Target(target *application_manager_v2.Target) map[string]any {
+	item := make(map[string]any)
 	if val, ok := target.GetProviderOk(); ok {
 		item["provider"] = *val
 	}
@@ -733,7 +725,7 @@ func flattenAppDeploymentV2Target(target *application_manager_v2.Target) map[str
 		item["target_id"] = *val
 	}
 	if deployment_settings, ok := target.GetDeploymentSettingsOk(); ok {
-		item["deployment_settings"] = []interface{}{flattenAppDeploymentV2TargetDeplSett(deployment_settings)}
+		item["deployment_settings"] = []any{flattenAppDeploymentV2TargetDeplSett(deployment_settings)}
 	}
 	if val, ok := target.GetReplicasOk(); ok {
 		item["replicas"] = *val
@@ -741,8 +733,8 @@ func flattenAppDeploymentV2Target(target *application_manager_v2.Target) map[str
 	return item
 }
 
-func flattenAppDeploymentV2Ref(ref *application_manager_v2.Ref) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Ref(ref *application_manager_v2.Ref) map[string]any {
+	item := make(map[string]any)
 	if val, ok := ref.GetGroupIdOk(); ok {
 		item["group_id"] = *val
 	}
@@ -758,22 +750,22 @@ func flattenAppDeploymentV2Ref(ref *application_manager_v2.Ref) map[string]inter
 	return item
 }
 
-func flattenAppDeploymentV2Config(config *application_manager_v2.AppConfiguration) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Config(config *application_manager_v2.AppConfiguration) map[string]any {
+	item := make(map[string]any)
 	if srv, ok := config.GetMuleAgentApplicationPropertiesServiceOk(); ok {
-		item["mule_agent_app_props_service"] = []interface{}{flattenAppDeploymentV2ConfigMAAPS(srv)}
+		item["mule_agent_app_props_service"] = []any{flattenAppDeploymentV2ConfigMAAPS(srv)}
 	}
 	if srv, ok := config.GetMuleAgentLoggingServiceOk(); ok {
-		item["mule_agent_logging_service"] = []interface{}{flattenAppDeploymentV2ConfigMALS(srv)}
+		item["mule_agent_logging_service"] = []any{flattenAppDeploymentV2ConfigMALS(srv)}
 	}
 	if srv, ok := config.GetMuleAgentSchedulingServiceOk(); ok {
-		item["mule_agent_scheduling_service"] = []interface{}{flattenAppDeploymentV2ConfigMASS(srv)}
+		item["mule_agent_scheduling_service"] = []any{flattenAppDeploymentV2ConfigMASS(srv)}
 	}
 	return item
 }
 
-func flattenAppDeploymentV2ConfigMAAPS(service *application_manager_v2.MuleAgentAppPropService) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2ConfigMAAPS(service *application_manager_v2.MuleAgentAppPropService) map[string]any {
+	item := make(map[string]any)
 	if val, ok := service.GetApplicationNameOk(); ok {
 		item["application_name"] = *val
 	}
@@ -786,15 +778,15 @@ func flattenAppDeploymentV2ConfigMAAPS(service *application_manager_v2.MuleAgent
 	return item
 }
 
-func flattenAppDeploymentV2ConfigMALS(service *application_manager_v2.MuleAgentLoggingService) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2ConfigMALS(service *application_manager_v2.MuleAgentLoggingService) map[string]any {
+	item := make(map[string]any)
 	if val, ok := service.GetArtifactNameOk(); ok {
 		item["artifact_name"] = *val
 	}
 	if scope_logging_conf, ok := service.GetScopeLoggingConfigurationsOk(); ok {
-		res := make([]interface{}, len(scope_logging_conf))
+		res := make([]any, len(scope_logging_conf))
 		for i, cfg := range scope_logging_conf {
-			d := make(map[string]interface{})
+			d := make(map[string]any)
 			if val, ok := cfg.GetScopeOk(); ok {
 				d["scope"] = *val
 			}
@@ -808,15 +800,15 @@ func flattenAppDeploymentV2ConfigMALS(service *application_manager_v2.MuleAgentL
 	return item
 }
 
-func flattenAppDeploymentV2ConfigMASS(service *application_manager_v2.MuleAgentSchedulingService) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2ConfigMASS(service *application_manager_v2.MuleAgentSchedulingService) map[string]any {
+	item := make(map[string]any)
 	if val, ok := service.GetApplicationNameOk(); ok {
 		item["application_name"] = *val
 	}
 	if schedulers, ok := service.GetSchedulersOk(); ok {
-		res := make([]interface{}, len(schedulers))
+		res := make([]any, len(schedulers))
 		for i, scheduler := range schedulers {
-			d := make(map[string]interface{})
+			d := make(map[string]any)
 			if val, ok := scheduler.GetNameOk(); ok {
 				d["name"] = *val
 			}
@@ -851,8 +843,8 @@ func flattenAppDeploymentV2ConfigMASS(service *application_manager_v2.MuleAgentS
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manager_v2.DeploymentSettings) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manager_v2.DeploymentSettings) map[string]any {
+	item := make(map[string]any)
 	if val, ok := deployment_settings.GetClusteredOk(); ok {
 		item["clustered"] = *val
 	}
@@ -860,7 +852,7 @@ func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manag
 		item["enforce_deploying_replicas_across_nodes"] = *val
 	}
 	if http, ok := deployment_settings.GetHttpOk(); ok {
-		item["http"] = []interface{}{flattenAppDeploymentV2TargetDeplSettHttp(http)}
+		item["http"] = []any{flattenAppDeploymentV2TargetDeplSettHttp(http)}
 	}
 	if jvm, ok := deployment_settings.GetJvmOk(); ok {
 		if val, ok := jvm.GetArgsOk(); ok {
@@ -868,16 +860,16 @@ func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manag
 		}
 	}
 	if runtime, ok := deployment_settings.GetRuntimeOk(); ok {
-		item["runtime"] = []interface{}{flattenAppDeploymentV2TargetDeplSettRuntime(runtime)}
+		item["runtime"] = []any{flattenAppDeploymentV2TargetDeplSettRuntime(runtime)}
 	}
 	if autoscaling, ok := deployment_settings.GetAutoscalingOk(); ok {
-		item["autoscaling"] = []interface{}{flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling)}
+		item["autoscaling"] = []any{flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling)}
 	}
 	if val, ok := deployment_settings.GetUpdateStrategyOk(); ok {
 		item["update_strategy"] = *val
 	}
 	if resources, ok := deployment_settings.GetResourcesOk(); ok {
-		item["resources"] = []interface{}{flattenAppDeploymentV2TargetDeplSettResources(resources)}
+		item["resources"] = []any{flattenAppDeploymentV2TargetDeplSettResources(resources)}
 	}
 	if val, ok := deployment_settings.GetLastMileSecurityOk(); ok {
 		item["last_mile_security"] = *val
@@ -892,7 +884,7 @@ func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manag
 		item["anypoint_monitoring_scope"] = *val
 	}
 	if sidecars, ok := deployment_settings.GetSidecarsOk(); ok {
-		item["sidecars"] = []interface{}{flattenAppDeploymentV2TargetDeplSettSidecars(sidecars)}
+		item["sidecars"] = []any{flattenAppDeploymentV2TargetDeplSettSidecars(sidecars)}
 	}
 	if val, ok := deployment_settings.GetForwardSslSessionOk(); ok {
 		item["forward_ssl_session"] = *val
@@ -909,8 +901,8 @@ func flattenAppDeploymentV2TargetDeplSett(deployment_settings *application_manag
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSettHttp(http *application_manager_v2.Http) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSettHttp(http *application_manager_v2.Http) map[string]any {
+	item := make(map[string]any)
 	if inbound, ok := http.GetInboundOk(); ok {
 		if val, ok := inbound.GetPublicUrlOk(); ok {
 			item["inbound_public_url"] = *val
@@ -934,8 +926,8 @@ func flattenAppDeploymentV2TargetDeplSettHttp(http *application_manager_v2.Http)
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSettRuntime(runtime *application_manager_v2.Runtime) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSettRuntime(runtime *application_manager_v2.Runtime) map[string]any {
+	item := make(map[string]any)
 	if val, ok := runtime.GetVersionOk(); ok {
 		item["version"] = *val
 	}
@@ -948,8 +940,8 @@ func flattenAppDeploymentV2TargetDeplSettRuntime(runtime *application_manager_v2
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling *application_manager_v2.Autoscaling) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling *application_manager_v2.Autoscaling) map[string]any {
+	item := make(map[string]any)
 	if val, ok := autoscaling.GetEnabledOk(); ok {
 		item["enabled"] = *val
 	}
@@ -962,8 +954,8 @@ func flattenAppDeploymentV2TargetDeplSettAutoscaling(autoscaling *application_ma
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSettResources(resources *application_manager_v2.Resources) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSettResources(resources *application_manager_v2.Resources) map[string]any {
+	item := make(map[string]any)
 	if cpu, ok := resources.GetCpuOk(); ok {
 		if val, ok := cpu.GetLimitOk(); ok {
 			item["cpu_limit"] = *val
@@ -991,8 +983,8 @@ func flattenAppDeploymentV2TargetDeplSettResources(resources *application_manage
 	return item
 }
 
-func flattenAppDeploymentV2TargetDeplSettSidecars(sidecars *application_manager_v2.Sidecars) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2TargetDeplSettSidecars(sidecars *application_manager_v2.Sidecars) map[string]any {
+	item := make(map[string]any)
 	if anypoint_monitoring, ok := sidecars.GetAnypointMonitoringOk(); ok {
 		if val, ok := anypoint_monitoring.GetImageOk(); ok {
 			item["anypoint_monitoring_image"] = *val
@@ -1019,8 +1011,8 @@ func flattenAppDeploymentV2TargetDeplSettSidecars(sidecars *application_manager_
 	return item
 }
 
-func flattenAppDeploymentV2Integrations(integrations *application_manager_v2.ApplicationIntegrations) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenAppDeploymentV2Integrations(integrations *application_manager_v2.ApplicationIntegrations) map[string]any {
+	item := make(map[string]any)
 	if services, ok := integrations.GetServicesOk(); ok {
 		if object_store_v2, ok := services.GetObjectStoreV2Ok(); ok {
 			item["object_store_v2_enabled"] = object_store_v2.GetEnabled()
@@ -1030,7 +1022,7 @@ func flattenAppDeploymentV2Integrations(integrations *application_manager_v2.App
 }
 
 // Set Attributes
-func setAppDeploymentV2AttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setAppDeploymentV2AttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getAppDeploymentV2Attributes()
 	if data != nil {
 		for _, attr := range attributes {

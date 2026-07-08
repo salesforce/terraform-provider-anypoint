@@ -76,3 +76,21 @@ terraform-provider-anypoint
 **/.secret
 
 **/dist
+
+#Windsurf rules
+.windsurf/rules
+
+# Local agent recipes (machine-specific paths)
+docs/MULTIREPO.md
+docs/ISSUE_*.md
+docs/RELEASE_*.md
+
+# In-flight release-cycle design specs (per-version folders)
+docs/v*/
+
+# Claude Code: ignore personal config, keep shared commands tracked
+.claude/*
+!.claude/commands/
+
+# CI release: notes staged from the GitHub release body at runtime
+release-notes.md

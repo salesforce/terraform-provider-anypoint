@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -81,7 +80,7 @@ func dataSourceSecretGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	//init vars
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
@@ -92,14 +91,7 @@ func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m in
 	//perform request
 	res, httpr, err := pco.secretgroupclient.DefaultApi.GetSecretGroup(authctx, orgid, envid, id).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get secret group " + id,
@@ -123,7 +115,7 @@ func dataSourceSecretGroupRead(ctx context.Context, d *schema.ResourceData, m in
 	return diags
 }
 
-func setSecretGroupAttributesToResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setSecretGroupAttributesToResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getSecretGroupAttributes()
 	if data != nil {
 		for _, attr := range attributes {

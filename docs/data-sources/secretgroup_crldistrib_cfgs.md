@@ -47,5 +47,3 @@ data "anypoint_secretgroup_crldistrib_cfgs" "cfg" {
 - `frequency` (Number) How frequently should the distributor site be checked for new crl files(in minutes)
 - `name` (String) The name of the crl-distributor-configs
 - `path` (String) The path of the crl-distributor-configs
-
-

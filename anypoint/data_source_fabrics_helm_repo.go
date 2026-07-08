@@ -3,7 +3,6 @@ package anypoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
@@ -44,7 +43,7 @@ func dataSourceFabricsHelmRepoProps() *schema.Resource {
 	}
 }
 
-func dataSourceFabricsHelmRepoPropsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceFabricsHelmRepoPropsRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	orgid := d.Get("org_id").(string)
@@ -52,14 +51,7 @@ func dataSourceFabricsHelmRepoPropsRead(ctx context.Context, d *schema.ResourceD
 	//perform request
 	res, httpr, err := pco.rtfclient.DefaultApi.GetFabricsHelmRepoProps(authctx, orgid).Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get fabrics helm repository props",
@@ -85,8 +77,8 @@ func dataSourceFabricsHelmRepoPropsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenFabricsHelmRepoProps(props *rtf.FabricsHelmRepoProps) map[string]interface{} {
-	data := make(map[string]interface{})
+func flattenFabricsHelmRepoProps(props *rtf.FabricsHelmRepoProps) map[string]any {
+	data := make(map[string]any)
 	if props == nil {
 		return data
 	}
@@ -104,7 +96,7 @@ func flattenFabricsHelmRepoProps(props *rtf.FabricsHelmRepoProps) map[string]int
 	return data
 }
 
-func setFabricsHelmRepoResourceData(d *schema.ResourceData, data map[string]interface{}) error {
+func setFabricsHelmRepoResourceData(d *schema.ResourceData, data map[string]any) error {
 	attributes := getFabricsHelmRepoAttributes()
 	if data != nil {
 		for _, attr := range attributes {

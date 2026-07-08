@@ -48,5 +48,3 @@ Read-Only:
 - `name` (String)
 - `path` (String)
 - `type` (String)
-
-

@@ -2,7 +2,6 @@ package anypoint
 
 import (
 	"context"
-	"io"
 	"strconv"
 	"time"
 
@@ -135,7 +134,7 @@ func dataSourceTeamMembers() *schema.Resource {
 	}
 }
 
-func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	pco := m.(ProviderConfOutput)
 	searchOpts := d.Get("params").(*schema.Set)
@@ -152,14 +151,7 @@ func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m in
 	//perform request
 	res, httpr, err := req.Execute()
 	if err != nil {
-		var details string
-		if httpr != nil && httpr.StatusCode >= 400 {
-			defer httpr.Body.Close()
-			b, _ := io.ReadAll(httpr.Body)
-			details = string(b)
-		} else {
-			details = err.Error()
-		}
+		details := extractAPIErrorDetail(err, httpr)
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get team " + teamid + " member ",
@@ -179,7 +171,7 @@ func dataSourceTeamMembersRead(ctx context.Context, d *schema.ResourceData, m in
 		})
 		return diags
 	}
-	if err := d.Set("total", res.GetTotal); err != nil {
+	if err := d.Set("total", res.GetTotal()); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to set total number of team " + teamid + " roles",
@@ -205,37 +197,40 @@ func parseTeamMembersSearchOpts(req team_members.DefaultApiApiOrganizationsOrgId
 
 	opts := params.List()[0]
 
-	for k, v := range opts.(map[string]interface{}) {
-		if k == "membership_type" {
-			req = req.MembershipType(v.(string))
+	for k, v := range opts.(map[string]any) {
+		if k == "membership_type" && toString(v) != "" {
+			req = req.MembershipType(toString(v))
 			continue
 		}
-		if k == "identity_type" {
-			req = req.IdentityType(v.(string))
+		if k == "identity_type" && toString(v) != "" {
+			req = req.IdentityType(toString(v))
 			continue
 		}
 		if k == "member_ids" {
-			req = req.MemberIds(v.([]string))
+			ids := toStringSlice(v)
+			if len(ids) > 0 {
+				req = req.MemberIds(ids)
+			}
 			continue
 		}
-		if k == "search" {
-			req = req.Search(v.(string))
+		if k == "search" && toString(v) != "" {
+			req = req.Search(toString(v))
 			continue
 		}
 		if k == "offset" {
-			req = req.Offset(int32(v.(int)))
+			req = req.Offset(toInt32(v))
 			continue
 		}
 		if k == "limit" {
-			req = req.Limit(int32(v.(int)))
+			req = req.Limit(toInt32(v))
 			continue
 		}
-		if k == "sort" {
-			req = req.Sort(v.(string))
+		if k == "sort" && toString(v) != "" {
+			req = req.Sort(toString(v))
 			continue
 		}
 		if k == "ascending" {
-			req = req.Ascending(v.(bool))
+			req = req.Ascending(toBool(v))
 			continue
 		}
 	}
@@ -243,19 +238,19 @@ func parseTeamMembersSearchOpts(req team_members.DefaultApiApiOrganizationsOrgId
 	return req, diags
 }
 
-func flattenTeamMembersData(teammembers *[]team_members.TeamMember) []interface{} {
+func flattenTeamMembersData(teammembers *[]team_members.TeamMember) []any {
 	if teammembers != nil && len(*teammembers) > 0 {
-		res := make([]interface{}, len(*teammembers))
+		res := make([]any, len(*teammembers))
 		for i, teammember := range *teammembers {
 			res[i] = flattenTeamMemberData(&teammember)
 		}
 		return res
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
-func flattenTeamMemberData(teammember *team_members.TeamMember) map[string]interface{} {
-	item := make(map[string]interface{})
+func flattenTeamMemberData(teammember *team_members.TeamMember) map[string]any {
+	item := make(map[string]any)
 	if teammember == nil {
 		//log.Printf("tm nil")
 		return item

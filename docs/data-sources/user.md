@@ -54,5 +54,3 @@ data "anypoint_user" "user" {
 - `type` (String) The type of user.
 - `updated_at` (String) The last time this user was updated.
 - `username` (String) The username of this user.
-
-

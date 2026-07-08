@@ -6,8 +6,7 @@ description: |-
   Attributes `roles` to your selected `team` for your `org`.
   
   Depending on the role, some roles are environment scoped others are business group scoped :
-  * For environment scoped roles, the org id and environment id needs to be specified.
-  * For business group scoped roles, only the org id is needed.
+  For environment scoped roles, the org id and environment id needs to be specified.For business group scoped roles, only the org id is needed.
 ---
 
 # anypoint_team_roles (Resource)
@@ -66,6 +65,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 # In order for the import to work, you should provide a ID composed of the following:
